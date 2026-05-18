@@ -1,0 +1,1932 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Maven Manage: Email Imports</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"></noscript>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <style>
+    /* ===== IMPORTS TABLE (matches integrations.html .lp-table-wrap) ===== */
+    .imports-wrap { padding: 0 40px 48px; flex: 1; overflow-y: auto; background: var(--color-background-primary); }
+    .imports-table-wrap {
+      border: 0.5px solid #E8E8EF;
+      border-radius: 6px;
+      background: #fff;
+      overflow: hidden;
+    }
+    /* Filter row, matches configure.html .cfg-filter-row pattern */
+    .imports-filter-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 20px 40px 14px;
+    }
+    .imports-filter-right {
+      margin-left: auto;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .imports-filter-pill {
+      display: inline-flex; align-items: center; gap: 8px;
+      height: 36px; padding: 0 32px 0 14px;
+      border: 0.5px solid var(--color-border-secondary);
+      border-radius: var(--border-radius-sm);
+      background: var(--color-background-primary);
+      font-family: var(--font-body); font-size: 13px;
+      color: var(--color-text-primary);
+      cursor: pointer; appearance: none; -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%238A8894' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 12px center;
+      outline: none; min-width: 132px;
+    }
+    .imports-filter-pill:focus { border-color: var(--color-navy-lt); }
+    .imports-reset {
+      font-family: var(--font-display); font-size: 13px; font-weight: 600;
+      color: var(--color-navy-lt); cursor: pointer;
+      background: none; border: none; padding: 0 6px;
+    }
+    .imports-reset:hover { color: var(--color-navy); }
+    /* Top page header (title + search), overrides shared .page-header padding to match content (40px) */
+    .imports-page-header {
+      height: 68px;
+      padding: 0 40px;
+    }
+    .imports-page-header .page-header-title {
+      font-family: var(--font-display);
+      font-size: 20px; font-weight: 700;
+      color: var(--color-text-primary);
+      letter-spacing: -0.01em;
+    }
+
+    /* Search field (top-right of page header) */
+    .imports-search {
+      position: relative;
+      width: 280px;
+    }
+    .imports-search input {
+      width: 100%; height: 36px;
+      padding: 0 14px 0 36px;
+      border: 0.5px solid var(--color-border-secondary);
+      border-radius: var(--border-radius-sm);
+      background: var(--color-background-primary);
+      font-family: var(--font-body); font-size: 13px;
+      color: var(--color-text-primary);
+      outline: none;
+    }
+    .imports-search input:focus { border-color: var(--color-navy-lt); }
+    .imports-search input::placeholder { color: var(--color-text-tertiary); }
+    .imports-search-icon {
+      position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+      color: var(--color-text-tertiary); pointer-events: none;
+      font-size: 13px;
+    }
+    .imports-table {
+      width: 100%; border-collapse: collapse;
+      background: #fff;
+    }
+    .imports-table thead tr {
+      background: #FAFAFB;
+      border-bottom: 1px solid #EEEFF4;
+    }
+    .imports-table th {
+      padding: 11px 16px; text-align: left;
+      font-family: var(--font-display); font-size: 12px;
+      font-weight: 700;
+      color: #383F60;
+      white-space: nowrap;
+    }
+    .imports-table th .sort-caret {
+      display: inline-block; margin-left: 4px;
+      font-size: 11px; color: var(--color-text-secondary); vertical-align: middle;
+    }
+    .imports-table tbody tr { height: 44px; }
+    .imports-table td {
+      padding: 0 16px; border-bottom: 1px solid #EEEFF4;
+      vertical-align: middle; font-size: 14px; color: #383F60;
+    }
+    .imports-table tbody tr:last-child td { border-bottom: none; }
+    .imports-table tbody tr:hover { background: transparent; cursor: pointer; }
+    .imports-table tbody tr:hover td { background: #F7F7FB; }
+    .import-name { font-family: var(--font-body); font-size: 14px; font-weight: 500; color: #383F60; }
+    .imports-table td.id-cell {
+      font-family: var(--font-display);
+      font-size: 13px; font-weight: 500;
+      color: var(--color-text-secondary);
+      white-space: nowrap;
+    }
+    /* Status / Health labels: all text in navy, only the dot color differs by state. */
+    .status-pill, .health-pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 0; border: none; background: none !important;
+      border-radius: 0;
+      font-size: 13px; font-weight: 500;
+      color: #383F60;
+      white-space: nowrap;
+    }
+    /* Status dot is rendered as the ::before of each modifier for parity with health dot. */
+    .sp-active::before, .sp-inactive::before,
+    .sp-submitted::before, .sp-waiting-support::before,
+    .sp-in-progress::before, .sp-waiting-customer::before {
+      content: ''; display: inline-block;
+      width: 7px; height: 7px; border-radius: 50%;
+      margin-right: 2px; flex-shrink: 0;
+    }
+    .sp-active::before          { background: #03BF00; }
+    .sp-inactive::before        { background: #C9C8D3; }
+    .sp-submitted::before       { background: #C9CCD4; }
+    .sp-waiting-support::before { background: #0C447C; }
+    .sp-in-progress::before {
+      background: #0C447C;
+      animation: status-pulse 1.5s ease-in-out infinite;
+    }
+    .sp-waiting-customer::before{ background: #FFB82E; }
+    @keyframes status-pulse {
+      0%, 100% { opacity: 1; }
+      50%      { opacity: 0.35; }
+    }
+    .health-pill .hp-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .hp-on-track .hp-dot      { background: #03BF00; }
+    .hp-overdue .hp-dot       { background: #FFB82E; }
+    .hp-not-received .hp-dot  { background: #DC0700; }
+    .hp-not-monitored .hp-dot { background: #C9C8D3; }
+
+    .name-cell { display: flex; align-items: center; gap: 8px; }
+
+    /* Filter tabs, sit above the table.
+       Maps multiple MSD statuses into product-friendly groupings:
+         All           = everything
+         Active        = Status: Active
+         Pending       = Submitted + Waiting for support + In progress
+         Action needed = Waiting for customer
+         Inactive      = Status: Inactive */
+    .filter-tabs {
+      display: flex; align-items: center;
+      padding: 0 32px;
+      background: var(--color-background-primary);
+      border-bottom: 0.5px solid var(--color-border-tertiary);
+      flex-shrink: 0;
+    }
+    .filter-tab {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 10px 14px;
+      font-family: var(--font-display); font-size: 13px;
+      font-weight: 500; color: var(--color-text-secondary);
+      background: none; border: none; cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -0.5px;
+      transition: color 0.1s, border-color 0.1s;
+    }
+    .filter-tab:hover { color: var(--color-text-primary); }
+    .filter-tab.active {
+      color: var(--color-navy);
+      border-bottom-color: var(--color-orange);
+      font-weight: 700;
+    }
+    .filter-tab .tab-count {
+      display: inline-block;
+      min-width: 18px; padding: 1px 7px;
+      border-radius: 10px;
+      background: var(--color-background-tertiary);
+      color: var(--color-text-secondary);
+      font-size: 10px; font-weight: 700;
+      text-align: center; line-height: 1.5;
+    }
+    .filter-tab.active .tab-count { background: #FFE5CC; color: var(--color-orange); }
+
+    /* Sender cell */
+    .sender-display { position: relative; display: inline-flex; align-items: center; gap: 6px; }
+    .sender-cell {
+      font-size: 14px; color: #797979;
+      display: inline-block; max-width: 220px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      vertical-align: middle;
+    }
+    .sender-more {
+      display: inline-flex; align-items: center;
+      font-family: var(--font-display); font-size: 11px; font-weight: 600;
+      color: var(--color-navy);
+      background: var(--color-background-tertiary);
+      border: 0.5px solid var(--color-border-tertiary);
+      padding: 1px 6px;
+      border-radius: 10px;
+      cursor: help;
+    }
+    /* Custom hover tooltip listing all senders in a styled box */
+    .sender-tooltip {
+      position: absolute;
+      top: calc(100% + 6px); left: 0;
+      min-width: max-content;
+      padding: 8px 12px;
+      background: var(--color-background-primary);
+      border: 0.5px solid var(--color-border-secondary);
+      border-radius: var(--border-radius-sm);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.10);
+      z-index: 50;
+      display: none;
+      pointer-events: none;
+    }
+    .sender-display:hover .sender-tooltip { display: block; }
+    .sender-tooltip-label {
+      display: block;
+      font-family: var(--font-display); font-size: 10px; font-weight: 600;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      color: var(--color-text-secondary);
+      margin-bottom: 4px;
+    }
+    .sender-tooltip-list { list-style: none; margin: 0; padding: 0; }
+    .sender-tooltip-list li {
+      font-family: var(--font-body); font-size: 13px; color: var(--color-text-primary);
+      padding: 3px 0;
+      white-space: nowrap;
+    }
+
+    /* Received-in-last-30-days count, replaces the old Frequency pill.
+       Matches the default cell style (14px, dark grey) — severity is conveyed
+       by the Health column, not this number. */
+    .recv-count {
+      font-family: var(--font-display); font-size: 14px; font-weight: 500;
+      color: #383F60;
+    }
+
+    /* Last received cell */
+    .last-received { font-size: 13px; color: #797979; }
+    .last-received.empty { font-style: italic; color: var(--color-text-tertiary); }
+
+    /* Inactive row dimming */
+    .imports-table tbody tr.row-inactive { opacity: 0.55; }
+    .imports-table tbody tr.row-inactive:hover { opacity: 0.75; }
+
+    .action-cell { display: flex; align-items: center; gap: 14px; }
+    .action-icon-btn {
+      background: none; border: none; padding: 0;
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 18px; height: 18px;
+      color: #383F60; cursor: pointer;
+      transition: color 0.1s;
+    }
+    .action-icon-btn:hover { color: var(--color-orange); }
+    .action-icon-btn svg { display: block; }
+    .empty-state { padding: 56px 0; text-align: center; }
+    .empty-state-title { font-family: var(--font-display); font-size: 14px; font-weight: 600; color: var(--color-text-primary); margin-bottom: 6px; }
+    .empty-state-desc { font-size: 13px; color: var(--color-text-secondary); }
+
+    /* ===== CREATE DRAWER ===== */
+    .drawer.create-drawer { width: 50vw; }
+    .create-drawer .drawer-body { padding: 24px 28px 32px; background: var(--color-background-primary); }
+    .drawer-intro { margin-bottom: 4px; }
+    .drawer-intro-desc {
+      font-size: 13px; color: var(--color-text-secondary); line-height: 1.6;
+    }
+
+    /* ===== FORM SECTIONS (stacked: header above fields) ===== */
+    .form-section {
+      display: block; padding: 28px 0;
+      border-bottom: 0.5px solid var(--color-border-tertiary);
+    }
+    .form-section:first-of-type { padding-top: 16px; }
+    .form-section:last-of-type { border-bottom: none; padding-bottom: 8px; }
+    .section-left {
+      display: flex; flex-wrap: wrap; align-items: center;
+      gap: 6px 10px; margin-bottom: 16px;
+    }
+    .section-label {
+      font-family: var(--font-display); font-size: 15px;
+      font-weight: 700; color: var(--color-text-primary); margin: 0;
+    }
+    .section-sublabel {
+      flex-basis: 100%; order: 3;
+      font-size: 13px; color: var(--color-text-secondary);
+      line-height: 1.5; margin: 0;
+    }
+    .section-left .owner-badge { order: 2; }
+    .section-right { display: block; }
+
+    /* Owner badges */
+    .owner-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 2px 8px; border-radius: 20px;
+      font-size: 11px; font-weight: 600; letter-spacing: 0.02em;
+    }
+    .owner-dot { width: 6px; height: 6px; border-radius: 50%; }
+    .owner-rob  { background: #E6F1FB; color: #0C447C; border: 0.5px solid #85B7EB; }
+    .owner-rob .owner-dot  { background: #0C447C; }
+    .owner-luis { background: var(--color-background-tertiary); color: var(--color-text-secondary); border: 0.5px solid var(--color-border-secondary); }
+    .owner-luis .owner-dot { background: var(--color-text-secondary); }
+
+    /* Field rows */
+    .field-row { margin-bottom: 16px; }
+    .field-row:last-child { margin-bottom: 0; }
+    .field-label {
+      display: flex; align-items: center; gap: 4px;
+      font-size: 12px; font-weight: 600;
+      color: var(--color-text-primary);
+      margin-bottom: 6px;
+    }
+    .req { color: #DC0700; font-size: 10px; }
+    .field-hint {
+      font-size: 11px; color: var(--color-text-secondary);
+      margin-top: 5px; line-height: 1.5;
+    }
+    .form-input-std {
+      width: 100%; height: 36px; padding: 0 11px;
+      border: 0.5px solid var(--color-border-secondary);
+      border-radius: var(--border-radius-sm);
+      background: var(--color-background-primary);
+      font-family: var(--font-body); font-size: 13px;
+      color: var(--color-text-primary);
+      transition: border-color 0.15s; outline: none;
+    }
+    .form-input-std::placeholder { color: var(--color-text-tertiary); }
+    .form-input-std:focus { border-color: #5969A6; }
+
+    /* Select dropdown, visually matches form-input-std with caret */
+    .form-select-std {
+      width: 100%; height: 36px;
+      padding: 0 32px 0 11px;
+      border: 0.5px solid var(--color-border-secondary);
+      border-radius: var(--border-radius-sm);
+      background: var(--color-background-primary)
+        url("data:image/svg+xml,%3Csvg width='10' height='6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%238A8894' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+        no-repeat right 11px center;
+      appearance: none; -webkit-appearance: none;
+      font-family: var(--font-body); font-size: 13px;
+      color: var(--color-text-primary);
+      cursor: pointer; outline: none;
+      transition: border-color 0.15s;
+    }
+    .form-select-std:focus { border-color: #5969A6; }
+    .form-select-std.placeholder { color: var(--color-text-tertiary); }
+
+    /* ===== Multi-select dropdown (checkbox style with "All" toggle) ===== */
+    .multi-select { position: relative; width: 100%; }
+    .multi-select-trigger {
+      width: 100%; height: 36px;
+      padding: 0 32px 0 11px;
+      border: 0.5px solid var(--color-border-secondary);
+      border-radius: var(--border-radius-sm);
+      background: var(--color-background-primary)
+        url("data:image/svg+xml,%3Csvg width='10' height='6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%238A8894' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+        no-repeat right 11px center;
+      font-family: var(--font-body); font-size: 13px;
+      color: var(--color-text-primary);
+      cursor: pointer; outline: none;
+      text-align: left;
+      display: flex; align-items: center;
+      transition: border-color 0.15s;
+    }
+    .multi-select-trigger:focus,
+    .multi-select.is-open .multi-select-trigger { border-color: #5969A6; }
+    .multi-select-value {
+      flex: 1;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .multi-select-value.is-empty { color: var(--color-text-tertiary); }
+    .multi-select-caret { display: none; } /* arrow rendered via bg image */
+    .multi-select-menu {
+      position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+      background: var(--color-background-primary);
+      border: 0.5px solid var(--color-border-secondary);
+      border-radius: var(--border-radius-sm);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      padding: 6px 0;
+      z-index: 50;
+      max-height: 240px; overflow-y: auto;
+    }
+    .multi-option {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 12px;
+      font-family: var(--font-body); font-size: 13px;
+      color: var(--color-text-primary);
+      cursor: pointer;
+    }
+    .multi-option:hover { background: var(--color-background-secondary); }
+    .multi-option input[type="checkbox"] {
+      width: 14px; height: 14px;
+      accent-color: var(--color-navy);
+      cursor: pointer;
+      margin: 0;
+    }
+    .multi-option-all { font-weight: 600; }
+    .multi-divider {
+      height: 0.5px; background: var(--color-border-tertiary);
+      margin: 4px 0;
+    }
+
+    /* Checkbox row, sub-question under a field */
+    .checkbox-row {
+      display: flex; align-items: flex-start; gap: 8px;
+      margin-top: 10px; cursor: pointer;
+    }
+    .checkbox-row input[type="checkbox"] {
+      margin: 0; margin-top: 1px;
+      width: 14px; height: 14px;
+      accent-color: var(--color-navy);
+      cursor: pointer; flex-shrink: 0;
+    }
+    .checkbox-row .checkbox-text {
+      font-size: 13px; color: var(--color-text-primary);
+      line-height: 1.45; cursor: pointer;
+    }
+    .checkbox-row .checkbox-text small {
+      display: block;
+      font-size: 11px; color: var(--color-text-secondary);
+      font-weight: 400; margin-top: 2px;
+    }
+
+    /* File warnings, auto-flag issues with the uploaded sample */
+    .file-warnings { margin-top: 10px; display: flex; flex-direction: column; gap: 8px; }
+    .file-warning {
+      display: flex; align-items: flex-start; gap: 8px;
+      padding: 10px 12px;
+      background: #FFF7E5; border: 0.5px solid #FFB72D;
+      border-radius: var(--border-radius-sm);
+      font-size: 12px; color: #8A5A00; line-height: 1.5;
+    }
+    .file-warning.error {
+      background: #FEF2F2; border-color: #FECACA; color: #9B1C1C;
+    }
+    .file-warning.info {
+      background: var(--color-background-secondary);
+      border-color: var(--color-border-tertiary);
+      color: var(--color-text-secondary);
+    }
+    .file-warning .warn-icon { font-size: 14px; flex-shrink: 0; line-height: 1.2; }
+    .file-warning strong { font-weight: 700; }
+
+    /* Conditional block, revealed when its parent checkbox is on */
+    .conditional-block {
+      display: none;
+      padding: 12px 14px; margin-top: 10px;
+      background: var(--color-background-primary);
+      border: 0.5px solid var(--color-border-secondary);
+      border-radius: var(--border-radius-sm);
+    }
+    .conditional-block.visible { display: block; }
+    .conditional-block .field-row { margin-bottom: 12px; }
+    .conditional-block .field-row:last-child { margin-bottom: 0; }
+
+    /* Chip / tag input */
+    .chip-input-wrap {
+      display: flex; flex-wrap: wrap; gap: 5px; align-items: center;
+      min-height: 36px; padding: 5px 8px;
+      border: 0.5px solid var(--color-border-secondary);
+      border-radius: var(--border-radius-sm);
+      background: var(--color-background-primary);
+      cursor: text; transition: border-color 0.15s;
+    }
+    .chip-input-wrap:focus-within { border-color: #5969A6; }
+    .chip {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 2px 7px; border-radius: 4px;
+      background: #EEF2FF; border: 0.5px solid #C5CFED;
+      color: var(--color-navy); font-size: 12px; font-weight: 500;
+    }
+    .chip-remove {
+      background: none; border: none; cursor: pointer;
+      color: var(--color-navy-lt); font-size: 13px; line-height: 1;
+      padding: 0; display: flex; align-items: center;
+    }
+    .chip-remove:hover { color: #DC0700; }
+    .chip-text-input {
+      flex: 1; min-width: 160px; border: none; outline: none;
+      font-family: var(--font-body); font-size: 13px;
+      color: var(--color-text-primary); background: transparent; padding: 0;
+    }
+    .chip-text-input::placeholder { color: var(--color-text-tertiary); }
+
+    /* Segmented toggle */
+    .seg-toggle {
+      display: inline-flex;
+      border: 0.5px solid var(--color-border-secondary);
+      border-radius: var(--border-radius-sm);
+      overflow: hidden; background: var(--color-background-secondary);
+    }
+    .seg-opt {
+      padding: 0 14px; height: 34px;
+      font-family: var(--font-display); font-size: 13px;
+      font-weight: 500; color: var(--color-text-secondary);
+      background: none; border: none; cursor: pointer;
+      border-right: 0.5px solid var(--color-border-secondary);
+      transition: background 0.1s, color 0.1s;
+    }
+    .seg-opt:last-child { border-right: none; }
+    .seg-opt:hover { background: var(--color-background-primary); color: var(--color-text-primary); }
+    .seg-opt.active {
+      background: var(--color-background-primary);
+      color: var(--color-navy); font-weight: 600;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+    }
+
+    /* Upload zone */
+    .upload-zone {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      width: 100%; min-height: 220px;
+      padding: 36px 28px; text-align: center;
+      border: 1.5px dashed var(--color-border-secondary);
+      border-radius: var(--border-radius-md);
+      background: var(--color-background-secondary);
+      cursor: pointer; transition: border-color 0.15s, background 0.15s;
+    }
+    .upload-zone:hover, .upload-zone.drag-over { border-color: #5969A6; background: #EEF2FF; }
+    .upload-zone input[type="file"] { display: none; }
+    .upload-icon {
+      width: 48px; height: 48px; border-radius: var(--border-radius-md);
+      background: var(--color-background-primary);
+      border: 0.5px solid var(--color-border-secondary);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; margin: 0 auto 14px;
+    }
+    .upload-zone-title {
+      font-family: var(--font-display); font-size: 15px;
+      font-weight: 600; color: var(--color-text-primary); margin-bottom: 4px;
+    }
+    .upload-zone-sub { font-size: 13px; color: var(--color-text-secondary); margin-bottom: 14px; }
+    .upload-zone-note {
+      font-size: 12px; font-weight: 600; color: #DC0700;
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 4px 10px; border-radius: 12px;
+      background: #FEF2F2; border: 0.5px solid #FECACA;
+    }
+
+    /* File bar (post-upload) */
+    .file-bar {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px;
+      border: 0.5px solid var(--color-border-secondary);
+      border-radius: var(--border-radius-sm);
+      background: var(--color-background-primary);
+      margin-bottom: 12px;
+    }
+    .file-icon-box {
+      width: 32px; height: 32px; flex-shrink: 0;
+      background: #EEF2FF; border: 0.5px solid #C5CFED;
+      border-radius: var(--border-radius-sm);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px;
+    }
+    .file-info { flex: 1; min-width: 0; }
+    .file-name-text {
+      font-size: 13px; font-weight: 600; color: var(--color-text-primary);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .file-meta-text { font-size: 11px; color: var(--color-text-secondary); margin-top: 1px; }
+    .file-remove-btn {
+      font-size: 12px; color: var(--color-text-secondary);
+      background: none; border: none; cursor: pointer; flex-shrink: 0;
+    }
+    .file-remove-btn:hover { color: #DC0700; text-decoration: underline; }
+
+    /* Preview table */
+    .preview-wrap {
+      border: 0.5px solid var(--color-border-secondary);
+      border-radius: var(--border-radius-md);
+      overflow: hidden; margin-bottom: 10px;
+    }
+    .preview-meta {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 12px;
+      background: var(--color-background-secondary);
+      border-bottom: 0.5px solid var(--color-border-secondary);
+      font-size: 11px; color: var(--color-text-secondary);
+    }
+    .preview-meta strong { font-weight: 600; color: var(--color-text-primary); }
+    /* File summary, date range + recognized metric chips */
+    .preview-summary {
+      display: flex; flex-direction: column; gap: 10px;
+      padding: 12px;
+      background: var(--color-background-primary);
+      border-bottom: 0.5px solid var(--color-border-secondary);
+    }
+    .preview-summary-row {
+      display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;
+    }
+    .preview-summary-label {
+      font-family: var(--font-display); font-size: 11px; font-weight: 600;
+      color: var(--color-text-secondary);
+      letter-spacing: 0.04em; text-transform: uppercase;
+      min-width: 96px;
+    }
+    .preview-summary-value {
+      font-family: var(--font-body); font-size: 13px; font-weight: 500;
+      color: var(--color-text-primary);
+    }
+    .preview-summary-value .accent { font-weight: 600; color: var(--color-navy); }
+    .metric-chip {
+      display: inline-flex; align-items: center;
+      padding: 2px 8px; margin-right: 6px;
+      border-radius: 10px;
+      font-family: var(--font-body); font-size: 12px; font-weight: 500;
+      background: var(--color-background-tertiary);
+      color: var(--color-text-secondary);
+      border: 0.5px solid var(--color-border-tertiary);
+    }
+    .metric-chip.is-key {
+      background: #EEF2FF;
+      color: var(--color-navy-dark);
+      border-color: #C9D2EE;
+      font-weight: 600;
+    }
+    .metric-chip-more {
+      display: inline-flex; align-items: center;
+      padding: 2px 8px; margin-left: 6px;
+      font-family: var(--font-body); font-size: 12px; font-weight: 500;
+      color: var(--color-navy-lt);
+      font-style: italic;
+      background: none; border: none;
+      cursor: pointer;
+      text-decoration: underline; text-underline-offset: 2px;
+      text-decoration-style: dotted;
+    }
+    .metric-chip-more:hover { color: var(--color-navy); }
+    .metric-chip-other {
+      display: inline-flex; align-items: center;
+      padding: 2px 8px; margin: 2px 4px 2px 0;
+      border-radius: 10px;
+      font-family: var(--font-body); font-size: 12px; font-weight: 500;
+      background: var(--color-background-tertiary);
+      color: var(--color-text-secondary);
+      border: 0.5px solid var(--color-border-tertiary);
+    }
+    #preview-other-cols {
+      display: none;
+      margin-top: 6px;
+      padding-top: 8px;
+      border-top: 0.5px dashed var(--color-border-tertiary);
+    }
+    #preview-other-cols.is-open { display: block; }
+    .metric-chip-empty {
+      display: inline-flex; align-items: center;
+      padding: 2px 8px;
+      font-family: var(--font-body); font-size: 12px; font-style: italic;
+      color: var(--color-text-tertiary);
+    }
+    .preview-table-scroll { overflow-x: auto; max-height: 200px; overflow-y: auto; }
+    .preview-table { width: 100%; border-collapse: collapse; font-size: 12px; white-space: nowrap; }
+    .preview-table th {
+      padding: 7px 12px; text-align: left;
+      background: var(--color-background-tertiary);
+      border-bottom: 0.5px solid var(--color-border-secondary);
+      font-family: var(--font-display); font-weight: 700;
+      font-size: 11px; color: var(--color-text-secondary);
+      position: sticky; top: 0;
+    }
+    .preview-table td {
+      padding: 6px 12px;
+      border-bottom: 0.5px solid var(--color-border-tertiary);
+      color: var(--color-text-primary); max-width: 180px;
+      overflow: hidden; text-overflow: ellipsis;
+    }
+    .preview-table tbody tr:last-child td { border-bottom: none; }
+    .preview-more {
+      padding: 8px 12px;
+      font-size: 11px;
+      color: var(--color-navy-lt);
+      font-weight: 600;
+      background: var(--color-background-secondary);
+      border-top: 0.5px solid var(--color-border-tertiary);
+      cursor: pointer;
+      text-align: center;
+      font-style: italic;
+    }
+    .preview-notice {
+      display: flex; align-items: flex-start; gap: 8px;
+      padding: 10px 12px;
+      background: #EEF2FF; border: 0.5px solid #C5CFED;
+      border-radius: var(--border-radius-sm);
+      font-size: 12px; color: #0C447C; line-height: 1.5;
+    }
+    .preview-notice-icon { flex-shrink: 0; font-size: 13px; margin-top: 1px; }
+
+    /* Luis settings box */
+    .luis-box {
+      background: var(--color-background-secondary);
+      border: 0.5px solid var(--color-border-secondary);
+      border-radius: var(--border-radius-md);
+      overflow: hidden;
+    }
+    .luis-box-note {
+      padding: 10px 14px;
+      background: var(--color-background-tertiary);
+      border-bottom: 0.5px solid var(--color-border-secondary);
+      font-size: 12px; color: var(--color-text-secondary); line-height: 1.5;
+    }
+    .luis-box-fields { padding: 16px 14px; display: flex; flex-direction: column; gap: 14px; }
+    .luis-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .mono-input {
+      width: 100%; height: 36px; padding: 0 11px;
+      border: 0.5px solid var(--color-border-secondary);
+      border-radius: var(--border-radius-sm);
+      background: var(--color-background-primary);
+      font-family: var(--font-mono); font-size: 12px;
+      color: var(--color-text-primary); outline: none;
+      transition: border-color 0.15s;
+    }
+    .mono-input::placeholder { color: var(--color-text-tertiary); font-style: italic; }
+    .mono-input:focus { border-color: #5969A6; }
+
+    /* Drawer footer (form actions) */
+    .create-drawer .drawer-footer { padding: 0 24px; }
+    .drawer-footer-note { font-size: 12px; color: var(--color-text-tertiary); }
+
+    /* ===== MAP-COLUMNS TAKEOVER ===== */
+    /* Slides in from the right as a fixed-width panel; sidebar stays, rest of page dims via backdrop. */
+    .takeover-screen {
+      position: fixed; top: 0; right: 0; bottom: 0;
+      width: 900px; max-width: calc(100vw - 240px);
+      z-index: 102;
+      background: var(--color-background-primary);
+      box-shadow: -4px 0 20px rgba(8, 6, 13, 0.08);
+      display: flex; flex-direction: column;
+      transform: translateX(100%);
+      transition: transform 0.25s cubic-bezier(0.32, 0, 0.2, 1);
+      overflow: hidden;
+    }
+    .takeover-screen.open { transform: translateX(0); }
+    .takeover-backdrop {
+      position: fixed; top: 0; left: 240px; right: 0; bottom: 0;
+      background: rgba(8, 6, 13, 0.28);
+      z-index: 101; opacity: 0; pointer-events: none;
+      transition: opacity 0.2s;
+    }
+    .takeover-backdrop.visible { opacity: 1; pointer-events: auto; }
+    .takeover-header {
+      flex-shrink: 0;
+      display: flex; align-items: flex-start; justify-content: space-between;
+      gap: 16px; padding: 14px 24px;
+      border-bottom: 0.5px solid var(--color-border-tertiary);
+      background: var(--color-background-primary);
+    }
+    .takeover-header-left {
+      display: flex; flex-direction: column; align-items: flex-start; gap: 2px;
+    }
+    .takeover-title {
+      font-family: var(--font-display); font-size: 15px; font-weight: 700;
+      color: var(--color-navy);
+    }
+    .takeover-back {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 12px; color: var(--color-navy-lt);
+      background: none; border: none; cursor: pointer;
+      font-family: var(--font-display); font-weight: 600;
+      padding: 0; margin: 0;
+    }
+    .takeover-back:hover { color: var(--color-navy); text-decoration: underline; }
+    .takeover-back svg { display: block; }
+    .takeover-close {
+      width: 26px; height: 26px;
+      display: flex; align-items: center; justify-content: center;
+      border: 0.5px solid var(--color-border-secondary);
+      border-radius: var(--border-radius-sm);
+      background: var(--color-background-primary);
+      cursor: pointer; color: var(--color-text-secondary); font-size: 12px;
+    }
+    .takeover-close:hover { background: var(--color-background-secondary); }
+    .takeover-body {
+      flex: 1; overflow: hidden;
+      display: flex; flex-direction: column;
+    }
+    .takeover-iframe {
+      flex: 1; width: 100%; height: 100%; border: none; display: block;
+    }
+
+    /* Success banner (after mapping submit) */
+    .success-banner {
+      display: none; align-items: center; gap: 12px;
+      margin: 16px 32px 0;
+      padding: 12px 16px;
+      background: #F1FFF4; border: 0.5px solid #A3E8A3;
+      border-radius: var(--border-radius-md);
+      font-size: 13px;
+    }
+    .success-banner.visible { display: flex; }
+    .success-banner .check {
+      flex-shrink: 0;
+      width: 22px; height: 22px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 50%; background: #03BF00; color: #fff;
+      font-size: 12px; font-weight: 700;
+    }
+    .success-banner .body { flex: 1; color: var(--color-text-primary); line-height: 1.5; }
+    .success-banner .body strong { color: #03BF00; font-weight: 700; }
+    .success-banner .dismiss {
+      background: none; border: none; cursor: pointer;
+      color: var(--color-text-secondary); font-size: 14px;
+      padding: 0 4px; line-height: 1;
+    }
+    .success-banner .dismiss:hover { color: var(--color-text-primary); }
+
+    /* ===== PAGE BG (override body grey) + match sidebar logo height for line continuity ===== */
+    .main-wrapper { background: var(--color-background-primary); }
+    .page-header { height: 60px; }
+
+    /* ===== EMAIL IMPORTS SECTION HEADER (acts as the page title row) ===== */
+    .all-imports-hdr {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 16px; padding: 20px 40px 12px;
+      background: var(--color-background-primary);
+      flex-shrink: 0;
+    }
+    .all-imports-hdr-left { display: flex; align-items: center; gap: 18px; }
+    .all-imports-title {
+      font-family: var(--font-display); font-size: 16px; font-weight: 700;
+      color: var(--color-navy);
+    }
+
+    /* Search field above table */
+    .table-search {
+      display: flex; align-items: center; gap: 8px;
+      width: 280px; height: 33px; padding: 0 12px;
+      border: 1px solid #D5D9E5;
+      border-radius: var(--border-radius-sm);
+      background: var(--color-background-primary);
+    }
+    .table-search input {
+      flex: 1; min-width: 0;
+      border: none; outline: none; background: transparent;
+      font-family: var(--font-body); font-size: 13px;
+      color: var(--color-text-primary);
+    }
+    .table-search input::placeholder { color: #9D9D9D; }
+    .table-search-icon { width: 18px; height: 18px; color: #797979; flex-shrink: 0; }
+  </style>
+</head>
+<body>
+<div class="app-shell">
+
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark">M</div>
+      <span class="logo-name">Maven Manage</span>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-group-title">Manage</div>
+      <a class="nav-item" href="index.html"><span class="nav-icon">⊞</span> Campaigns</a>
+      <a class="nav-item"><span class="nav-icon">◈</span> Accounts</a>
+      <a class="nav-item"><span class="nav-icon">↺</span> Global Continuations</a>
+
+      <div class="nav-group-title">Tasks</div>
+
+      <div class="nav-group-title">Configure</div>
+      <a class="nav-item active"><span class="nav-icon">✉</span> Email Imports</a>
+
+      <div class="nav-group-title">Tools</div>
+
+      <div class="nav-group-title">Conversion Engine</div>
+      <a class="nav-item" href="integrations-a.html"><span class="nav-icon">⇄</span> Integrations</a>
+      <a class="nav-item" href="accounts.html"><span class="nav-icon">◈</span> Accounts</a>
+      <a class="nav-item" href="configure.html"><span class="nav-icon">⚙</span> Configurations</a>
+    </nav>
+  </aside>
+
+  <!-- ===== MAIN ===== -->
+  <div class="main-wrapper">
+
+    <!-- Top page header: title (left) + search (right) -->
+    <header class="page-header imports-page-header">
+      <span class="page-header-title">Email Imports</span>
+      <div class="imports-search">
+        <span class="imports-search-icon">&#9906;</span>
+        <input type="text" id="imports-search" placeholder="Search by name, sender, or status…" />
+      </div>
+    </header>
+
+    <div class="success-banner" id="created-banner">
+      <span class="check">✓</span>
+      <div class="body"><strong id="created-name"></strong> is being set up. It will be reviewed and activated shortly.</div>
+      <button type="button" class="dismiss" id="banner-dismiss" title="Dismiss">✕</button>
+    </div>
+
+    <!-- Filters + Add button on the same row -->
+    <div class="imports-filter-row">
+      <select class="imports-filter-pill" id="filter-status">
+        <option value="">Status</option>
+        <option value="active">Active</option>
+        <option value="inactive">Inactive</option>
+      </select>
+      <select class="imports-filter-pill" id="filter-health">
+        <option value="">Health</option>
+        <option value="on-track">On track</option>
+        <option value="overdue">Overdue</option>
+        <option value="not-received">Not received</option>
+        <option value="not-monitored">Not monitored</option>
+      </select>
+      <button type="button" class="imports-reset" id="filter-reset">Reset All</button>
+      <div class="imports-filter-right">
+        <button type="button" id="btn-create" class="btn btn-primary btn-md">+ Create Email Import</button>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="imports-wrap">
+      <div class="imports-table-wrap">
+      <table class="imports-table">
+        <thead>
+          <tr>
+            <th style="width:4%;">ID <span class="sort-caret">↓</span></th>
+            <th style="width:23%;">Name <span class="sort-caret">↓</span></th>
+            <th style="width:17%;">Sender</th>
+            <th style="width:10%;">Received (30d)</th>
+            <th style="width:12%;">Last received <span class="sort-caret">↓</span></th>
+            <th style="width:13%;">Health</th>
+            <th style="width:13%;">Status</th>
+            <th style="width:96px;">Action</th>
+          </tr>
+        </thead>
+        <tbody id="imports-tbody">
+          <tr data-status="inactive" data-health="not-monitored">
+            <td class="id-cell">01</td>
+            <td><div class="name-cell"><span class="import-name">Acme Display Daily</span></div></td>
+            <td><span class="sender-cell">christopher@adtechnacity.com</span></td>
+            <td><span class="recv-count is-zero">0</span></td>
+            <td><span class="last-received">May 10, 2026</span></td>
+            <td><span class="health-pill hp-not-monitored" title="No frequency set or import is inactive"><span class="hp-dot"></span>Not monitored</span></td>
+            <td><span class="status-pill sp-inactive" title="Import not active">Inactive</span></td>
+            <td><div class="action-cell"><button class="action-icon-btn" title="View"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></button><button class="action-icon-btn" title="Edit"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg></button></div></td>
+          </tr>
+          <tr data-status="inactive" data-health="not-monitored">
+            <td class="id-cell">02</td>
+            <td><div class="name-cell"><span class="import-name">Quark Insights Weekly</span></div></td>
+            <td><span class="sender-cell">robert@adtechnacity.com</span></td>
+            <td><span class="recv-count is-zero">0</span></td>
+            <td><span class="last-received">May 08, 2026</span></td>
+            <td><span class="health-pill hp-not-monitored" title="No frequency set or import is inactive"><span class="hp-dot"></span>Not monitored</span></td>
+            <td><span class="status-pill sp-inactive" title="Import not active">Inactive</span></td>
+            <td><div class="action-cell"><button class="action-icon-btn" title="View"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></button><button class="action-icon-btn" title="Edit"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg></button></div></td>
+          </tr>
+          <tr data-status="inactive" data-health="not-monitored">
+            <td class="id-cell">03</td>
+            <td><div class="name-cell"><span class="import-name">Honda Adobe Prospect Visits</span></div></td>
+            <td><span class="sender-cell">cameron.thornton@adtechnacity.com</span></td>
+            <td><span class="recv-count is-zero">0</span></td>
+            <td><span class="last-received">May 11, 2026</span></td>
+            <td><span class="health-pill hp-not-monitored" title="No frequency set or import is inactive"><span class="hp-dot"></span>Not monitored</span></td>
+            <td><span class="status-pill sp-inactive" title="Import not active">Inactive</span></td>
+            <td><div class="action-cell"><button class="action-icon-btn" title="View"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></button><button class="action-icon-btn" title="Edit"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg></button></div></td>
+          </tr>
+          <tr data-status="inactive" data-health="not-monitored">
+            <td class="id-cell">04</td>
+            <td><div class="name-cell"><span class="import-name">Innovid Video Report</span></div></td>
+            <td><span class="sender-cell">ana.dejanovic@adtechnacity.com</span></td>
+            <td><span class="recv-count is-zero">0</span></td>
+            <td><span class="last-received">May 06, 2026</span></td>
+            <td><span class="health-pill hp-not-monitored" title="No frequency set or import is inactive"><span class="hp-dot"></span>Not monitored</span></td>
+            <td><span class="status-pill sp-inactive" title="Import not active">Inactive</span></td>
+            <td><div class="action-cell"><button class="action-icon-btn" title="View"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></button><button class="action-icon-btn" title="Edit"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg></button></div></td>
+          </tr>
+          <tr data-status="active" data-health="on-track">
+            <td class="id-cell">05</td>
+            <td><div class="name-cell"><span class="import-name">CCF Facebook Daily</span></div></td>
+            <td><div class="sender-display"><span class="sender-cell">christopher@adtechnacity.com</span><span class="sender-more">+1</span><div class="sender-tooltip"><span class="sender-tooltip-label">All senders (2)</span><ul class="sender-tooltip-list"><li>christopher@adtechnacity.com</li><li>robert@adtechnacity.com</li></ul></div></div></td>
+            <td><span class="recv-count">30</span></td>
+            <td><span class="last-received">Today 9:15 AM</span></td>
+            <td><span class="health-pill hp-on-track" title="Received within expected frequency window"><span class="hp-dot"></span>On track</span></td>
+            <td><span class="status-pill sp-active" title="Ticket resolved + import activated, data is flowing">Active</span></td>
+            <td><div class="action-cell"><button class="action-icon-btn" title="View"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></button><button class="action-icon-btn" title="Edit"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg></button></div></td>
+          </tr>
+          <tr data-status="active" data-health="on-track">
+            <td class="id-cell">06</td>
+            <td><div class="name-cell"><span class="import-name">OST Outbrain Daily</span></div></td>
+            <td><div class="sender-display"><span class="sender-cell">robert@adtechnacity.com</span><span class="sender-more">+1</span><div class="sender-tooltip"><span class="sender-tooltip-label">All senders (2)</span><ul class="sender-tooltip-list"><li>robert@adtechnacity.com</li><li>cameron.thornton@adtechnacity.com</li></ul></div></div></td>
+            <td><span class="recv-count">29</span></td>
+            <td><span class="last-received">Today 7:42 AM</span></td>
+            <td><span class="health-pill hp-on-track" title="Received within expected frequency window"><span class="hp-dot"></span>On track</span></td>
+            <td><span class="status-pill sp-active" title="Ticket resolved + import activated, data is flowing">Active</span></td>
+            <td><div class="action-cell"><button class="action-icon-btn" title="View"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></button><button class="action-icon-btn" title="Edit"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg></button></div></td>
+          </tr>
+          <tr data-status="active" data-health="overdue">
+            <td class="id-cell">07</td>
+            <td><div class="name-cell"><span class="import-name">Fisher Investments Weekly Digest</span></div></td>
+            <td><div class="sender-display"><span class="sender-cell">christopher@adtechnacity.com</span><span class="sender-more">+2</span><div class="sender-tooltip"><span class="sender-tooltip-label">All senders (3)</span><ul class="sender-tooltip-list"><li>christopher@adtechnacity.com</li><li>robert@adtechnacity.com</li><li>cameron.thornton@adtechnacity.com</li></ul></div></div></td>
+            <td><span class="recv-count is-gap">3</span></td>
+            <td><span class="last-received">3 days ago</span></td>
+            <td><span class="health-pill hp-overdue" title="Missed 1 expected delivery"><span class="hp-dot"></span>Overdue</span></td>
+            <td><span class="status-pill sp-active" title="Ticket resolved + import activated, data is flowing">Active</span></td>
+            <td><div class="action-cell"><button class="action-icon-btn" title="View"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></button><button class="action-icon-btn" title="Edit"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg></button></div></td>
+          </tr>
+          <tr data-status="active" data-health="overdue">
+            <td class="id-cell">08</td>
+            <td><div class="name-cell"><span class="import-name">COS Monthly Digest</span></div></td>
+            <td><span class="sender-cell">cameron.thornton@adtechnacity.com</span></td>
+            <td><span class="recv-count">1</span></td>
+            <td><span class="last-received">5 days ago</span></td>
+            <td><span class="health-pill hp-overdue" title="Missed 1 expected delivery"><span class="hp-dot"></span>Overdue</span></td>
+            <td><span class="status-pill sp-active" title="Ticket resolved + import activated, data is flowing">Active</span></td>
+            <td><div class="action-cell"><button class="action-icon-btn" title="View"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></button><button class="action-icon-btn" title="Edit"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg></button></div></td>
+          </tr>
+          <tr data-status="active" data-health="not-received">
+            <td class="id-cell">09</td>
+            <td><div class="name-cell"><span class="import-name">Taboola Campaign Summary</span></div></td>
+            <td><span class="sender-cell">ana.dejanovic@adtechnacity.com</span></td>
+            <td><span class="recv-count is-warn">0</span></td>
+            <td><span class="last-received">Mar 2026</span></td>
+            <td><span class="health-pill hp-not-received" title="Missed 2+ expected deliveries"><span class="hp-dot"></span>Not received</span></td>
+            <td><span class="status-pill sp-active" title="Ticket resolved + import activated, data is flowing">Active</span></td>
+            <td><div class="action-cell"><button class="action-icon-btn" title="View"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></button><button class="action-icon-btn" title="Edit"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg></button></div></td>
+          </tr>
+          <tr data-status="inactive" data-health="not-monitored" class="row-inactive">
+            <td class="id-cell">10</td>
+            <td><div class="name-cell"><span class="import-name">Bing Performance Report</span></div></td>
+            <td><span class="sender-cell">christopher@adtechnacity.com</span></td>
+            <td><span class="recv-count is-zero">0</span></td>
+            <td><span class="last-received">Apr 18, 2026</span></td>
+            <td><span class="health-pill hp-not-monitored" title="No frequency set or import is inactive"><span class="hp-dot"></span>Not monitored</span></td>
+            <td><span class="status-pill sp-inactive" title="Import turned off manually">Inactive</span></td>
+            <td><div class="action-cell"><button class="action-icon-btn" title="View"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></button><button class="action-icon-btn" title="Edit"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg></button></div></td>
+          </tr>
+        </tbody>
+      </table>
+      </div><!-- /.imports-table-wrap -->
+      <div class="empty-state" id="empty-state-zero" style="display:none;">
+        <div class="empty-state-title">No email imports yet</div>
+        <div class="empty-state-desc">Email imports automatically pull report data from your shared inbox into Maven.</div>
+        <button type="button" id="btn-empty-create" class="btn btn-primary btn-md" style="margin-top:16px;">+ New import</button>
+      </div>
+    </div>
+
+  </div><!-- /main-wrapper -->
+
+  <!-- ===== CREATE DRAWER ===== -->
+  <div class="drawer-backdrop" id="create-backdrop"></div>
+  <div class="drawer create-drawer" id="create-drawer" aria-hidden="true">
+    <div class="drawer-header">
+      <span class="drawer-title" id="drawer-title">New email import</span>
+      <button type="button" class="drawer-close" id="create-close" title="Close">✕</button>
+    </div>
+    <div class="drawer-body">
+
+      <form id="create-form" novalidate>
+
+        <!-- Section 1: Basic info -->
+        <div class="form-section">
+          <div class="section-left">
+            <div class="section-label">Basic info</div>
+            <div class="section-sublabel">Name and identify this import.</div>
+          </div>
+          <div class="section-right">
+            <div class="field-row">
+              <div class="field-label">Import name</div>
+              <input type="text" class="form-input-std" id="import-name" placeholder="e.g. Honda Adobe" autocomplete="off" value="Honda Adobe">
+              <div class="field-hint">A clear name for this report, used to identify it in the imports list.</div>
+            </div>
+            <div class="field-row">
+              <div class="field-label">Client / Advertiser</div>
+              <input type="text" class="form-input-std" id="client-advertiser" placeholder="e.g. Horizon Honda" autocomplete="off">
+              <div class="field-hint">Optional, helps you find this import later if the client name isn't already in the import name.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 2: Email filters -->
+        <div class="form-section">
+          <div class="section-left">
+            <div class="section-label">Email filters</div>
+            <div class="section-sublabel">Define how incoming emails are matched to this import.</div>
+          </div>
+          <div class="section-right">
+            <div class="field-row">
+              <div class="field-label">Subject line</div>
+              <input type="text" class="form-input-std" id="subject-line" placeholder="e.g. Honda | Adobe Prospect Visit" autocomplete="off" value="Honda | Adobe Prospect Visit">
+              <div class="field-hint">The exact subject line of the client's email. Must match precisely.</div>
+              <label class="checkbox-row">
+                <input type="checkbox" id="subject-varies">
+                <span class="checkbox-text">
+                  Subject line varies between emails
+                  <small>Check this if a report number, date, or ID changes each time. A regex pattern will be used instead of an exact match.</small>
+                </span>
+              </label>
+            </div>
+            <div class="field-row">
+              <div class="field-label">Sender emails</div>
+              <div class="multi-select" id="sender-multi">
+                <button type="button" class="multi-select-trigger" id="sender-trigger">
+                  <span class="multi-select-value" id="sender-value">christopher@adtechnacity.com</span>
+                  <span class="multi-select-caret">▾</span>
+                </button>
+                <div class="multi-select-menu" id="sender-menu" hidden>
+                  <label class="multi-option multi-option-all">
+                    <input type="checkbox" id="sender-all">
+                    <span>All senders</span>
+                  </label>
+                  <div class="multi-divider"></div>
+                  <label class="multi-option">
+                    <input type="checkbox" value="christopher@adtechnacity.com" checked>
+                    <span>christopher@adtechnacity.com</span>
+                  </label>
+                  <label class="multi-option">
+                    <input type="checkbox" value="robert@adtechnacity.com">
+                    <span>robert@adtechnacity.com</span>
+                  </label>
+                  <label class="multi-option">
+                    <input type="checkbox" value="cameron.thornton@adtechnacity.com">
+                    <span>cameron.thornton@adtechnacity.com</span>
+                  </label>
+                  <label class="multi-option">
+                    <input type="checkbox" value="ana.dejanovic@adtechnacity.com">
+                    <span>ana.dejanovic@adtechnacity.com</span>
+                  </label>
+                </div>
+              </div>
+              <div class="field-hint">Select one or more email addresses the report can be sent from.</div>
+            </div>
+            <div class="field-row">
+              <div class="field-label">File source</div>
+              <div class="seg-toggle" id="file-source-toggle">
+                <button type="button" class="seg-opt active" data-val="attachment">Attachment</button>
+                <button type="button" class="seg-opt" data-val="download">Download link in body</button>
+              </div>
+              <div class="conditional-block" id="download-link-block">
+                <div class="field-row" style="margin-top:12px;">
+                  <div class="field-label">Link pattern or example URL</div>
+                  <input type="text" class="form-input-std" id="download-link-pattern" placeholder="e.g. https://reports.client.com/download/abc123" autocomplete="off">
+                  <div class="field-hint">Don't know the exact pattern? Just paste an example link from a recent email, or paste the whole email body, the engineers will figure it out.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 3: Sample file -->
+        <div class="form-section">
+          <div class="section-left">
+            <div class="section-label">Sample file</div>
+            <div class="section-sublabel">Upload a real example of what the client sends.</div>
+          </div>
+          <div class="section-right">
+            <div class="field-row">
+              <div class="field-label">Upload sample</div>
+              <label class="upload-zone" id="upload-zone"
+                ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
+                <input type="file" id="file-input" accept=".csv,.xlsx,.xls" onchange="handleFileSelect(this.files[0])">
+                <div class="upload-icon">⬆</div>
+                <div class="upload-zone-title">Drop file here or click to browse</div>
+                <div class="upload-zone-sub">CSV or Excel accepted</div>
+                <div class="upload-zone-note">⚠ Required, used to map columns before activating</div>
+              </label>
+              <div id="file-warnings" class="file-warnings"></div>
+              <div id="file-bar" style="display:none;">
+                <div class="file-bar">
+                  <div class="file-icon-box" id="file-icon">📄</div>
+                  <div class="file-info">
+                    <div class="file-name-text" id="file-name-text"></div>
+                    <div class="file-meta-text" id="file-meta-text"></div>
+                  </div>
+                  <button type="button" class="file-remove-btn" onclick="removeFile()">Remove</button>
+                </div>
+                <div id="file-preview" style="display:none;">
+                  <div class="preview-wrap">
+                    <div class="preview-meta">
+                      <span id="col-count"></span>
+                      <span id="row-count"></span>
+                    </div>
+                    <div class="preview-summary" id="preview-summary">
+                      <div class="preview-summary-row" id="preview-daterange-row" style="display:none;">
+                        <span class="preview-summary-label">Date range</span>
+                        <span class="preview-summary-value" id="preview-daterange"></span>
+                      </div>
+                      <div class="preview-summary-row" id="preview-metrics-row" style="display:none;">
+                        <span class="preview-summary-label">Detected columns</span>
+                        <span class="preview-summary-value" id="preview-metrics"></span>
+                      </div>
+                      <div id="preview-other-cols"></div>
+                    </div>
+                    <div class="preview-table-scroll">
+                      <div id="preview-table-inner"></div>
+                    </div>
+                    <div class="preview-more" id="more-rows" style="display:none;"></div>
+                  </div>
+                  <div class="preview-notice">
+                    <span class="preview-notice-icon">ℹ</span>
+                    <span>Used to understand the column structure before building the reader. Make sure it's a real example of what the client sends, not a blank template.</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </form>
+    </div>
+    <div class="drawer-footer">
+      <span class="drawer-footer-note"></span>
+      <div class="drawer-footer-right">
+        <button type="button" class="btn btn-ghost btn-md" id="create-cancel">Cancel</button>
+        <button type="submit" form="create-form" id="create-next-btn" class="btn btn-primary btn-md" disabled>Next: map columns →</button>
+        <button type="button" form="create-form" id="create-save-btn" class="btn btn-primary btn-md" style="display:none;">Save changes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== MAP-COLUMNS TAKEOVER ===== -->
+  <div class="takeover-backdrop" id="takeover-backdrop"></div>
+  <div class="takeover-screen" id="map-takeover" aria-hidden="true">
+    <header class="takeover-header">
+      <div class="takeover-header-left">
+        <span class="takeover-title">Map columns</span>
+        <button type="button" class="takeover-back" id="takeover-back" title="Back to setup">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+          Back to setup
+        </button>
+      </div>
+      <button type="button" class="takeover-close" id="takeover-exit" title="Exit">✕</button>
+    </header>
+    <div class="takeover-body">
+      <iframe id="takeover-iframe" class="takeover-iframe" title="Map columns" src="about:blank"></iframe>
+    </div>
+  </div>
+
+</div><!-- /app-shell -->
+
+<script>
+  /* ===== PREVIEW SHORTCUTS ===== */
+  // ?preview=confirm, opens drawer + takeover + jumps straight to the post-submit confirmation screen
+  var previewParam = new URLSearchParams(window.location.search).get('preview');
+
+  /* ===== SUCCESS BANNER (post-mapping submit) ===== */
+  var createdName = new URLSearchParams(window.location.search).get('created');
+  if (createdName) {
+    var banner = document.getElementById('created-banner');
+    document.getElementById('created-name').textContent = createdName;
+    banner.classList.add('visible');
+    document.getElementById('banner-dismiss').addEventListener('click', function() {
+      banner.classList.remove('visible');
+      history.replaceState({}, '', 'emailimports.html');
+    });
+  }
+
+  /* ===== EMPTY-STATE CHECK ===== */
+  var rows = document.querySelectorAll('#imports-tbody tr');
+  if (rows.length === 0) {
+    document.getElementById('empty-state-zero').style.display = 'block';
+  }
+
+  /* ===== CREATE DRAWER ===== */
+  var drawer    = document.getElementById('create-drawer');
+  var backdrop  = document.getElementById('create-backdrop');
+
+  function openCreateDrawer() {
+    drawer.classList.add('open');
+    drawer.setAttribute('aria-hidden', 'false');
+    backdrop.classList.add('visible');
+  }
+  function closeCreateDrawer() {
+    drawer.classList.remove('open');
+    drawer.setAttribute('aria-hidden', 'true');
+    backdrop.classList.remove('visible');
+    if (editingRow) exitEditMode();
+  }
+
+  document.getElementById('btn-create').addEventListener('click', openCreateDrawer);
+  document.getElementById('btn-empty-create').addEventListener('click', openCreateDrawer);
+  document.getElementById('create-close').addEventListener('click', closeCreateDrawer);
+  document.getElementById('create-cancel').addEventListener('click', closeCreateDrawer);
+  backdrop.addEventListener('click', closeCreateDrawer);
+
+  /* ===== SENDER EMAIL MULTI-SELECT =====
+     Custom dropdown with checkboxes + "All senders" toggle.
+     `chips` array remains source of truth so submit/validation code is unchanged. */
+  var senderMulti   = document.getElementById('sender-multi');
+  var senderTrigger = document.getElementById('sender-trigger');
+  var senderMenu    = document.getElementById('sender-menu');
+  var senderValueEl = document.getElementById('sender-value');
+  var senderAll     = document.getElementById('sender-all');
+  var senderBoxes   = senderMenu
+    ? Array.from(senderMenu.querySelectorAll('input[type="checkbox"][value]'))
+    : [];
+
+  function getSenderChips() {
+    return senderBoxes.filter(function(b) { return b.checked; }).map(function(b) { return b.value; });
+  }
+  function renderSenderValue() {
+    var picked = getSenderChips();
+    if (!picked.length) {
+      senderValueEl.textContent = 'Select sender emails…';
+      senderValueEl.classList.add('is-empty');
+    } else if (picked.length === senderBoxes.length) {
+      senderValueEl.textContent = 'All senders';
+      senderValueEl.classList.remove('is-empty');
+    } else if (picked.length === 1) {
+      senderValueEl.textContent = picked[0];
+      senderValueEl.classList.remove('is-empty');
+    } else {
+      senderValueEl.textContent = picked.length + ' selected';
+      senderValueEl.classList.remove('is-empty');
+    }
+    senderAll.checked = picked.length === senderBoxes.length;
+  }
+  function syncChipsFromMulti() {
+    chips = getSenderChips();
+    renderSenderValue();
+    validateCreateForm();
+  }
+
+  var chips = senderBoxes.filter(function(b) { return b.checked; }).map(function(b) { return b.value; });
+
+  if (senderTrigger) {
+    senderTrigger.addEventListener('click', function(e) {
+      e.stopPropagation();
+      var open = !senderMenu.hasAttribute('hidden');
+      if (open) { senderMenu.setAttribute('hidden', ''); senderMulti.classList.remove('is-open'); }
+      else      { senderMenu.removeAttribute('hidden'); senderMulti.classList.add('is-open'); }
+    });
+    document.addEventListener('click', function(e) {
+      if (!senderMulti.contains(e.target)) {
+        senderMenu.setAttribute('hidden', '');
+        senderMulti.classList.remove('is-open');
+      }
+    });
+    senderAll.addEventListener('change', function() {
+      var checked = this.checked;
+      senderBoxes.forEach(function(b) { b.checked = checked; });
+      syncChipsFromMulti();
+    });
+    senderBoxes.forEach(function(b) {
+      b.addEventListener('change', syncChipsFromMulti);
+    });
+    renderSenderValue();
+  }
+
+  function renderChips() {
+    // Legacy hook kept for edit-mode callers that previously seeded chips.
+    // Reflect current chips back onto checkbox state.
+    if (!senderBoxes.length) return;
+    senderBoxes.forEach(function(b) {
+      b.checked = chips.indexOf(b.value) !== -1;
+    });
+    renderSenderValue();
+    validateCreateForm();
+  }
+
+  /* ===== STEP 1 VALIDATION ===== */
+  // Required: Import name, Subject line, ≥1 sender chip, file uploaded (real, not example).
+  // File source has a default ('attachment'), so it's always satisfied.
+  // In edit mode the file requirement is bypassed (existing imports already have one).
+  var fileUploaded = false;
+  var editingRow = null;
+  function validateCreateForm() {
+    var nameOk    = document.getElementById('import-name').value.trim().length > 0;
+    var subjectOk = document.getElementById('subject-line').value.trim().length > 0;
+    var sendersOk = chips.length > 0;
+    var freqOk    = true; // Expected frequency field removed; no longer gating submit.
+    var fileOk    = fileUploaded || editingRow !== null;
+    var disable = !(nameOk && subjectOk && sendersOk && freqOk && fileOk);
+    document.getElementById('create-next-btn').disabled = disable;
+    document.getElementById('create-save-btn').disabled = disable;
+  }
+  ['import-name', 'subject-line'].forEach(function(id) {
+    document.getElementById(id).addEventListener('input', validateCreateForm);
+  });
+  /* Technical settings section removed — engineers receive sample + metadata via
+     MSD ticket and write the reader externally, so Rob no longer fills in these
+     regex / dedup / report-naming fields. */
+
+  /* ===== SEGMENTED TOGGLE =====
+     "Download link in body" reveals an extra input where Rob can paste an example
+     URL or a description of where the link lives. */
+  document.querySelectorAll('#file-source-toggle .seg-opt').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('#file-source-toggle .seg-opt').forEach(function(b) { b.classList.remove('active'); });
+      this.classList.add('active');
+      var isDownload = this.dataset.val === 'download';
+      document.getElementById('download-link-block').classList.toggle('visible', isDownload);
+    });
+  });
+
+  /* ===== FILE UPLOAD ===== */
+  function handleDragOver(e) {
+    e.preventDefault();
+    document.getElementById('upload-zone').classList.add('drag-over');
+  }
+  function handleDragLeave(e) {
+    document.getElementById('upload-zone').classList.remove('drag-over');
+  }
+  function handleDrop(e) {
+    e.preventDefault();
+    document.getElementById('upload-zone').classList.remove('drag-over');
+    var file = e.dataTransfer.files[0];
+    if (file) handleFileSelect(file);
+  }
+  // Captures the parsed CSV/XLSX so the map-columns iframe can use real data.
+  var parsedFileData = null;
+
+  function clearFileWarnings() {
+    document.getElementById('file-warnings').innerHTML = '';
+  }
+  function addFileWarning(level, html) {
+    var div = document.createElement('div');
+    var levelCls = level === 'error' ? ' error' : (level === 'info' ? ' info' : '');
+    div.className = 'file-warning' + levelCls;
+    var icon = level === 'info' ? 'ℹ' : '⚠';
+    div.innerHTML = '<span class="warn-icon">' + icon + '</span><div>' + html + '</div>';
+    document.getElementById('file-warnings').appendChild(div);
+  }
+  function checkSampleColumns(columns) {
+    // Date column heuristic, covers "Date", "Report Date", "Sent on", "Day", etc.
+    // Per Ruben (MVP): not all sources have date columns. This is an info note,
+    // not a blocker — submit isn't gated on date presence.
+    var hasDateCol = columns.some(function(c) {
+      return /\b(date|day|month|year|timestamp|time|sent on|reporting)\b/i.test(String(c));
+    });
+    if (!hasDateCol) {
+      addFileWarning('info',
+        '<strong>No date column detected.</strong> Most reports include a date or timestamp, but not all sources have one — this is informational only.');
+    }
+  }
+
+  function handleFileSelect(file) {
+    if (!file) return;
+    var ext = file.name.split('.').pop().toLowerCase();
+
+    clearFileWarnings();
+
+    // Zip files can't be parsed here. Surface a clear blocker so Rob fixes it
+    // upfront instead of Luis discovering it days later (cf. MSD-2340).
+    if (ext === 'zip') {
+      fileUploaded = false; validateCreateForm();
+      document.getElementById('upload-zone').style.display = '';
+      document.getElementById('file-bar').style.display = 'none';
+      document.getElementById('file-input').value = '';
+      addFileWarning('error',
+        '<strong>Zip files aren\'t supported.</strong> The raw CSV or Excel inside this archive is needed, please extract it and upload that file instead.');
+      return;
+    }
+    if (!['csv', 'xlsx', 'xls'].includes(ext)) return;
+
+    fileUploaded = true; validateCreateForm();
+    document.getElementById('upload-zone').style.display = 'none';
+    document.getElementById('file-bar').style.display = 'block';
+    document.getElementById('file-icon').textContent = ext === 'csv' ? '📄' : '📊';
+    document.getElementById('file-name-text').textContent = file.name;
+    document.getElementById('file-meta-text').textContent =
+      ext.toUpperCase() + ' · ' + formatSize(file.size) + ' · Uploaded just now';
+    if (ext === 'csv') {
+      Papa.parse(file, { header: true, skipEmptyLines: true, complete: function(r) {
+        var cols = r.meta.fields || [];
+        parsedFileData = { columns: cols, rows: r.data || [], fileName: file.name };
+        renderFilePreview(r.data, cols);
+        checkSampleColumns(cols);
+      } });
+    } else {
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        var wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
+        var ws = wb.Sheets[wb.SheetNames[0]];
+        var raw = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+        if (!raw.length) return;
+        var headers = raw[0].map(String);
+        var rows = raw.slice(1).map(function(row) {
+          var obj = {}; headers.forEach(function(h, i) { obj[h] = row[i] !== undefined ? row[i] : ''; }); return obj;
+        });
+        parsedFileData = { columns: headers, rows: rows, fileName: file.name };
+        renderFilePreview(rows, headers);
+        checkSampleColumns(headers);
+      };
+      reader.readAsArrayBuffer(file);
+    }
+  }
+  function removeFile() {
+    fileUploaded = false; validateCreateForm();
+    parsedFileData = null;
+    document.getElementById('upload-zone').style.display = '';
+    document.getElementById('file-bar').style.display = 'none';
+    document.getElementById('file-preview').style.display = 'none';
+    document.getElementById('file-input').value = '';
+    clearFileWarnings();
+  }
+  /* ===== File summary helpers ===== */
+  // Key marketing metrics Rob cares about. Match loosely against column names.
+  var KEY_METRIC_PATTERNS = [
+    /\bimpression/i, /\bclick/i, /\bcost\b/i, /\bspend\b/i,
+    /\brevenue\b/i, /\bconversion/i, /\bsignup/i, /\bview/i,
+    /\bvisit/i, /\bpage\s*view/i, /\bbounce/i, /\bcampaign/i,
+    /\bdate\b/i, /\bday\b/i
+  ];
+  function isKeyMetric(col) {
+    return KEY_METRIC_PATTERNS.some(function(re) { return re.test(String(col)); });
+  }
+  function findDateColumn(columns) {
+    return columns.find(function(c) {
+      return /\b(date|day|month|year|timestamp|sent on|reporting)\b/i.test(String(c));
+    });
+  }
+  function parseDateSmart(v) {
+    if (v == null || v === '') return null;
+    // Try a few common shapes; rely on Date constructor for the rest.
+    var s = String(v).trim();
+    var d = new Date(s);
+    if (!isNaN(d.getTime())) return d;
+    // Excel serial numbers (numeric and within plausible range)
+    var n = Number(s);
+    if (!isNaN(n) && n > 25000 && n < 60000) {
+      return new Date((n - 25569) * 86400 * 1000);
+    }
+    return null;
+  }
+  function computeDateRange(rowsArr, dateCol) {
+    if (!dateCol) return null;
+    var min = null, max = null;
+    for (var i = 0; i < rowsArr.length; i++) {
+      var d = parseDateSmart(rowsArr[i][dateCol]);
+      if (!d) continue;
+      if (!min || d < min) min = d;
+      if (!max || d > max) max = d;
+    }
+    if (!min || !max) return null;
+    var spanDays = Math.round((max - min) / 86400000) + 1;
+    return { min: min, max: max, spanDays: spanDays };
+  }
+  function fmtDate(d) {
+    var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return months[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
+  }
+
+  function renderFilePreview(rowsArr, columns) {
+    var previewRows = rowsArr.slice(0, 5);
+    var total = rowsArr.length;
+    document.getElementById('col-count').innerHTML = '<strong>' + columns.length + '</strong> column' + (columns.length !== 1 ? 's' : '') + ' detected';
+    document.getElementById('row-count').textContent = 'Showing ' + previewRows.length + ' of ' + total + ' rows';
+
+    // Date range row
+    var dateCol = findDateColumn(columns);
+    var range = computeDateRange(rowsArr, dateCol);
+    var drRow = document.getElementById('preview-daterange-row');
+    var drVal = document.getElementById('preview-daterange');
+    if (range) {
+      drVal.innerHTML = '<span class="accent">' + fmtDate(range.min) + '</span>'
+        + ' &ndash; '
+        + '<span class="accent">' + fmtDate(range.max) + '</span>'
+        + ' &middot; <span>' + range.spanDays + ' day' + (range.spanDays === 1 ? '' : 's') + '</span>';
+      drRow.style.display = '';
+    } else {
+      drRow.style.display = 'none';
+    }
+
+    // Detected metric chips — only key metrics as chips, rest summarized as clickable count
+    var mRow = document.getElementById('preview-metrics-row');
+    var mVal = document.getElementById('preview-metrics');
+    var otherCols = columns.filter(function(c) { return !isKeyMetric(c); });
+    var otherWrap = document.getElementById('preview-other-cols');
+    otherWrap.classList.remove('is-open');
+    if (columns.length) {
+      var keyCols = columns.filter(isKeyMetric);
+      var html = '';
+      if (keyCols.length) {
+        html += keyCols.map(function(c) {
+          return '<span class="metric-chip is-key">' + escapeHtml(String(c)) + '</span>';
+        }).join('');
+      } else {
+        html += '<span class="metric-chip-empty">No key metrics auto-detected</span>';
+      }
+      if (otherCols.length) {
+        html += '<button type="button" class="metric-chip-more" id="metric-chip-more-btn">+ ' + otherCols.length + ' other column' + (otherCols.length === 1 ? '' : 's') + '</button>';
+      }
+      mVal.innerHTML = html;
+      mRow.style.display = '';
+
+      // Hidden list of all other columns; revealed when the count is clicked
+      otherWrap.innerHTML = otherCols.map(function(c) {
+        return '<span class="metric-chip-other">' + escapeHtml(String(c)) + '</span>';
+      }).join('');
+      var moreBtn = document.getElementById('metric-chip-more-btn');
+      if (moreBtn) {
+        moreBtn.addEventListener('click', function() {
+          var open = otherWrap.classList.toggle('is-open');
+          this.textContent = open
+            ? 'Hide other columns'
+            : '+ ' + otherCols.length + ' other column' + (otherCols.length === 1 ? '' : 's');
+        });
+      }
+    } else {
+      mRow.style.display = 'none';
+    }
+    var html = '<table class="preview-table"><thead><tr>';
+    columns.forEach(function(col) { html += '<th>' + escapeHtml(String(col)) + '</th>'; });
+    html += '</tr></thead><tbody>';
+    previewRows.forEach(function(row) {
+      html += '<tr>';
+      columns.forEach(function(col) { html += '<td>' + escapeHtml(String(row[col] !== undefined ? row[col] : '')) + '</td>'; });
+      html += '</tr>';
+    });
+    html += '</tbody></table>';
+    document.getElementById('preview-table-inner').innerHTML = html;
+    var more = total - previewRows.length;
+    var moreEl = document.getElementById('more-rows');
+    moreEl.onclick = null; // reset any previous handler
+    if (more > 0) {
+      moreEl.textContent = '+ ' + more + ' more rows · Show all';
+      moreEl.style.display = 'block';
+      moreEl.onclick = function() {
+        renderFullPreviewTable(rowsArr, columns);
+      };
+    } else {
+      moreEl.style.display = 'none';
+    }
+    document.getElementById('file-preview').style.display = 'block';
+  }
+
+  /* Render the full row set; called when the user clicks "+ N more rows". */
+  function renderFullPreviewTable(rowsArr, columns) {
+    var total = rowsArr.length;
+    var html = '<table class="preview-table"><thead><tr>';
+    columns.forEach(function(col) { html += '<th>' + escapeHtml(String(col)) + '</th>'; });
+    html += '</tr></thead><tbody>';
+    rowsArr.forEach(function(row) {
+      html += '<tr>';
+      columns.forEach(function(col) { html += '<td>' + escapeHtml(String(row[col] !== undefined ? row[col] : '')) + '</td>'; });
+      html += '</tr>';
+    });
+    html += '</tbody></table>';
+    document.getElementById('preview-table-inner').innerHTML = html;
+    document.getElementById('row-count').textContent = 'Showing all ' + total + ' rows';
+    var moreEl = document.getElementById('more-rows');
+    moreEl.textContent = 'Show first 5 rows only';
+    moreEl.onclick = function() { renderFilePreview(rowsArr, columns); };
+  }
+
+  /* ===== HELPERS ===== */
+  function formatSize(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  }
+  function escapeHtml(str) {
+    return String(str == null ? '' : str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  /* ===== EDIT MODE, clicking a row (or its action icons) opens the drawer pre-filled ===== */
+  function openEditDrawer(rowEl) {
+    editingRow = rowEl;
+    var name   = (rowEl.querySelector('.import-name') || {}).textContent || '';
+    var sender = (rowEl.querySelector('.sender-cell') || {}).textContent || '';
+
+    document.getElementById('drawer-title').textContent = 'Edit ' + name;
+    document.getElementById('create-next-btn').style.display = 'none';
+    document.getElementById('create-save-btn').style.display = '';
+
+    document.getElementById('import-name').value = name;
+    chips = sender ? [sender.trim()] : [];
+    renderChips();
+    validateCreateForm();
+    openCreateDrawer();
+  }
+  function exitEditMode() {
+    editingRow = null;
+    document.getElementById('drawer-title').textContent = 'New email import';
+    document.getElementById('create-next-btn').style.display = '';
+    document.getElementById('create-save-btn').style.display = 'none';
+  }
+
+  // Delegated click on the imports table, open edit drawer for the clicked row
+  document.getElementById('imports-tbody').addEventListener('click', function(e) {
+    var tr = e.target.closest('tr');
+    if (tr && this.contains(tr)) openEditDrawer(tr);
+  });
+
+  /* ===== FORM SUBMIT, Next (create flow) opens the map-columns takeover ===== */
+  document.getElementById('create-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    if (editingRow) return; // edit-mode uses the Save button instead
+    // Hand the parsed file off to the mapping iframe via localStorage.
+    try {
+      if (parsedFileData) {
+        localStorage.setItem('maven-mapping-data', JSON.stringify(parsedFileData));
+      } else {
+        localStorage.removeItem('maven-mapping-data');
+      }
+    } catch (_) {}
+    openMapTakeover();
+  });
+
+  /* ===== EDIT-MODE SAVE ===== */
+  document.getElementById('create-save-btn').addEventListener('click', function() {
+    if (!editingRow) return;
+    var newName   = document.getElementById('import-name').value.trim();
+    var newSender = chips[0] || '';
+    var nameEl   = editingRow.querySelector('.import-name');
+    var senderEl = editingRow.querySelector('.sender-cell');
+    if (nameEl && newName) nameEl.textContent = newName;
+    if (senderEl && newSender) senderEl.textContent = newSender;
+    closeCreateDrawer();
+  });
+
+  /* ===== MAP-COLUMNS TAKEOVER ===== */
+  var takeover    = document.getElementById('map-takeover');
+  var takeoverIframe = document.getElementById('takeover-iframe');
+
+  var takeoverBackdrop = document.getElementById('takeover-backdrop');
+
+  function openMapTakeover() {
+    // Pass the in-progress import name + subject so the iframe's confirmation
+    // panel can echo them back to the user after submit.
+    var importName = document.getElementById('import-name').value.trim() || 'New import';
+    var subject    = document.getElementById('subject-line').value.trim();
+    var qs = 'embedded=1' +
+             '&name='    + encodeURIComponent(importName) +
+             '&subject=' + encodeURIComponent(subject) +
+             '&v='       + Date.now();
+    takeoverIframe.src = 'emailimports-mapping.html?' + qs;
+    takeover.classList.add('open');
+    takeover.setAttribute('aria-hidden', 'false');
+    takeoverBackdrop.classList.add('visible');
+  }
+  function closeTakeoverOnly() {
+    // Back to setup, drawer stays open underneath
+    takeover.classList.remove('open');
+    takeover.setAttribute('aria-hidden', 'true');
+    takeoverBackdrop.classList.remove('visible');
+  }
+  function exitFlow() {
+    // Close takeover AND drawer, return to list page
+    closeTakeoverOnly();
+    closeCreateDrawer();
+  }
+  function finishFlow(name) {
+    // User dismissed the in-panel confirmation, drop a Pending row in the list
+    // and reset the form so a fresh open starts clean.
+    insertPendingRow(name);
+    exitFlow();
+    document.getElementById('create-form').reset();
+    chips = []; renderChips();
+    if (fileUploaded) removeFile();
+    validateCreateForm();
+  }
+  function insertPendingRow(name) {
+    var senders = chips.length ? chips.slice() : ['reports@adobe.com'];
+    var tbody = document.getElementById('imports-tbody');
+    var tr = document.createElement('tr');
+    // New imports start in MSD "Submitted", ticket created, unassigned.
+    // Health is "Not monitored" until the import goes Active.
+    tr.setAttribute('data-status', 'inactive');
+    tr.setAttribute('data-health', 'not-monitored');
+    // Generate sequential 2-digit ID matching the seed rows (01-10, then 11+)
+    var lastIdCell = tbody.querySelector('tr:last-child .id-cell');
+    var nextNum = (lastIdCell ? parseInt(lastIdCell.textContent.trim(), 10) : 10) + 1;
+    var nextId = String(nextNum).padStart(2, '0');
+    // Build the sender cell — single email, or first + "+N" badge with a hover tooltip listing all
+    var firstSender = senders[0];
+    var extra = senders.length - 1;
+    var senderCellHtml;
+    if (extra > 0) {
+      var tooltipList = senders.map(function(s) { return '<li>' + escapeHtml(s) + '</li>'; }).join('');
+      senderCellHtml = '<td><div class="sender-display">'
+        + '<span class="sender-cell">' + escapeHtml(firstSender) + '</span>'
+        + '<span class="sender-more">+' + extra + '</span>'
+        + '<div class="sender-tooltip">'
+        +   '<span class="sender-tooltip-label">All senders (' + senders.length + ')</span>'
+        +   '<ul class="sender-tooltip-list">' + tooltipList + '</ul>'
+        + '</div>'
+        + '</div></td>';
+    } else {
+      senderCellHtml = '<td><span class="sender-cell">' + escapeHtml(firstSender) + '</span></td>';
+    }
+    tr.innerHTML =
+      '<td class="id-cell">' + nextId + '</td>' +
+      '<td><div class="name-cell"><span class="import-name">' + escapeHtml(name) + '</span></div></td>' +
+      senderCellHtml +
+      '<td><span class="recv-count is-zero">0</span></td>' +
+      '<td><span class="last-received empty"></span></td>' +
+      '<td><span class="health-pill hp-not-monitored" title="No frequency set or import is inactive"><span class="hp-dot"></span>Not monitored</span></td>' +
+      '<td><span class="status-pill sp-inactive" title="Import not active">Inactive</span></td>' +
+      '<td><div class="action-cell">' +
+        '<button class="action-icon-btn" title="View"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></button>' +
+        '<button class="action-icon-btn" title="Edit"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg></button>' +
+      '</div></td>';
+    tbody.insertBefore(tr, tbody.firstChild);
+    refreshFilterUI();
+  }
+
+  /* ===== STATUS FILTER TABS =====
+     Maps multiple MSD statuses into product-friendly groupings.
+       All           → everything
+       Active        → status = active
+       Pending       → submitted | waiting-support | in-progress  (in MSD pipeline)
+       Action needed → waiting-customer  (blocked on Rob)
+       Inactive      → status = inactive
+  */
+  // Status simplified to Active / Inactive only (per Rob's UX feedback).
+  var FILTER_MATCHERS = {
+    'all':      function() { return true; },
+    'active':   function(s) { return s === 'active'; },
+    'inactive': function(s) { return s === 'inactive'; }
+  };
+  function applyFilter(filter) {
+    var match = FILTER_MATCHERS[filter] || FILTER_MATCHERS.all;
+    var rows = document.querySelectorAll('#imports-tbody tr');
+    rows.forEach(function(tr) {
+      tr.style.display = match(tr.dataset.status) ? '' : 'none';
+    });
+  }
+  function updateFilterCounts() {
+    var counts = { all: 0, active: 0, inactive: 0 };
+    document.querySelectorAll('#imports-tbody tr').forEach(function(tr) {
+      var s = tr.dataset.status;
+      counts.all++;
+      if (FILTER_MATCHERS.active(s))   counts.active++;
+      if (FILTER_MATCHERS.inactive(s)) counts.inactive++;
+    });
+    // Filter tabs were removed; counters no longer rendered, kept for parity.
+    var setCount = function(id, v) {
+      var el = document.getElementById(id); if (el) el.textContent = v;
+    };
+    setCount('count-all', counts.all);
+    setCount('count-active', counts.active);
+    setCount('count-inactive', counts.inactive);
+  }
+  function refreshFilterUI() {
+    updateFilterCounts();
+    applyAllFilters();
+    applySearch();
+  }
+
+  /* ===== Combined Status + Health filter =====
+     Status options map to the same FILTER_MATCHERS used by the old tab UI.
+     Health options match the `data-health` attribute directly. */
+  function applyAllFilters() {
+    var statusVal = document.getElementById('filter-status').value;
+    var healthVal = document.getElementById('filter-health').value;
+    var statusMatch = statusVal ? FILTER_MATCHERS[statusVal] : null;
+    document.querySelectorAll('#imports-tbody tr').forEach(function(tr) {
+      var s = tr.dataset.status;
+      var h = tr.dataset.health;
+      var ok = true;
+      if (statusMatch && !statusMatch(s)) ok = false;
+      if (healthVal && h !== healthVal) ok = false;
+      if (ok) {
+        if (tr.dataset.filteredOutByFilter) {
+          delete tr.dataset.filteredOutByFilter;
+          tr.style.display = '';
+        }
+      } else {
+        tr.style.display = 'none';
+        tr.dataset.filteredOutByFilter = '1';
+      }
+    });
+    applySearch();
+  }
+  document.getElementById('filter-status').addEventListener('change', applyAllFilters);
+  document.getElementById('filter-health').addEventListener('change', applyAllFilters);
+  document.getElementById('filter-reset').addEventListener('click', function() {
+    document.getElementById('filter-status').value = '';
+    document.getElementById('filter-health').value = '';
+    document.getElementById('imports-search').value = '';
+    applyAllFilters();
+  });
+
+  // Search filter, matches against ID, name, sender, status pill text
+  function applySearch() {
+    var q = (document.getElementById('imports-search').value || '').trim().toLowerCase();
+    document.querySelectorAll('#imports-tbody tr').forEach(function(tr) {
+      if (tr.style.display === 'none' && !tr.dataset.filteredOutBySearch) {
+        // already hidden by status filter, leave alone
+        return;
+      }
+      if (!q) {
+        if (tr.dataset.filteredOutBySearch) {
+          delete tr.dataset.filteredOutBySearch;
+          tr.style.display = '';
+        }
+        return;
+      }
+      var hay = tr.textContent.toLowerCase();
+      var match = hay.indexOf(q) !== -1;
+      if (!match) {
+        tr.style.display = 'none';
+        tr.dataset.filteredOutBySearch = '1';
+      } else if (tr.dataset.filteredOutBySearch) {
+        delete tr.dataset.filteredOutBySearch;
+        tr.style.display = '';
+      }
+    });
+  }
+  document.getElementById('imports-search').addEventListener('input', applySearch);
+
+  refreshFilterUI();
+
+  document.getElementById('takeover-back').addEventListener('click', closeTakeoverOnly);
+  document.getElementById('takeover-exit').addEventListener('click', exitFlow);
+
+  // Listen for messages from the embedded mapping iframe
+  window.addEventListener('message', function(e) {
+    if (!e.data) return;
+    if (e.data.type === 'mapping-exit')   exitFlow();
+    if (e.data.type === 'mapping-finish') {
+      // User clicked Close on the in-panel confirmation. Insert pending row + reset.
+      var nameInput = document.getElementById('import-name').value.trim();
+      finishFlow(nameInput || e.data.name || 'New import');
+    }
+  });
+
+  // Esc: takeover first, then drawer
+  document.addEventListener('keydown', function(e) {
+    if (e.key !== 'Escape') return;
+    if (takeover.classList.contains('open')) {
+      closeTakeoverOnly();
+    } else if (drawer.classList.contains('open')) {
+      closeCreateDrawer();
+    }
+  });
+</script>
+</body>
+</html>

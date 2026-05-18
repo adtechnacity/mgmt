@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Maven Manage — Map Columns</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"></noscript>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    /* ===== LAYOUT ===== */
+    .form-scroll { flex: 1; overflow-y: auto; }
+    .form-page   { max-width: 850px; padding: 24px 20px 32px; }
+com
+
+    /* ===== SUMMARY BANNER ===== */
+    .summary-banner {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 16px; padding: 14px 18px; margin-bottom: 20px;
+      background: #EEF2FF; border: 0.5px solid #C5CFED;
+      border-radius: var(--border-radius-md);
+    }
+    .summary-text { font-size: 13px; color: var(--color-navy); line-height: 1.5; }
+    .summary-text strong { font-weight: 700; }
+    .summary-sub {
+      font-size: 12px; color: var(--color-navy-lt); margin-top: 2px;
+    }
+    .summary-banner .btn-primary:disabled,
+    .summary-banner .btn-ghost:disabled {
+      opacity: 0.5; cursor: not-allowed;
+    }
+    .summary-banner-actions {
+      display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+    }
+
+    /* ===== SECTION HEADERS ===== */
+    .section-block { margin-bottom: 16px; }
+    .section-hdr {
+      display: flex; align-items: baseline; justify-content: space-between;
+      margin-bottom: 6px;
+    }
+    .section-title {
+      font-family: var(--font-display); font-size: 13px; font-weight: 700;
+      color: var(--color-text-primary);
+    }
+    .section-sub {
+      font-size: 12px; color: var(--color-text-secondary);
+    }
+
+    /* ===== MAPPING TABLE — matches Matched-results reference ===== */
+    .mapping-table-wrap {
+      border: 0.5px solid var(--color-border-tertiary);
+      border-radius: var(--border-radius-md);
+      background: var(--color-background-primary);
+      overflow: hidden;
+    }
+    .mapping-table { width: 100%; border-collapse: collapse; }
+    .mapping-table thead tr {
+      background: #F5F5F7;
+      border-bottom: 0.5px solid var(--color-border-tertiary);
+    }
+    .mapping-table th {
+      padding: 10px 12px; text-align: left;
+      font-family: var(--font-body); font-size: 12px;
+      font-weight: 500; color: var(--color-text-secondary);
+      text-transform: none; letter-spacing: 0;
+    }
+    .mapping-table td {
+      padding: 10px 12px;
+      border-bottom: 0.5px solid var(--color-border-tertiary);
+      vertical-align: middle; font-size: 13px;
+    }
+    .mapping-table tbody tr:last-child td { border-bottom: none; }
+    .mapping-table tbody tr:hover { background: #FAFAFB; }
+    /* No-match rows: previously had a red trailing asterisk; removed since MVP
+       does not enforce mandatory fields (per Ruben). Status column conveys state. */
+    /* Confirmed row: brief green flash that fades to default. No left navy bar. */
+    .mapping-table tbody tr.confirmed {
+      animation: confirm-flash 1.6s ease-out forwards;
+    }
+    @keyframes confirm-flash {
+      0%   { background: #F6FFF8; }
+      60%  { background: #F6FFF8; }
+      100% { background: transparent; }
+    }
+    .mapping-table tbody tr.skipped,
+    .mapping-table tbody tr.kept-raw {
+      background: #FAFAFB; color: var(--color-text-secondary);
+    }
+
+    .src-col {
+      font-family: var(--font-body); font-size: 13px; font-weight: 500;
+      color: var(--color-text-primary);
+      max-width: 160px; white-space: nowrap;
+      overflow: hidden; text-overflow: ellipsis;
+    }
+
+    /* ===== DROPDOWN ===== */
+    .map-select {
+      width: 100%; max-width: 100%; height: 28px;
+      padding: 0 22px 0 8px;
+      border: 0.5px solid var(--color-border-secondary);
+      border-radius: var(--border-radius-sm);
+      font-family: var(--font-body); font-size: 12px;
+      color: var(--color-text-primary);
+      background: var(--color-background-primary)
+        url("data:image/svg+xml,%3Csvg width='10' height='6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%238A8894' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+        no-repeat right 8px center;
+      appearance: none; -webkit-appearance: none;
+      cursor: pointer; outline: none;
+      transition: border-color 0.15s;
+    }
+    .map-select:focus { border-color: var(--color-navy-lt); }
+    .map-select:disabled { background-color: var(--color-background-tertiary); cursor: not-allowed; }
+    .map-select.no-mapping { color: var(--color-text-tertiary); font-style: italic; }
+
+    /* ===== ACTION CELL ===== */
+    .action-cell {
+      display: flex; align-items: center; gap: 4px;
+      flex-wrap: nowrap;
+    }
+    .btn-mini {
+      height: 22px; padding: 0 6px;
+      border-radius: var(--border-radius-sm);
+      font-family: var(--font-display); font-size: 11px; font-weight: 600;
+      cursor: pointer; outline: none;
+      transition: background 0.1s, border-color 0.1s, color 0.1s;
+      white-space: nowrap;
+    }
+    .btn-mini-primary {
+      background: var(--color-navy); color: #fff; border: 0.5px solid var(--color-navy);
+    }
+    .btn-mini-primary:hover { background: var(--color-navy-dark); }
+    .btn-mini-ghost {
+      background: var(--color-background-primary);
+      color: var(--color-text-secondary);
+      border: 0.5px solid var(--color-border-secondary);
+    }
+    .btn-mini-ghost:hover { color: var(--color-text-primary); background: var(--color-background-secondary); }
+    .btn-mini-keep {
+      background: var(--color-background-primary);
+      color: #BA7517; border: 0.5px solid #EF9F27;
+    }
+    .btn-mini-keep:hover { background: #FAEEDA; }
+
+    .status-text {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 12px; font-weight: 600;
+    }
+    .status-confirmed { color: #03BF00; }
+    .status-skipped, .status-kept { color: var(--color-text-secondary); }
+    .undo-link {
+      font-size: 11px; color: var(--color-navy-lt); cursor: pointer;
+      text-decoration: underline; background: none; border: none; padding: 0;
+      font-family: var(--font-body);
+    }
+    .undo-link:hover { color: var(--color-navy); }
+
+    /* ===== PREVIEW ===== */
+    .preview-wrap-outer {
+      border: 0.5px solid var(--color-border-secondary);
+      border-radius: var(--border-radius-md);
+      background: var(--color-background-primary);
+      overflow: hidden;
+    }
+    .preview-meta-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 14px;
+      background: var(--color-background-secondary);
+      border-bottom: 0.5px solid var(--color-border-secondary);
+      font-size: 11px; color: var(--color-text-secondary);
+    }
+    .preview-meta-bar strong { color: var(--color-text-primary); font-weight: 600; }
+    .preview-table-scroll { overflow-x: auto; max-height: 280px; }
+    .live-preview-table {
+      width: 100%; border-collapse: collapse; font-size: 12px; white-space: nowrap;
+    }
+    .live-preview-table th {
+      padding: 8px 12px; text-align: left;
+      background: var(--color-background-tertiary);
+      border-bottom: 0.5px solid var(--color-border-secondary);
+      font-family: var(--font-display); font-weight: 700; font-size: 11px;
+      color: var(--color-text-secondary);
+      position: sticky; top: 0;
+    }
+    .live-preview-table th.raw-col {
+      background: #FFF1F2; color: #BA1F2E;
+      border-left: 0.5px solid #EF9F27;
+    }
+    .live-preview-table td {
+      padding: 7px 12px;
+      border-bottom: 0.5px solid var(--color-border-tertiary);
+      color: var(--color-text-primary);
+      max-width: 220px; overflow: hidden; text-overflow: ellipsis;
+    }
+    .live-preview-table td.raw-cell {
+      background: #FFF8F8; border-left: 0.5px solid #EF9F27;
+      font-family: var(--font-mono); font-size: 11px;
+      color: var(--color-text-secondary); max-width: 320px;
+    }
+    .live-preview-table tbody tr:last-child td { border-bottom: none; }
+    .pending-pill {
+      display: inline-block; padding: 1px 7px;
+      background: var(--color-background-tertiary);
+      border: 0.5px solid var(--color-border-secondary);
+      border-radius: 10px;
+      font-size: 10px; color: var(--color-text-secondary);
+      text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;
+    }
+    .preview-empty {
+      padding: 36px 20px; text-align: center;
+      color: var(--color-text-secondary); font-size: 13px;
+    }
+    .preview-empty-title { font-weight: 600; color: var(--color-text-primary); margin-bottom: 4px; }
+
+    /* ===== FOOTER ===== */
+    .form-footer {
+      position: sticky; bottom: 0;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 16px; padding: 14px 0;
+      margin-top: 16px;
+      background: var(--color-background-tertiary);
+      border-top: 0.5px solid var(--color-border-tertiary);
+    }
+    .footer-left { font-size: 12px; color: var(--color-text-secondary); line-height: 1.5; }
+    .footer-left strong { color: var(--color-text-primary); font-weight: 700; }
+    .footer-left code {
+      padding: 1px 5px; border-radius: 3px;
+      background: var(--color-background-tertiary);
+      border: 0.5px solid var(--color-border-secondary);
+      font-family: var(--font-mono); font-size: 11px; color: var(--color-text-primary);
+    }
+    .footer-right { display: flex; align-items: center; gap: 8px; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* ===== EMBEDDED MODE (rendered inside the list-page map takeover) ===== */
+    body.embedded { background: var(--color-background-primary); }
+    body.embedded .sidebar     { display: none; }
+    body.embedded .page-header { display: none; }
+    body.embedded .form-page   { padding: 24px 32px 80px; max-width: none; }
+
+    /* ===== POST-SUBMIT CONFIRMATION (in-panel) ===== */
+    .confirm-state {
+      display: none; flex-direction: column; align-items: center;
+      padding: 64px 32px 80px;
+    }
+    .confirm-state.visible { display: flex; }
+    .confirm-card {
+      width: 100%; max-width: 480px;
+      background: var(--color-background-primary);
+      border: 0.5px solid var(--color-border-tertiary);
+      border-radius: var(--border-radius-md);
+      padding: 32px 32px 24px; text-align: center;
+      box-shadow: 0 1px 4px rgba(8, 6, 13, 0.04);
+    }
+    .confirm-success {
+      width: 56px; height: 56px; border-radius: 50%;
+      background: #03BF00; color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 28px; font-weight: 700; line-height: 1;
+      margin: 0 auto 18px;
+    }
+    .confirm-title {
+      font-family: var(--font-display); font-size: 18px; font-weight: 700;
+      color: var(--color-text-primary); margin: 0 0 8px;
+    }
+    .confirm-subtitle {
+      font-size: 13px; color: var(--color-text-secondary);
+      line-height: 1.55; margin: 0 0 22px;
+    }
+    .confirm-ticket-link {
+      color: var(--color-navy); font-weight: 700;
+      text-decoration: none; border-bottom: 1px dashed var(--color-navy-lt);
+    }
+    .confirm-ticket-link:hover { color: var(--color-navy-dark); border-bottom-style: solid; }
+    .confirm-summary {
+      text-align: left;
+      background: var(--color-background-secondary);
+      border: 0.5px solid var(--color-border-tertiary);
+      border-radius: var(--border-radius-sm);
+      padding: 12px 14px;
+      margin: 0 0 22px;
+    }
+    .confirm-summary-row {
+      display: flex; justify-content: space-between; gap: 16px;
+      padding: 5px 0; font-size: 12px;
+    }
+    .confirm-summary-row .label {
+      color: var(--color-text-secondary);
+      text-transform: uppercase; letter-spacing: 0.04em;
+      font-weight: 600; font-size: 11px; flex-shrink: 0;
+    }
+    .confirm-summary-row .value {
+      color: var(--color-text-primary); font-weight: 600;
+      text-align: right; word-break: break-word;
+    }
+    .confirm-actions { display: flex; justify-content: center; }
+  </style>
+</head>
+<body>
+<div class="app-shell">
+
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark">M</div>
+      <span class="logo-name">Maven Manage</span>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-group-title">Manage</div>
+      <a class="nav-item" href="index.html"><span class="nav-icon">⊞</span> Campaigns</a>
+      <a class="nav-item"><span class="nav-icon">◈</span> Accounts</a>
+      <a class="nav-item"><span class="nav-icon">↺</span> Global Continuations</a>
+
+      <div class="nav-group-title">Tasks</div>
+
+      <div class="nav-group-title">Configure</div>
+      <a class="nav-item active" href="emailimports.html"><span class="nav-icon">✉</span> Email Imports</a>
+
+      <div class="nav-group-title">Tools</div>
+
+      <div class="nav-group-title">Conversion Engine</div>
+      <a class="nav-item" href="integrations-a.html"><span class="nav-icon">⇄</span> Integrations</a>
+      <a class="nav-item" href="accounts.html"><span class="nav-icon">◈</span> Accounts</a>
+      <a class="nav-item" href="configure.html"><span class="nav-icon">⚙</span> Configurations</a>
+    </nav>
+  </aside>
+
+  <!-- ===== MAIN ===== -->
+  <div class="main-wrapper">
+
+    <header class="page-header">
+      <span class="page-header-title">Email Imports</span>
+    </header>
+
+    <div class="form-scroll">
+      <!-- Post-submit confirmation. Shown in place of the form once Rob submits. -->
+      <div class="confirm-state" id="confirm-state">
+        <div class="confirm-card">
+          <div class="confirm-success">✓</div>
+          <div class="confirm-title">Import submitted successfully</div>
+          <div class="confirm-subtitle">
+            Ticket <a href="#" class="confirm-ticket-link" id="confirm-ticket">#MSD-0000</a> created.
+            You'll be notified when this import is activated.
+          </div>
+          <div class="confirm-summary">
+            <div class="confirm-summary-row">
+              <span class="label">Import name</span>
+              <span class="value" id="confirm-import-name">—</span>
+            </div>
+            <div class="confirm-summary-row">
+              <span class="label">Subject line</span>
+              <span class="value" id="confirm-subject-line">—</span>
+            </div>
+            <div class="confirm-summary-row">
+              <span class="label">Mapped fields</span>
+              <span class="value" id="confirm-fields-count">—</span>
+            </div>
+          </div>
+          <div class="confirm-actions">
+            <button type="button" class="btn btn-primary btn-md" id="confirm-close-btn">Close</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-page" id="form-page">
+
+        <!-- Summary banner -->
+        <div class="summary-banner">
+          <div>
+            <div class="summary-text">
+              <strong id="auto-count">6</strong> of <strong id="total-count">10</strong> columns auto-detected
+            </div>
+            <div class="summary-sub" id="summary-sub">2 high-confidence matches can be accepted in one click.</div>
+          </div>
+          <div class="summary-banner-actions">
+            <button id="keep-unmatched-btn" class="btn btn-ghost btn-md" disabled>Keep unmatched as raw</button>
+            <button id="accept-all-btn" class="btn btn-primary btn-md">Confirm all suggestions</button>
+          </div>
+        </div>
+
+        <!-- Mapping table -->
+        <div class="section-block">
+          <div class="section-hdr">
+            <span class="section-title">Column mappings</span>
+            <span class="section-sub" id="section-sub-count">columns from your sample file</span>
+          </div>
+          <div class="mapping-table-wrap">
+            <table class="mapping-table">
+              <thead>
+                <tr>
+                  <th style="width: 28%;">Source</th>
+                  <th style="width: 44%;">Maps to</th>
+                  <th style="width: 28%;">Action</th>
+                </tr>
+              </thead>
+              <tbody id="mapping-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Preview -->
+        <div class="section-block">
+          <div class="section-hdr">
+            <span class="section-title">Live preview</span>
+            <span class="section-sub">First 4 rows transformed to Maven schema</span>
+          </div>
+          <div class="preview-wrap-outer">
+            <div class="preview-meta-bar">
+              <span><strong id="preview-confirmed-count">0</strong> mapped column<span id="preview-col-plural">s</span> · <strong id="preview-shown-rows">4</strong> of <strong id="preview-total-rows">312</strong> rows</span>
+              <span id="preview-raw-summary">Unmapped columns shown in <code>_raw</code></span>
+            </div>
+            <div class="preview-table-scroll" id="preview-scroll">
+              <div id="preview-empty" class="preview-empty" style="display:block;">
+                <div class="preview-empty-title">No mappings confirmed yet</div>
+                <div>Confirm mappings above to preview the standardized output.</div>
+              </div>
+              <table class="live-preview-table" id="preview-table" style="display:none;">
+                <thead><tr id="preview-thead-row"></tr></thead>
+                <tbody id="preview-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="form-footer">
+          <div class="footer-left">
+            <div><strong id="footer-confirmed">0</strong> confirmed · <strong id="footer-pending">10</strong> pending review</div>
+            <div><strong id="footer-raw">0</strong> column<span id="footer-raw-plural">s</span> will be stored as <code>_raw</code></div>
+          </div>
+          <div class="footer-right">
+            <a href="emailimports.html" class="btn btn-ghost btn-md">Cancel and exit</a>
+            <button id="submit-btn" class="btn btn-primary btn-md">Submit for review</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  /* ===== STANDARD FIELDS =====
+     Each entry has a readable `label` for the UI (dropdowns, summaries) and a
+     snake_case `dbName` for the BI table column / submit payload. Per Ruben:
+     DB columns must be snake_case for technical compatibility, but user-facing
+     names stay readable. */
+  var STANDARD_FIELDS = [
+    { label: 'Report date',     dbName: 'report_date'    },
+    { label: 'Traffic source',  dbName: 'traffic_source' },
+    { label: 'Clicks',          dbName: 'clicks'         },
+    { label: 'Impressions',     dbName: 'impressions'    },
+    { label: 'Cost',            dbName: 'cost'           },
+    { label: 'Visits',          dbName: 'visits'         },
+    { label: 'Page views',      dbName: 'page_views'     },
+    { label: 'Bounces',         dbName: 'bounces'        },
+    { label: 'Video starts',    dbName: 'video_starts'   },
+    { label: 'Video completes', dbName: 'video_completes'},
+    { label: 'Placement ID',    dbName: 'placement_id'   },
+    { label: 'Campaign',        dbName: 'campaign'       },
+    { label: 'Keyword',         dbName: 'keyword'        },
+    { label: 'Device',          dbName: 'device'         },
+    { label: 'Country',         dbName: 'country'        },
+    { label: 'State',           dbName: 'state'          },
+    { label: 'DMA',             dbName: 'dma'            }
+  ];
+  // Helper: snake_case dbName → readable label (for status text, summaries)
+  function fieldLabel(dbName) {
+    for (var i = 0; i < STANDARD_FIELDS.length; i++) {
+      if (STANDARD_FIELDS[i].dbName === dbName) return STANDARD_FIELDS[i].label;
+    }
+    return dbName;
+  }
+
+  /* ===== HONDA ADOBE FALLBACK (used when no real upload is available) ===== */
+  var FALLBACK_COLUMNS = [
+    'Sub Region', 'Partner', 'Audience Pillar', 'Date',
+    'Placement ID', 'DAA Year', 'Car Model', 'SV', 'QSV', 'PV'
+  ];
+  var FALLBACK_ROWS = [
+    ['Baltimore Honda Dealers', 'Motor Maven', 'Prospecting', '1/26/2026', '437823623', 'NEW', 'Multi-models', '2',   '—', '—'],
+    ['Baltimore Honda Dealers', 'Motor Maven', 'Prospecting', '1/28/2026', '437643217', 'NEW', 'Multi-models', '123', '7', '2'],
+    ['Baltimore Honda Dealers', 'Motor Maven', 'Prospecting', '1/29/2026', '437643217', 'NEW', 'Multi-models', '174', '14', '4'],
+    ['Baltimore Honda Dealers', 'Motor Maven', 'Prospecting', '1/30/2026', '437823623', 'NEW', 'Multi-models', '411', '3', '1']
+  ];
+  var FALLBACK_TOTAL = 312;
+
+  /* ===== LOAD REAL UPLOAD (if any) FROM PARENT ===== */
+  // The list-page drawer writes the parsed CSV/XLSX into localStorage as
+  // { columns: string[], rows: object[], fileName: string } before opening this iframe.
+  var STORED = null;
+  try {
+    var raw = localStorage.getItem('maven-mapping-data');
+    if (raw) STORED = JSON.parse(raw);
+  } catch (e) { STORED = null; }
+
+  var SOURCE_COLUMNS, SOURCE_ROWS, TOTAL_ROWS;
+  if (STORED && Array.isArray(STORED.columns) && STORED.columns.length && Array.isArray(STORED.rows)) {
+    SOURCE_COLUMNS = STORED.columns.map(String);
+    // Take the first up-to-4 rows for the live preview & sample-value column.
+    // Don't pad — show the file's actual size so "2 of 2 rows" reads honestly.
+    SOURCE_ROWS = STORED.rows.slice(0, 4).map(function(row) {
+      return SOURCE_COLUMNS.map(function(col) {
+        var v = row[col];
+        return v === undefined || v === null ? '' : String(v);
+      });
+    });
+    TOTAL_ROWS = STORED.rows.length;
+  } else {
+    SOURCE_COLUMNS = FALLBACK_COLUMNS;
+    SOURCE_ROWS    = FALLBACK_ROWS;
+    TOTAL_ROWS     = FALLBACK_TOTAL;
+  }
+
+  /* ===== AUTO-MATCH HEURISTIC =====
+     Normalises a source column name and matches it against synonyms for each
+     standard field. Returns {field, confidence} or {field:null, confidence:0}.
+  */
+  function normalizeKey(s) {
+    return String(s).toLowerCase().replace(/[_\-]+/g, ' ').replace(/\s+/g, ' ').trim();
+  }
+  var MATCH_RULES = [
+    { keys: ['date','event date','report date','reporting date','day'],            field: 'report_date',     conf: 90 },
+    { keys: ['placement id','placementid'],                                        field: 'placement_id',    conf: 100 },
+    { keys: ['placement'],                                                          field: 'placement_id',    conf: 70 },
+    { keys: ['traffic source','source','partner','channel','medium'],              field: 'traffic_source',  conf: 65 },
+    { keys: ['clicks','click','click count'],                                      field: 'clicks',          conf: 95 },
+    { keys: ['impressions','imps','impression'],                                   field: 'impressions',     conf: 95 },
+    { keys: ['cost','spend','spend usd','spend (usd)'],                            field: 'cost',            conf: 90 },
+    { keys: ['visits','sv','site visits','sessions'],                              field: 'visits',          conf: 60 },
+    { keys: ['page views','pv','pageviews'],                                       field: 'page_views',      conf: 75 },
+    { keys: ['bounces','bounce'],                                                  field: 'bounces',         conf: 95 },
+    { keys: ['video starts','vs'],                                                 field: 'video_starts',    conf: 90 },
+    { keys: ['video completes','vc'],                                              field: 'video_completes', conf: 90 },
+    { keys: ['campaign','campaign name','campaign_name'],                          field: 'campaign',        conf: 95 },
+    { keys: ['keyword','kw','search term'],                                        field: 'keyword',         conf: 90 },
+    { keys: ['device','device type','device_type'],                                field: 'device',          conf: 95 },
+    { keys: ['country','country code','country_code'],                             field: 'country',         conf: 95 },
+    { keys: ['state','region'],                                                    field: 'state',           conf: 80 },
+    { keys: ['dma','sub region','subregion','dma code'],                           field: 'dma',             conf: 60 }
+  ];
+  function computeAutoMatch(sourceColumn) {
+    var src = normalizeKey(sourceColumn);
+    if (!src) return { field: null, confidence: 0 };
+    // 1) exact match against any synonym → 100%
+    for (var i = 0; i < MATCH_RULES.length; i++) {
+      for (var j = 0; j < MATCH_RULES[i].keys.length; j++) {
+        if (src === MATCH_RULES[i].keys[j]) return { field: MATCH_RULES[i].field, confidence: 100 };
+      }
+    }
+    // 2) partial containment in either direction → rule's stated confidence
+    for (var i = 0; i < MATCH_RULES.length; i++) {
+      for (var j = 0; j < MATCH_RULES[i].keys.length; j++) {
+        var key = MATCH_RULES[i].keys[j];
+        if (src.indexOf(key) !== -1 || key.indexOf(src) !== -1) {
+          return { field: MATCH_RULES[i].field, confidence: MATCH_RULES[i].conf };
+        }
+      }
+    }
+    return { field: null, confidence: 0 };
+  }
+  var AUTO_MATCH = {};
+  SOURCE_COLUMNS.forEach(function(col) { AUTO_MATCH[col] = computeAutoMatch(col); });
+
+  /* ===== UPDATE STATIC COPY WITH REAL COUNTS ===== */
+  // (Section subtitle + preview meta — runs after DOM is parsed below)
+  document.addEventListener('DOMContentLoaded', function() {
+    var nCols = SOURCE_COLUMNS.length;
+    var sub = document.getElementById('section-sub-count');
+    if (sub) sub.textContent = nCols + ' column' + (nCols === 1 ? '' : 's') + ' from your sample file';
+    var shown = document.getElementById('preview-shown-rows');
+    if (shown) shown.textContent = SOURCE_ROWS.length;
+    var total = document.getElementById('preview-total-rows');
+    if (total) total.textContent = TOTAL_ROWS;
+    document.getElementById('total-count').textContent = nCols;
+  });
+
+  /* ===== STATE ===== */
+  var mappings = SOURCE_COLUMNS.map(function(col, i) {
+    var m = AUTO_MATCH[col] || { field: null, confidence: 0 };
+    var sample = (SOURCE_ROWS[0] && SOURCE_ROWS[0][i] != null) ? SOURCE_ROWS[0][i] : '';
+    return {
+      sourceColumn: col,
+      sourceIndex:  i,
+      sampleValue:  sample,
+      suggestedField: m.field,
+      confidence:     m.confidence,
+      selectedField:  m.field,
+      status: 'pending' // 'pending' | 'confirmed' | 'skipped' | 'kept_raw'
+    };
+  });
+
+  /* ===== HELPERS ===== */
+  function escapeHtml(str) {
+    return String(str == null ? '' : str)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+  function autoDetectedCount() {
+    return mappings.filter(function(m) { return m.suggestedField !== null; }).length;
+  }
+  function pendingHighConfCount() {
+    return mappings.filter(function(m) {
+      return m.status === 'pending' && m.confidence >= 80;
+    }).length;
+  }
+  function pendingWithSuggestionCount() {
+    return mappings.filter(function(m) {
+      return m.status === 'pending' && m.suggestedField !== null;
+    }).length;
+  }
+  function pendingUnmatchedCount() {
+    return mappings.filter(function(m) {
+      return m.status === 'pending' && m.suggestedField === null;
+    }).length;
+  }
+  function confirmedFieldsByOther(currentIdx) {
+    var used = {};
+    mappings.forEach(function(m, i) {
+      if (i === currentIdx) return;
+      if (m.status === 'confirmed' && m.selectedField) {
+        used[m.selectedField] = m.sourceColumn;
+      }
+    });
+    return used;
+  }
+
+  /* ===== RENDER: MAPPING ROWS =====
+     Confidence column removed per Ruben's note: mappings are human-guided (Rob/Luis),
+     not algorithmic. The match heuristic still drives the suggested-field pre-selection
+     in the dropdown, but we don't surface the % to users anymore. */
+
+  function dropdownHTML(m, idx) {
+    var used = confirmedFieldsByOther(idx);
+    var disabled = m.status === 'confirmed';
+    var html = '<select class="map-select' + (m.selectedField === null ? ' no-mapping' : '') +
+               '" data-idx="' + idx + '"' + (disabled ? ' disabled' : '') + '>';
+    html += '<option value="">' + (m.selectedField === null ? '— No mapping —' : '— No mapping —') + '</option>';
+    STANDARD_FIELDS.forEach(function(f) {
+      var taken = used[f.dbName];
+      var label = taken ? f.label + '  (used by ' + taken + ')' : f.label;
+      var sel = m.selectedField === f.dbName ? ' selected' : '';
+      var dis = taken ? ' disabled' : '';
+      html += '<option value="' + escapeHtml(f.dbName) + '"' + sel + dis + '>' + escapeHtml(label) + '</option>';
+    });
+    html += '</select>';
+    return html;
+  }
+
+  function actionCellHTML(m, idx) {
+    if (m.status === 'confirmed') {
+      return '<div class="action-cell">' +
+               '<span class="status-text status-confirmed">✓ Confirmed</span>' +
+               '<button type="button" class="undo-link" data-action="undo" data-idx="' + idx + '">Undo</button>' +
+             '</div>';
+    }
+    if (m.status === 'skipped') {
+      return '<div class="action-cell">' +
+               '<span class="status-text status-skipped">Skipped</span>' +
+               '<button type="button" class="undo-link" data-action="undo" data-idx="' + idx + '">Undo</button>' +
+             '</div>';
+    }
+    if (m.status === 'kept_raw') {
+      return '<div class="action-cell">' +
+               '<span class="status-text status-kept">Kept as <code>_raw</code></span>' +
+               '<button type="button" class="undo-link" data-action="undo" data-idx="' + idx + '">Undo</button>' +
+             '</div>';
+    }
+    // pending
+    if (m.suggestedField === null && (m.selectedField === null || m.selectedField === '')) {
+      return '<div class="action-cell">' +
+               '<button type="button" class="btn-mini btn-mini-ghost" data-action="keep" data-idx="' + idx + '">Keep as raw</button>' +
+             '</div>';
+    }
+    return '<div class="action-cell">' +
+             '<button type="button" class="btn-mini btn-mini-primary" data-action="confirm" data-idx="' + idx + '">Confirm</button>' +
+             '<button type="button" class="btn-mini btn-mini-ghost" data-action="skip" data-idx="' + idx + '">Skip</button>' +
+           '</div>';
+  }
+
+  function rowClass(m) {
+    if (m.status === 'confirmed') return 'confirmed';
+    if (m.status === 'skipped')   return 'skipped';
+    if (m.status === 'kept_raw')  return 'kept-raw';
+    if (m.suggestedField === null) return 'no-match';
+    return '';
+  }
+
+  function renderTable() {
+    var tbody = document.getElementById('mapping-tbody');
+    var html = '';
+    mappings.forEach(function(m, i) {
+      html += '<tr class="' + rowClass(m) + '" data-idx="' + i + '">' +
+                '<td>' +
+                  '<div class="src-col" title="' + escapeHtml(m.sourceColumn) + '">' + escapeHtml(m.sourceColumn) + '</div>' +
+                '</td>' +
+                '<td>' + dropdownHTML(m, i) + '</td>' +
+                '<td>' + actionCellHTML(m, i) + '</td>' +
+              '</tr>';
+    });
+    tbody.innerHTML = html;
+  }
+
+  /* ===== RENDER: SUMMARY BANNER ===== */
+  function renderSummary() {
+    document.getElementById('auto-count').textContent = autoDetectedCount();
+    document.getElementById('total-count').textContent = mappings.length;
+    var sub = document.getElementById('summary-sub');
+    var confirmBtn = document.getElementById('accept-all-btn');
+    var keepBtn    = document.getElementById('keep-unmatched-btn');
+
+    var pendingSugg = pendingWithSuggestionCount();
+    var pendingUnm  = pendingUnmatchedCount();
+
+    // Sub-text adapts to what's left to do
+    if (pendingSugg + pendingUnm === 0) {
+      sub.textContent = 'All columns reviewed. Submit when ready.';
+    } else if (pendingSugg > 0 && pendingUnm > 0) {
+      sub.textContent = pendingSugg + ' to confirm · ' + pendingUnm + ' with no match.';
+    } else if (pendingSugg > 0) {
+      sub.textContent = pendingSugg + ' suggestion' + (pendingSugg === 1 ? '' : 's') + ' ready to confirm.';
+    } else {
+      sub.textContent = pendingUnm + ' column' + (pendingUnm === 1 ? '' : 's') + ' have no match — keep them as raw or skip.';
+    }
+
+    confirmBtn.disabled = pendingSugg === 0;
+    confirmBtn.textContent = pendingSugg > 0
+      ? 'Confirm ' + pendingSugg + ' suggestion' + (pendingSugg === 1 ? '' : 's')
+      : 'All confirmed';
+
+    keepBtn.disabled = pendingUnm === 0;
+    keepBtn.textContent = pendingUnm > 0
+      ? 'Keep ' + pendingUnm + ' as raw'
+      : 'No unmatched';
+  }
+
+  /* ===== RENDER: PREVIEW ===== */
+  function renderPreview() {
+    var confirmedMaps = mappings.filter(function(m) {
+      return m.status === 'confirmed' && m.selectedField;
+    });
+    var rawMaps = mappings.filter(function(m) {
+      return m.status !== 'confirmed';
+    });
+
+    document.getElementById('preview-confirmed-count').textContent = confirmedMaps.length;
+    document.getElementById('preview-col-plural').textContent = confirmedMaps.length === 1 ? '' : 's';
+
+    var rawSummary = document.getElementById('preview-raw-summary');
+    if (rawMaps.length === 0) {
+      rawSummary.innerHTML = 'All columns mapped — no <code>_raw</code> data';
+    } else {
+      rawSummary.innerHTML = rawMaps.length + ' column' + (rawMaps.length === 1 ? '' : 's') +
+        ' shown in <code>_raw</code>';
+    }
+
+    var emptyEl = document.getElementById('preview-empty');
+    var tableEl = document.getElementById('preview-table');
+
+    if (confirmedMaps.length === 0 && rawMaps.length === mappings.length) {
+      // pure pending state — show empty hint
+      emptyEl.style.display = 'block';
+      tableEl.style.display = 'none';
+      return;
+    }
+    emptyEl.style.display = 'none';
+    tableEl.style.display = 'table';
+
+    // Order confirmed columns by canonical STANDARD_FIELDS order; the BI table
+    // sees snake_case so the preview headers render `f.dbName`, not the label.
+    var confirmedFields = STANDARD_FIELDS.filter(function(f) {
+      return confirmedMaps.some(function(m) { return m.selectedField === f.dbName; });
+    });
+
+    // Build header row — snake_case dbName to match the actual BI column schema
+    var thead = '';
+    confirmedFields.forEach(function(f) {
+      thead += '<th>' + escapeHtml(f.dbName) + '</th>';
+    });
+    // _raw column always shown
+    thead += '<th class="raw-col">_raw</th>';
+    document.getElementById('preview-thead-row').innerHTML = thead;
+
+    // Build body rows (4 sample rows)
+    var bodyHtml = '';
+    SOURCE_ROWS.forEach(function(srcRow) {
+      var rowHtml = '<tr>';
+      confirmedFields.forEach(function(f) {
+        var m = confirmedMaps.find(function(x) { return x.selectedField === f.dbName; });
+        var val = m ? srcRow[m.sourceIndex] : '';
+        rowHtml += '<td>' + escapeHtml(val) + '</td>';
+      });
+      // _raw cell — JSON of all non-confirmed source columns
+      var rawObj = {};
+      rawMaps.forEach(function(m) {
+        rawObj[m.sourceColumn] = srcRow[m.sourceIndex];
+      });
+      var rawStr = JSON.stringify(rawObj);
+      if (rawStr.length > 110) rawStr = rawStr.slice(0, 107) + '…';
+      rowHtml += '<td class="raw-cell" title="' + escapeHtml(JSON.stringify(rawObj)) + '">' +
+                  escapeHtml(rawStr) + '</td>';
+      rowHtml += '</tr>';
+      bodyHtml += rowHtml;
+    });
+    document.getElementById('preview-tbody').innerHTML = bodyHtml;
+  }
+
+  /* ===== RENDER: FOOTER ===== */
+  function renderFooter() {
+    var confirmed = mappings.filter(function(m) { return m.status === 'confirmed'; }).length;
+    var pending   = mappings.filter(function(m) { return m.status === 'pending'; }).length;
+    var raw       = mappings.filter(function(m) {
+      return m.status === 'skipped' || m.status === 'kept_raw' ||
+             (m.status === 'pending' && (m.selectedField === null || m.selectedField === ''));
+    }).length;
+
+    document.getElementById('footer-confirmed').textContent = confirmed;
+    document.getElementById('footer-pending').textContent = pending;
+    document.getElementById('footer-raw').textContent = raw;
+    document.getElementById('footer-raw-plural').textContent = raw === 1 ? '' : 's';
+
+    // MVP: no mandatory-field enforcement (per Ruben). Submit is always enabled
+    // once the file is parsed. Pending rows fall through as kept_raw on submit.
+    document.getElementById('submit-btn').disabled = false;
+  }
+
+  /* ===== RE-RENDER ALL ===== */
+  function render() {
+    renderSummary();
+    renderTable();
+    renderPreview();
+    renderFooter();
+  }
+
+  /* ===== EVENT HANDLERS ===== */
+  document.getElementById('mapping-tbody').addEventListener('click', function(e) {
+    var btn = e.target.closest('[data-action]');
+    if (!btn) return;
+    var idx = parseInt(btn.dataset.idx, 10);
+    var action = btn.dataset.action;
+    var m = mappings[idx];
+
+    if (action === 'confirm') {
+      if (!m.selectedField) return;
+      m.status = 'confirmed';
+    } else if (action === 'skip') {
+      m.status = 'skipped';
+    } else if (action === 'keep') {
+      m.status = 'kept_raw';
+    } else if (action === 'undo') {
+      m.status = 'pending';
+      // restore selected to suggested only if still empty
+    }
+    render();
+  });
+
+  // Auto-confirm on dropdown change: picking a field IS confirming.
+  // Picking "(no mapping)" sends the row back to pending.
+  document.getElementById('mapping-tbody').addEventListener('change', function(e) {
+    var sel = e.target.closest('select.map-select');
+    if (!sel) return;
+    var idx = parseInt(sel.dataset.idx, 10);
+    var m = mappings[idx];
+    m.selectedField = sel.value || null;
+    if (m.selectedField) {
+      m.status = 'confirmed';
+    } else if (m.status === 'confirmed') {
+      m.status = 'pending';
+    }
+    render();
+  });
+
+  // "Confirm all suggestions" — confirms every pending row that has any suggested mapping.
+  document.getElementById('accept-all-btn').addEventListener('click', function() {
+    mappings.forEach(function(m) {
+      if (m.status === 'pending' && m.suggestedField && m.selectedField) {
+        m.status = 'confirmed';
+      }
+    });
+    render();
+  });
+
+  // "Keep N as raw" — flips every pending NO MATCH row to kept_raw.
+  document.getElementById('keep-unmatched-btn').addEventListener('click', function() {
+    mappings.forEach(function(m) {
+      if (m.status === 'pending' && m.suggestedField === null) {
+        m.status = 'kept_raw';
+      }
+    });
+    render();
+  });
+
+  /* ===== EMBEDDED MODE ===== */
+  // When rendered inside the list-page map-takeover (?embedded=1):
+  //  - hide sidebar / page-header (via body.embedded CSS)
+  //  - rewire Cancel + Submit so they bubble to the parent
+  var IS_EMBEDDED = new URLSearchParams(window.location.search).has('embedded');
+  if (IS_EMBEDDED) {
+    document.body.classList.add('embedded');
+    var cancelLink = document.querySelector('.form-footer a.btn-ghost');
+    if (cancelLink) {
+      cancelLink.addEventListener('click', function(e) {
+        e.preventDefault();
+        window.parent.postMessage({ type: 'mapping-exit' }, '*');
+      });
+    }
+  }
+
+  /* ===== SUBMIT — show in-panel confirmation =====
+     The MSD ticket is auto-created and assigned to Ruben; his existing
+     automation creates the ACMP project task for Luis from there.
+     We don't render anyone's name in the confirmation — the user prefers
+     a minimal panel showing the ticket # and what was submitted.
+  */
+  function generateMsdTicket() {
+    return 'MSD-' + Math.floor(1000 + Math.random() * 9000);
+  }
+  function showSubmissionConfirmation() {
+    var qs = new URLSearchParams(window.location.search);
+    var importName  = (qs.get('name') || '').trim()    || 'New import';
+    var subjectLine = (qs.get('subject') || '').trim() || '—';
+    var mappedCount = mappings.filter(function(m) { return m.status === 'confirmed'; }).length;
+    var totalCount  = mappings.length;
+    var ticket = generateMsdTicket();
+
+    var ticketEl = document.getElementById('confirm-ticket');
+    ticketEl.textContent = '#' + ticket;
+    ticketEl.href = '#' + ticket;
+    document.getElementById('confirm-import-name').textContent = importName;
+    document.getElementById('confirm-subject-line').textContent = subjectLine;
+    document.getElementById('confirm-fields-count').textContent =
+      mappedCount + ' of ' + totalCount;
+
+    document.getElementById('form-page').style.display = 'none';
+    document.getElementById('confirm-state').classList.add('visible');
+
+    // Stash for the Close handler so the parent gets the right name back.
+    document.getElementById('confirm-close-btn').dataset.name = importName;
+  }
+
+  document.getElementById('submit-btn').addEventListener('click', function() {
+    // Per Ruben's MVP guidance: don't force Rob to resolve every row. Any rows
+    // still pending at submit time fall through as kept_raw automatically.
+    mappings.forEach(function(m) {
+      if (m.status === 'pending') m.status = 'kept_raw';
+    });
+    var payload = mappings.map(function(m) {
+      return {
+        source_column: m.sourceColumn,                                  // snake_case keys throughout
+        mapped_to:     m.status === 'confirmed' ? m.selectedField : null, // snake_case dbName
+        status:        m.status
+      };
+    });
+    console.log('Submit payload:', payload);
+    showSubmissionConfirmation();
+  });
+
+  document.getElementById('confirm-close-btn').addEventListener('click', function() {
+    var name = this.dataset.name || 'New import';
+    if (IS_EMBEDDED) {
+      window.parent.postMessage({ type: 'mapping-finish', name: name }, '*');
+    } else {
+      window.location.href = 'emailimports.html?created=' + encodeURIComponent(name);
+    }
+  });
+
+  /* ===== BOOT ===== */
+  render();
+</script>
+
+</body>
+</html>

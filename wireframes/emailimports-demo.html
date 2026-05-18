@@ -1,0 +1,516 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Email Import → BI Table PoC</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    /* ===== Page wrap ===== */
+    body { background: var(--color-background-primary); }
+    .demo-page {
+      max-width: 1280px; margin: 0 auto;
+      padding: 32px 40px 80px;
+      font-family: var(--font-display);
+      color: var(--color-text-primary);
+    }
+
+    /* ===== Header ===== */
+    .demo-h {
+      display: flex; align-items: baseline; justify-content: space-between;
+      margin-bottom: 6px;
+    }
+    .demo-h h1 {
+      font-size: 22px; font-weight: 700; margin: 0;
+      letter-spacing: -0.01em;
+    }
+    .demo-h .pill {
+      font-size: 11px; font-weight: 600; letter-spacing: 0.06em;
+      text-transform: uppercase; color: var(--color-navy-dark);
+      background: #EEF2FF; padding: 4px 10px; border-radius: 12px;
+    }
+    .demo-sub {
+      font-size: 13px; color: var(--color-text-secondary);
+      margin: 0 0 24px;
+    }
+
+    /* ===== Config card ===== */
+    .cfg-card {
+      border: 0.5px solid var(--color-border-tertiary);
+      border-radius: 8px;
+      background: var(--color-background-primary);
+      padding: 20px 24px;
+      margin-bottom: 18px;
+    }
+    .cfg-card-h {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .cfg-card-name {
+      font-size: 16px; font-weight: 700; color: var(--color-navy);
+      letter-spacing: -0.005em;
+    }
+    .cfg-meta {
+      display: grid;
+      grid-template-columns: 140px 1fr;
+      gap: 8px 16px;
+      margin-bottom: 16px;
+    }
+    .cfg-meta dt {
+      font-size: 11px; font-weight: 500; letter-spacing: 0.06em;
+      text-transform: uppercase; color: var(--color-text-secondary);
+      align-self: center;
+    }
+    .cfg-meta dd {
+      font-size: 13px; font-weight: 500; color: var(--color-text-primary);
+      margin: 0;
+      font-family: var(--font-mono);
+    }
+    .path-radio {
+      display: inline-flex; gap: 8px;
+    }
+    .path-radio label {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 6px 12px;
+      border: 0.5px solid var(--color-border-secondary);
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: var(--font-display);
+      font-size: 13px;
+      transition: all 0.12s;
+    }
+    .path-radio input { accent-color: var(--color-navy-dark); }
+    .path-radio label.is-active {
+      background: var(--color-navy-dark);
+      color: #fff;
+      border-color: var(--color-navy-dark);
+    }
+    .cfg-actions {
+      display: flex; gap: 10px; padding-top: 6px;
+      border-top: 0.5px dashed var(--color-border-tertiary);
+      margin-top: 12px;
+    }
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      height: 36px; padding: 0 18px;
+      border-radius: 6px;
+      border: 0.5px solid transparent;
+      font-family: var(--font-display);
+      font-size: 13px; font-weight: 600;
+      cursor: pointer;
+      transition: all 0.12s;
+    }
+    .btn-primary {
+      background: var(--color-navy); color: #fff;
+      border-color: var(--color-navy);
+    }
+    .btn-primary:hover { background: #4F5988; }
+    .btn-secondary {
+      background: transparent;
+      color: var(--color-text-primary);
+      border-color: var(--color-border-secondary);
+    }
+    .btn-secondary:hover { background: var(--color-background-secondary); }
+    .btn-danger {
+      background: transparent;
+      color: var(--color-orange);
+      border-color: var(--color-border-secondary);
+    }
+    .btn-danger:hover { background: #fff8f0; }
+    .btn[disabled] { opacity: 0.5; cursor: not-allowed; }
+
+    /* ===== Banner ===== */
+    .banner {
+      margin: 0 0 18px;
+      padding: 12px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      display: none;
+    }
+    .banner.show { display: block; }
+    .banner.bi {
+      background: #ECFDF3; color: #036332; border: 0.5px solid #B7E5C8;
+    }
+    .banner.tx {
+      background: #FFF6E6; color: #8A4A00; border: 0.5px solid #FFD79A;
+    }
+    .banner code { font-family: var(--font-mono); font-size: 12px; }
+
+    /* ===== Panels ===== */
+    .panel {
+      border: 0.5px solid var(--color-border-tertiary);
+      border-radius: 8px;
+      margin-bottom: 16px;
+      background: var(--color-background-primary);
+      overflow: hidden;
+    }
+    .panel-h {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 18px;
+      background: var(--color-background-secondary);
+      border-bottom: 0.5px solid var(--color-border-tertiary);
+      cursor: pointer;
+      user-select: none;
+    }
+    .panel-h .title {
+      font-size: 13px; font-weight: 700; color: var(--color-navy);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .panel-h .chev {
+      display: inline-block;
+      transition: transform 0.18s;
+      font-size: 12px; color: var(--color-text-secondary);
+    }
+    .panel.is-open .chev { transform: rotate(90deg); }
+    .panel-h .badge {
+      font-family: var(--font-mono);
+      font-size: 12px; font-weight: 600;
+      color: var(--color-navy-dark);
+      background: #EEF2FF;
+      padding: 2px 8px; border-radius: 10px;
+    }
+    .panel-body {
+      max-height: 0; overflow: hidden;
+      transition: max-height 0.2s ease;
+    }
+    .panel.is-open .panel-body { max-height: 480px; overflow: auto; }
+
+    /* ===== Data tables ===== */
+    table.dt {
+      width: 100%; border-collapse: collapse;
+      font-family: var(--font-mono);
+      font-size: 12px;
+    }
+    table.dt thead th {
+      position: sticky; top: 0;
+      background: var(--color-background-tertiary);
+      color: var(--color-text-secondary);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      font-size: 10px;
+      padding: 8px 12px;
+      text-align: left;
+      border-bottom: 0.5px solid var(--color-border-secondary);
+      white-space: nowrap;
+    }
+    table.dt tbody td {
+      padding: 6px 12px;
+      border-bottom: 0.5px solid var(--color-border-tertiary);
+      color: var(--color-text-primary);
+      white-space: nowrap;
+      max-width: 280px;
+      overflow: hidden; text-overflow: ellipsis;
+    }
+    table.dt tbody tr:hover td { background: var(--color-background-secondary); }
+    table.dt .num { text-align: right; color: var(--color-navy); }
+    table.dt .ts  { color: var(--color-text-secondary); font-size: 11px; }
+    table.dt .routed-bi  { color: var(--color-navy-dark); font-weight: 700; }
+    table.dt .routed-tx  { color: var(--color-orange); font-weight: 700; }
+    .empty {
+      padding: 32px 18px;
+      text-align: center;
+      color: var(--color-text-tertiary);
+      font-family: var(--font-display);
+      font-size: 13px; font-style: italic;
+    }
+
+    /* ===== Transformation pending callout ===== */
+    .tx-callout {
+      display: none;
+      margin: 16px 0 0;
+      padding: 14px 16px;
+      background: #FFFAF0;
+      border: 0.5px dashed var(--color-orange);
+      border-radius: 6px;
+      font-size: 13px;
+      color: #8A4A00;
+    }
+    .tx-callout.show { display: block; }
+    .tx-callout a { color: var(--color-navy-dark); font-weight: 600; }
+
+    /* ===== Server status ===== */
+    .server-dot {
+      display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+      background: #C9C8D3; margin-right: 6px;
+      vertical-align: middle;
+    }
+    .server-dot.up { background: #03A300; }
+    .server-dot.down { background: #D03030; }
+  </style>
+</head>
+<body>
+  <div class="demo-page">
+
+    <div class="demo-h">
+      <h1>Email Import → BI Table PoC</h1>
+      <span class="pill" id="server-pill"><span class="server-dot" id="server-dot"></span>checking…</span>
+    </div>
+    <p class="demo-sub">
+      Simulates an inbound email landing in raw form, then routing to a BI table (mock of <code>maven.maven_bi.honda_adobe_data</code>) or the transformation queue — driven by the import's path selector. Storage: local SQLite via Express on :3001.
+    </p>
+
+    <!-- === Import config card === -->
+    <div class="cfg-card" id="cfg-card">
+      <div class="cfg-card-h">
+        <div class="cfg-card-name" id="import-name">Honda Adobe Email</div>
+      </div>
+
+      <dl class="cfg-meta">
+        <dt>Path</dt>
+        <dd>
+          <div class="path-radio" id="path-radio">
+            <label data-val="bi_direct"><input type="radio" name="path" value="bi_direct" />BI Direct</label>
+            <label data-val="transformation"><input type="radio" name="path" value="transformation" />Transformation</label>
+          </div>
+        </dd>
+
+        <dt>BI Table</dt>
+        <dd>maven.maven_bi.<span id="bi-table-name">honda_adobe_data</span></dd>
+
+        <dt>Sample File</dt>
+        <dd id="sample-file-path">seed/honda-adobe.xlsx</dd>
+      </dl>
+
+      <div class="cfg-actions">
+        <button class="btn btn-primary" id="simulate-btn">Simulate Email Arrival</button>
+        <button class="btn btn-danger" id="reset-btn">Reset Tables</button>
+      </div>
+    </div>
+
+    <!-- === Status banner === -->
+    <div class="banner" id="banner"></div>
+
+    <!-- === Raw data panel === -->
+    <div class="panel is-open" id="raw-panel">
+      <div class="panel-h" data-toggle="raw-panel">
+        <div class="title">
+          <span class="chev">›</span>
+          raw_email_data
+          <span style="font-weight:500;color:var(--color-text-secondary);font-family:var(--font-mono);font-size:11px;">— landing table, every row regardless of path</span>
+        </div>
+        <span class="badge" id="raw-count">0 rows</span>
+      </div>
+      <div class="panel-body" id="raw-body">
+        <div class="empty">No rows yet. Click "Simulate Email Arrival" above.</div>
+      </div>
+    </div>
+
+    <!-- === BI table panel === -->
+    <div class="panel is-open" id="bi-panel">
+      <div class="panel-h" data-toggle="bi-panel">
+        <div class="title">
+          <span class="chev">›</span>
+          honda_adobe_data
+          <span style="font-weight:500;color:var(--color-text-secondary);font-family:var(--font-mono);font-size:11px;">— BI table, populated when path = BI Direct</span>
+        </div>
+        <span class="badge" id="bi-count">0 rows</span>
+      </div>
+      <div class="panel-body" id="bi-body">
+        <div class="empty">No rows yet. Toggle path to BI Direct and simulate.</div>
+      </div>
+    </div>
+
+    <!-- === Transformation callout === -->
+    <div class="tx-callout" id="tx-callout">
+      <strong id="tx-pending-n">0</strong> rows pending mapping &middot;
+      <a href="emailimports-mapping.html">Open mapping page</a>
+    </div>
+
+  </div>
+
+<script>
+const API = 'http://localhost:3001/api';
+let currentImport = null;
+
+async function api(method, url, body) {
+  const r = await fetch(API + url, {
+    method,
+    headers: body ? { 'Content-Type': 'application/json' } : {},
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  if (!r.ok) throw new Error(`${method} ${url} → ${r.status}`);
+  return r.json();
+}
+
+async function checkServer() {
+  const pill = document.getElementById('server-pill');
+  const dot = document.getElementById('server-dot');
+  try {
+    await api('GET', '/health');
+    dot.className = 'server-dot up';
+    pill.lastChild.textContent = 'server up';
+  } catch (e) {
+    dot.className = 'server-dot down';
+    pill.lastChild.textContent = 'server down — run `npm start` in email-import-mapping/';
+  }
+}
+
+async function loadImport() {
+  const imports = await api('GET', '/imports');
+  if (!imports.length) return;
+  currentImport = imports[0];
+  document.getElementById('import-name').textContent = currentImport.name;
+  document.getElementById('bi-table-name').textContent = currentImport.bi_table_name;
+  document.getElementById('sample-file-path').textContent = currentImport.sample_file_path;
+  setPathRadio(currentImport.path);
+}
+
+function setPathRadio(path) {
+  document.querySelectorAll('#path-radio label').forEach((lbl) => {
+    const v = lbl.dataset.val;
+    const isActive = v === path;
+    lbl.classList.toggle('is-active', isActive);
+    lbl.querySelector('input').checked = isActive;
+  });
+}
+
+async function changePath(newPath) {
+  if (!currentImport) return;
+  const updated = await api('PATCH', `/imports/${currentImport.id}/path`, { path: newPath });
+  currentImport = updated;
+  setPathRadio(updated.path);
+}
+
+async function refreshRaw() {
+  const { total, rows } = await api('GET', `/raw-data?importId=${currentImport.id}&limit=200`);
+  document.getElementById('raw-count').textContent = `${total} row${total === 1 ? '' : 's'}`;
+  const body = document.getElementById('raw-body');
+  if (!rows.length) {
+    body.innerHTML = '<div class="empty">No rows yet. Click "Simulate Email Arrival" above.</div>';
+    return;
+  }
+  let html = '<table class="dt"><thead><tr>';
+  html += '<th>id</th><th>file_name</th><th>email_datetime</th><th>row_preview</th><th>imported_at</th><th>routed_to</th>';
+  html += '</tr></thead><tbody>';
+  for (const r of rows) {
+    const rowPreview = r.row_json ? (r.row_json.length > 80 ? r.row_json.slice(0, 80) + '…' : r.row_json) : '';
+    const routedCls = r.routed_to === 'bi' ? 'routed-bi' : 'routed-tx';
+    html += `<tr>
+      <td class="num">${r.id}</td>
+      <td>${escapeHtml(r.file_name)}</td>
+      <td class="ts">${escapeHtml(r.email_datetime)}</td>
+      <td>${escapeHtml(rowPreview)}</td>
+      <td class="ts">${escapeHtml(r.imported_at)}</td>
+      <td class="${routedCls}">${escapeHtml(r.routed_to)}</td>
+    </tr>`;
+  }
+  html += '</tbody></table>';
+  body.innerHTML = html;
+}
+
+async function refreshBi() {
+  const { total, rows } = await api('GET', `/bi-table/honda_adobe_data?limit=200`);
+  document.getElementById('bi-count').textContent = `${total} row${total === 1 ? '' : 's'}`;
+  const body = document.getElementById('bi-body');
+  if (!rows.length) {
+    body.innerHTML = '<div class="empty">No rows yet. Toggle path to BI Direct and simulate.</div>';
+    return;
+  }
+  let html = '<table class="dt"><thead><tr>';
+  const cols = ['id', 'FILE_NAME', 'EMAIL_DATETIME', 'DAA', 'SUB_REGION', 'PARTNER', 'AUDIENCE_PILLAR', 'DATE1', 'PLACEMENT_ID', 'PLACEMENT_NAME', 'DAA_YEAR', 'FSV', 'QSV', 'PV', 'CREATED_AT', 'UPDATED_AT', 'IMPORTED_AT'];
+  for (const c of cols) html += `<th>${c}</th>`;
+  html += '</tr></thead><tbody>';
+  for (const r of rows) {
+    html += `<tr>
+      <td class="num">${r.id}</td>
+      <td>${escapeHtml(r.file_name)}</td>
+      <td class="ts">${escapeHtml(r.email_datetime)}</td>
+      <td>${escapeHtml(r.daa)}</td>
+      <td>${escapeHtml(r.sub_region)}</td>
+      <td>${escapeHtml(r.partner)}</td>
+      <td>${escapeHtml(r.audience_pillar)}</td>
+      <td>${escapeHtml(r.date1)}</td>
+      <td>${escapeHtml(r.placement_id)}</td>
+      <td>${escapeHtml(r.placement_name)}</td>
+      <td>${escapeHtml(r.daa_year)}</td>
+      <td class="num">${r.fsv ?? ''}</td>
+      <td class="num">${r.qsv ?? ''}</td>
+      <td class="num">${r.pv ?? ''}</td>
+      <td class="ts">${escapeHtml(r.created_at)}</td>
+      <td class="ts">${escapeHtml(r.updated_at)}</td>
+      <td class="ts">${escapeHtml(r.imported_at)}</td>
+    </tr>`;
+  }
+  html += '</tbody></table>';
+  body.innerHTML = html;
+}
+
+function showBanner(result) {
+  const b = document.getElementById('banner');
+  b.classList.remove('bi', 'tx');
+  if (result.routed_to === 'bi') {
+    b.classList.add('bi', 'show');
+    b.innerHTML = `📥 Email <code>${escapeHtml(result.file_name)}</code> arrived ${escapeHtml(result.email_datetime)} →
+      inserted <strong>${result.raw_inserted}</strong> rows into <code>raw_email_data</code>
+      &middot; routed to <strong>BI Direct</strong>
+      &middot; inserted <strong>${result.bi_inserted}</strong> rows into <code>${escapeHtml(result.bi_table_name)}</code>.`;
+  } else {
+    b.classList.add('tx', 'show');
+    b.innerHTML = `📥 Email <code>${escapeHtml(result.file_name)}</code> arrived ${escapeHtml(result.email_datetime)} →
+      inserted <strong>${result.raw_inserted}</strong> rows into <code>raw_email_data</code>
+      &middot; routed to <strong>Transformation</strong>
+      &middot; <strong>${result.pending_mapping_count}</strong> rows awaiting mapping.`;
+  }
+}
+
+async function refreshTransformationCallout() {
+  // count raw rows routed to transformation
+  const { rows, total } = await api('GET', `/raw-data?importId=${currentImport.id}&limit=2000`);
+  const txCount = rows.filter((r) => r.routed_to === 'transformation').length;
+  const cal = document.getElementById('tx-callout');
+  document.getElementById('tx-pending-n').textContent = txCount;
+  cal.classList.toggle('show', txCount > 0);
+}
+
+function escapeHtml(s) {
+  if (s == null) return '';
+  return String(s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+// --- Wire up ---
+document.getElementById('path-radio').addEventListener('change', (e) => {
+  if (e.target.matches('input[type=radio]')) changePath(e.target.value);
+});
+document.getElementById('simulate-btn').addEventListener('click', async () => {
+  const btn = document.getElementById('simulate-btn');
+  btn.disabled = true; btn.textContent = 'Simulating…';
+  try {
+    const result = await api('POST', `/imports/${currentImport.id}/simulate-email`);
+    showBanner(result);
+    await Promise.all([refreshRaw(), refreshBi(), refreshTransformationCallout()]);
+  } catch (err) {
+    alert('Failed: ' + err.message);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Simulate Email Arrival';
+  }
+});
+document.getElementById('reset-btn').addEventListener('click', async () => {
+  if (!confirm('Truncate raw_email_data + honda_adobe_data?')) return;
+  await api('POST', '/reset');
+  document.getElementById('banner').classList.remove('show');
+  await Promise.all([refreshRaw(), refreshBi(), refreshTransformationCallout()]);
+});
+document.querySelectorAll('[data-toggle]').forEach((el) => {
+  el.addEventListener('click', () => {
+    document.getElementById(el.dataset.toggle).classList.toggle('is-open');
+  });
+});
+
+// --- Bootstrap ---
+(async () => {
+  await checkServer();
+  try {
+    await loadImport();
+    await refreshRaw();
+    await refreshBi();
+    await refreshTransformationCallout();
+  } catch (err) {
+    console.error(err);
+  }
+})();
+</script>
+</body>
+</html>

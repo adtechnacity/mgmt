@@ -1,0 +1,17 @@
+{
+  "name": "email-import-mock-bi",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Mock backend for Maven email-import → BI table PoC. Express + SQLite. Demonstrates the end-to-end flow without Snowflake permissions.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "seed": "node -e \"require('./db').init(); require('./generate-seed').generate()\""
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.3.0",
+    "cors": "^2.8.5",
+    "express": "^4.21.0",
+    "xlsx": "^0.18.5"
+  }
+}
