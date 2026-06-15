@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Maven — Build Drawer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"></noscript>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    body { background: var(--color-background-tertiary); display: flex; align-items: flex-start; justify-content: flex-end; min-height: 100vh; }
+    .panel-shell {
+      width: 560px; min-height: 100vh;
+      background: var(--color-background-secondary);
+      border-left: 0.5px solid var(--color-border-tertiary);
+      display: flex; flex-direction: column;
+    }
+    .panel-header {
+      height: 56px; display: flex; align-items: center; justify-content: space-between;
+      padding: 0 var(--sp-md);
+      border-bottom: 0.5px solid var(--color-border-tertiary);
+      background: var(--color-background-primary);
+      flex-shrink: 0;
+    }
+    .panel-title {
+      font-family: var(--font-display); font-size: 15px;
+      font-weight: 700; color: var(--color-navy);
+    }
+    .panel-close {
+      width: 26px; height: 26px;
+      border: 0.5px solid var(--color-border-secondary);
+      border-radius: var(--border-radius-sm);
+      background: var(--color-background-primary);
+      cursor: pointer; display: flex; align-items: center;
+      justify-content: center; font-size: 12px; color: var(--color-text-secondary);
+    }
+    .panel-close:hover { background: var(--color-background-secondary); }
+    .panel-body {
+      flex: 1; overflow-y: auto; padding: var(--sp-md);
+    }
+    .panel-footer {
+      height: 58px; display: flex; align-items: center;
+      justify-content: space-between; padding: 0 var(--sp-md);
+      border-top: 0.5px solid var(--color-border-tertiary);
+      background: var(--color-background-primary);
+      flex-shrink: 0; gap: var(--sp-xs);
+    }
+    .panel-footer-right { display: flex; align-items: center; gap: var(--sp-xs); }
+  </style>
+</head>
+<body>
+
+<div class="panel-shell">
+
+  <!-- Header -->
+  <div class="panel-header">
+    <span class="panel-title">New campaign</span>
+    <button class="panel-close">✕</button>
+  </div>
+
+  <!-- Body -->
+  <div class="panel-body">
+
+    <!-- Ticket banner — pre-filled from Asana task 1211441122399736 -->
+    <div class="ticket-banner">
+      <div class="ticket-banner-eyebrow">From Asana · Task 1211441122399736</div>
+      <div class="ticket-banner-name">CCF Duplicate of the OST CA Sr Travel Page</div>
+      <div class="ticket-banner-meta">CapitalOne Shopping · Facebook / Meta · Desktop · Senior Travel</div>
+    </div>
+
+    <!-- ─────────────────────────────────────────
+         SECTION 1 — Initiative
+         Collapsed ✓, auto-filled from ticket
+         ───────────────────────────────────────── -->
+    <div class="build-section collapsed" id="s1">
+      <div class="section-hdr">
+        <div class="section-num sn-done">✓</div>
+        <div class="section-hdr-body">
+          <div class="section-title">Initiative <span class="auto-badge">filled from ticket</span></div>
+          <div class="section-summary">CapitalOne Shopping · CCF — Coupon Code Finder</div>
+        </div>
+        <span class="section-chevron">▾</span>
+      </div>
+      <div class="section-body">
+        <div class="form-row">
+          <div class="auto-field-label">Account <span class="auto-chip">auto</span></div>
+          <div class="auto-value">CapitalOne Shopping</div>
+        </div>
+        <div class="form-row">
+          <div class="auto-field-label">O&amp;O page <span class="auto-chip">auto</span></div>
+          <div class="auto-value">CCF — Coupon Code Finder</div>
+        </div>
+        <div class="initiative-banner">
+          <span class="initiative-banner-label">Initiative resolved</span>
+          <span class="initiative-banner-value">COS Social Desktop · COS US Desktop Group</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─────────────────────────────────────────
+         SECTION 2 — Traffic source
+         Collapsed ✓, auto-filled from ticket
+         ───────────────────────────────────────── -->
+    <div class="build-section collapsed" id="s2">
+      <div class="section-hdr">
+        <div class="section-num sn-done">✓</div>
+        <div class="section-hdr-body">
+          <div class="section-title">Traffic source <span class="auto-badge">filled from ticket</span></div>
+          <div class="section-summary">Facebook / Meta · Desktop</div>
+        </div>
+        <span class="section-chevron">▾</span>
+      </div>
+      <div class="section-body">
+        <div class="form-row">
+          <div class="auto-field-label">Platform <span class="auto-chip">auto</span></div>
+          <div class="auto-value">Facebook / Meta</div>
+        </div>
+        <div class="form-row">
+          <div class="auto-field-label">Device <span class="auto-chip">auto</span></div>
+          <div class="auto-value">Desktop</div>
+        </div>
+        <div class="ts-resolved-banner">
+          <div class="ts-resolved-row">
+            <span class="ts-resolved-key">Data Source</span>
+            <span class="ts-resolved-val">DS12</span>
+          </div>
+          <div class="ts-resolved-row">
+            <span class="ts-resolved-key">Pre-lander</span>
+            <span class="ts-resolved-val">Off — Instapage URL is the Media URL</span>
+          </div>
+          <div class="ts-resolved-row">
+            <span class="ts-resolved-key">Alias domain</span>
+            <span class="ts-resolved-val">None</span>
+          </div>
+          <div class="ts-resolved-row">
+            <span class="ts-resolved-key">Macros</span>
+            <span class="ts-resolved-val">{{double-curly}}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─────────────────────────────────────────
+         SECTION 3 — Landing page
+         Open — Sheba fills this
+         ───────────────────────────────────────── -->
+    <div class="build-section" id="s3">
+      <div class="section-hdr">
+        <div class="section-num sn-active">3</div>
+        <div class="section-hdr-body">
+          <div class="section-title">Landing page</div>
+          <div class="section-desc">Instapage URL · angle · landing URL</div>
+        </div>
+        <span class="section-chevron">▾</span>
+      </div>
+      <div class="section-body">
+        <div class="form-row">
+          <label class="form-label" for="s3-instapage">Instapage URL</label>
+          <input type="text" class="form-input" id="s3-instapage"
+            value="blog.couponcodefinder.com/ca/travel-budget-fb"
+            placeholder="e.g. blog.couponcodefinder.com/ca/travel-budget-fb">
+          <div class="helper-text">Base page URL, no parameters. Becomes the pre-lander URL for front-door platforms.</div>
+        </div>
+        <div class="form-row">
+          <label class="form-label" for="s3-angle">Angle</label>
+          <select class="form-select" id="s3-angle">
+            <option value="">Select...</option>
+            <option value="senior-travel" selected>Senior Travel</option>
+            <option value="pricing">Pricing</option>
+            <option value="2-retailers">2 Retailers</option>
+            <option value="amazon-hates">Amazon Hates</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─────────────────────────────────────────
+         SECTION 4 — Experience
+         Open — Sheba fills this
+         ───────────────────────────────────────── -->
+    <div class="build-section" id="s4">
+      <div class="section-hdr">
+        <div class="section-num sn-active">4</div>
+        <div class="section-hdr-body">
+          <div class="section-title">Experience</div>
+          <div class="section-desc">EC · popup · continuation · UTM source</div>
+        </div>
+        <span class="section-chevron">▾</span>
+      </div>
+      <div class="section-body">
+        <div class="form-row">
+          <label class="form-label" for="s4-ec">EC (Exit Capture)</label>
+          <select class="form-select" id="s4-ec">
+            <option value="">Select...</option>
+            <option value="0" selected>ec=0 — off</option>
+            <option value="1">ec=1 — on</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label class="form-label" for="s4-popup">Popup</label>
+          <select class="form-select" id="s4-popup">
+            <option value="">Select...</option>
+            <option value="1" selected>popup=1 — on</option>
+            <option value="none">none — off</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label class="form-label" for="s4-continuation">Continuation</label>
+          <select class="form-select" id="s4-continuation">
+            <option value="none" selected>None</option>
+            <option value="extra-steps">Extra steps</option>
+            <option value="multi-offer">Multi offer</option>
+          </select>
+        </div>
+
+        <hr class="section-rule">
+
+        <div class="form-row">
+          <label class="form-label" for="s4-utm">
+            UTM source
+            <span style="font-size:10px;font-weight:400;text-transform:none;letter-spacing:0;color:var(--color-text-tertiary)"> expertm_source</span>
+          </label>
+          <select class="form-select" id="s4-utm">
+            <option value="">Select...</option>
+            <option value="ccf_facebook_desktop">ccf_facebook_desktop</option>
+            <option value="ccf_tbfa">ccf_tbfa</option>
+            <option value="ost_taboola_desktop">ost_taboola_desktop</option>
+            <option value="__new__" selected>+ New source required</option>
+          </select>
+        </div>
+
+        <!-- New source inputs — visible because __new__ is selected -->
+        <div id="utm-new-wrap">
+          <div class="form-row">
+            <label class="form-label" for="s4-utm-new">New UTM source value</label>
+            <input type="text" class="form-input" id="s4-utm-new"
+              value="ccf_tbfa" placeholder="e.g. ccf_tbfa">
+            <div class="helper-text">Lowercase, no spaces. Format: [brand][platform].</div>
+          </div>
+          <div class="amber-banner">
+            <strong>GTM setup needed before URL can be generated.</strong><br>
+            LP + LPG will save first. Return here once Angel Rojas has published the container.
+          </div>
+          <label class="gtm-confirm" id="gtm-confirm-row">
+            <input type="checkbox" id="gtm-checkbox">
+            <div class="gtm-confirm-text">
+              GTM container has been updated and published
+              <small>Check this after Angel Rojas publishes. Enables URL generation.</small>
+            </div>
+          </label>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ─────────────────────────────────────────
+         URL PREVIEW
+         ───────────────────────────────────────── -->
+    <div class="url-preview-section">
+      <div class="url-preview-hdr">
+        <span class="url-preview-hdr-label">URL preview</span>
+        <span class="url-preview-mode">Pre-lander off · Media URL</span>
+      </div>
+      <div class="url-preview-block" id="url-preview"></div>
+      <div class="url-preview-legend">
+        <span class="legend-item"><span class="legend-dot" style="background:#1D9E75"></span>Auto-resolved</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#212121"></span>User input</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#BA7517"></span>Pending</span>
+      </div>
+    </div>
+
+  </div><!-- /panel-body -->
+
+  <!-- Footer — Save LP+LPG is primary because UTM new source required -->
+  <div class="panel-footer">
+    <button class="btn btn-ghost btn-md">Cancel</button>
+    <div class="panel-footer-right">
+      <button class="btn btn-primary btn-md" id="btn-save-lp">Save LP + LPG</button>
+      <button class="btn btn-secondary btn-md" id="btn-generate" disabled style="opacity:0.4;cursor:not-allowed">Generate URL →</button>
+    </div>
+  </div>
+
+</div><!-- /panel-shell -->
+
+<script>
+  /* ===== SECTION COLLAPSE ===== */
+  document.addEventListener('click', function(e) {
+    var hdr = e.target.closest('.section-hdr');
+    if (!hdr) return;
+    hdr.closest('.build-section').classList.toggle('collapsed');
+  });
+
+  /* ===== PLATFORM CONFIG ===== */
+  const PLATFORM_CFG = {
+    Facebook: {
+      prelander: 'off',
+      macro: k => `{{${k}}}`,
+      buildUrl(inst, ec, popup, utm) {
+        const m = this.macro;
+        const parts = [];
+        parts.push(inst
+          ? `<span class="u-user">${inst}</span>`
+          : `<span class="u-pending">[instapage-url]</span>`);
+        parts.push(`<span class="u-auto">?atnds=12&publisher=${m('placement')}&creative=${m('ad.id')}&adgroup=${m('adset.id')}&campaign=${m('campaign.id')}</span>`);
+        parts.push(utm
+          ? `<span class="u-auto">&utm_source=</span><span class="u-user">${utm}</span>`
+          : `<span class="u-pending">&utm_source=?</span>`);
+        parts.push(popup === '1'
+          ? `<span class="u-user">&popup=1</span>`
+          : popup === 'none' ? '' : `<span class="u-pending">&popup=?</span>`);
+        parts.push(`<span class="u-auto">&uxid=fb</span>`);
+        parts.push(ec !== ''
+          ? `<span class="u-user">&ec=${ec}</span>`
+          : `<span class="u-pending">&ec=?</span>`);
+        return parts.join('');
+      }
+    }
+  };
+
+  /* ===== URL PREVIEW ===== */
+  function renderUrlPreview() {
+    var el = document.getElementById('url-preview');
+    if (!el) return;
+    var cfg    = PLATFORM_CFG['Facebook'];
+    var inst   = document.getElementById('s3-instapage').value.trim();
+    var ec     = document.getElementById('s4-ec').value;
+    var popup  = document.getElementById('s4-popup').value;
+    var utmSel = document.getElementById('s4-utm').value;
+    var utmNew = document.getElementById('s4-utm-new').value.trim();
+    var utm    = utmSel === '__new__' ? utmNew : utmSel;
+
+    el.innerHTML = cfg.buildUrl(inst, ec, popup, utm);
+  }
+
+  /* ===== UTM SELECT ===== */
+  document.getElementById('s4-utm').addEventListener('change', function() {
+    var isNew    = this.value === '__new__';
+    var newWrap  = document.getElementById('utm-new-wrap');
+    var btnGen   = document.getElementById('btn-generate');
+    var btnSave  = document.getElementById('btn-save-lp');
+
+    newWrap.classList.toggle('hidden', !isNew);
+
+    if (isNew) {
+      btnGen.disabled = true;
+      btnGen.style.opacity = '0.4';
+      btnGen.style.cursor = 'not-allowed';
+      btnSave.classList.add('btn-primary');
+      btnSave.classList.remove('btn-secondary');
+    } else {
+      btnGen.disabled = false;
+      btnGen.style.opacity = '';
+      btnGen.style.cursor = '';
+      btnSave.classList.remove('btn-primary');
+      btnSave.classList.add('btn-secondary');
+    }
+    renderUrlPreview();
+  });
+
+  /* ===== GTM CHECKBOX ===== */
+  document.getElementById('gtm-checkbox').addEventListener('change', function() {
+    var btnGen  = document.getElementById('btn-generate');
+    var btnSave = document.getElementById('btn-save-lp');
+    if (this.checked) {
+      btnGen.disabled = false;
+      btnGen.style.opacity = '';
+      btnGen.style.cursor = '';
+      btnSave.classList.remove('btn-primary');
+      btnSave.classList.add('btn-secondary');
+    } else {
+      btnGen.disabled = true;
+      btnGen.style.opacity = '0.4';
+      btnGen.style.cursor = 'not-allowed';
+      btnSave.classList.add('btn-primary');
+      btnSave.classList.remove('btn-secondary');
+    }
+  });
+
+  /* ===== LIVE UPDATE INPUTS ===== */
+  ['s3-instapage', 's4-ec', 's4-popup', 's4-utm-new'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) {
+      el.addEventListener('input',  renderUrlPreview);
+      el.addEventListener('change', renderUrlPreview);
+    }
+  });
+
+  /* ===== INITIAL RENDER ===== */
+  renderUrlPreview();
+</script>
+</body>
+</html>

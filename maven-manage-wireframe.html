@@ -1,0 +1,2816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Maven Manage — Wireframe Prototype</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"></noscript>
+  <style>
+    /* ===== DESIGN TOKENS (Maven MGMT-UI-Style-Guide) ===== */
+    :root {
+      --navy:           #383F60;
+      --navy-dark:      #002483;
+      --navy-mid:       #5969A6;
+      --orange:         #FF8000;
+      --amber:          #FFB000;
+      --success:        #03BF00;
+      --error:          #DC0700;
+      --muted:          #797979;
+      --body-dark:      #121C2D;
+
+      --surface:        #F3F3F3;
+      --surface-blue:   #EEF2FF;
+      --surface-orange: #FFF8F1;
+      --surface-green:  #F1FFF4;
+      --surface-amber:  #FFF5DF;
+      --surface-red:    #FFF5F5;
+      --off-white:      #F9FAFB;
+
+      --border-input:   #D5D9E5;
+      --border-divider: #EBEBEB;
+      --border-pill:    #CAD6FF;
+      --border-gray:    #D9D9D9;
+
+      --shadow-panel:   0px 2px 12.2px -2px rgba(0,0,0,0.18);
+      --shadow-drawer:  -6px 0 24px rgba(0,0,0,0.12);
+
+      --font-sans: 'Inter', system-ui, sans-serif;
+      --radius:    4px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font-sans);
+      font-size: 14px;
+      color: var(--navy);
+      background: var(--off-white);
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ===== SIDEBAR ===== */
+    .sidebar {
+      width: 220px;
+      min-width: 220px;
+      background: #fff;
+      border-right: 1px solid var(--border-divider);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar-logo {
+      height: 64px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 20px;
+      border-bottom: 1px solid var(--border-divider);
+      flex-shrink: 0;
+    }
+
+    .logo-badge {
+      width: 28px;
+      height: 28px;
+      background: var(--navy);
+      border-radius: var(--radius);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .logo-text {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+    }
+    .logo-text-main {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--navy);
+      line-height: 1;
+    }
+    .logo-text-sub {
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 400;
+      line-height: 1;
+    }
+
+    .nav-section { padding: 8px 0; flex: 1; }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      height: 40px;
+      padding: 0 20px;
+      cursor: pointer;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 400;
+      border-left: 3px solid transparent;
+      transition: background 0.1s, color 0.1s;
+    }
+    .nav-item:hover { background: var(--surface); color: var(--navy); }
+    .nav-item.active {
+      background: var(--surface-blue);
+      color: var(--navy);
+      font-weight: 500;
+      border-left-color: var(--orange);
+    }
+    .nav-icon { width: 16px; text-align: center; font-size: 14px; }
+
+    /* ===== MAIN LAYOUT ===== */
+    .main-wrapper {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      min-width: 0;
+    }
+
+    /* ===== PAGE HEADER ===== */
+    .page-header {
+      height: 64px;
+      background: #fff;
+      border-bottom: 1px solid var(--border-divider);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      flex-shrink: 0;
+    }
+
+    .page-header-left {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .page-title {
+      font-size: 19px;
+      font-weight: 700;
+      color: var(--navy);
+      line-height: 1;
+    }
+    .page-breadcrumb {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .page-header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* ===== FILTER BAR ===== */
+    .filter-bar {
+      height: 56px;
+      background: #fff;
+      border-bottom: 1px solid var(--border-divider);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 24px;
+      flex-shrink: 0;
+    }
+
+    .search-wrap {
+      position: relative;
+      flex: 1;
+      max-width: 340px;
+    }
+    .search-icon {
+      position: absolute;
+      left: 9px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      font-size: 13px;
+      pointer-events: none;
+    }
+    .search-input {
+      height: 36px;
+      width: 100%;
+      padding: 0 10px 0 30px;
+      border: 1px solid var(--border-input);
+      border-radius: var(--radius);
+      font-family: var(--font-sans);
+      font-size: 14px;
+      color: var(--navy);
+      background: #fff;
+      outline: none;
+    }
+    .search-input:focus { border-color: var(--navy-mid); }
+    .search-input::placeholder { color: var(--muted); }
+
+    /* ===== BUTTONS ===== */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border-radius: var(--radius);
+      font-family: var(--font-sans);
+      font-size: 14px;
+      font-weight: 400;
+      line-height: 1;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+      white-space: nowrap;
+      border: 1px solid transparent;
+    }
+
+    /* Sizes */
+    .btn-sm { height: 32px; padding: 0 16px; font-size: 13px; }
+    .btn-md { height: 36px; padding: 0 16px; }
+    .btn-lg { height: 40px; padding: 0 24px; }
+
+    /* Primary */
+    .btn-primary {
+      background: var(--navy);
+      color: #fff;
+      border-color: var(--navy);
+    }
+    .btn-primary:hover { background: #4F5988; border-color: #4F5988; }
+    .btn-primary:active { background: var(--navy-dark); border-color: var(--navy-dark); }
+
+    /* Secondary */
+    .btn-secondary {
+      background: #fff;
+      color: var(--muted);
+      border-color: rgba(121,121,121,0.5);
+    }
+    .btn-secondary:hover { background: var(--surface); }
+    .btn-secondary:active { background: #E5E5E5; }
+
+    /* Tertiary */
+    .btn-tertiary {
+      background: var(--surface-blue);
+      color: var(--navy-dark);
+      border-color: var(--navy-dark);
+    }
+    .btn-tertiary:hover { background: #DDE8FF; }
+    .btn-tertiary:active { background: #C7D8FF; }
+
+    /* Ghost / inline action */
+    .btn-ghost {
+      background: none;
+      color: var(--muted);
+      border: none;
+      font-size: 13px;
+      padding: 0 8px;
+    }
+    .btn-ghost:hover { color: var(--navy); }
+
+    /* ===== CONTENT AREA ===== */
+    .content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px;
+      background: var(--off-white);
+    }
+
+    .section { margin-bottom: 32px; }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .section-label {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+    }
+
+    /* Status Badge */
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      line-height: 16px;
+      border: 1px solid transparent;
+    }
+    .status-badge .dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .badge-neutral   { background: var(--surface); color: var(--muted); border-color: var(--border-gray); }
+    .badge-active    { background: var(--surface-green); color: var(--success); }
+    .badge-amber     { background: var(--surface-amber); color: var(--amber); }
+    .badge-draft     { background: var(--surface-orange); color: var(--orange); }
+    .badge-navy      { background: var(--surface-blue); color: var(--navy-dark); border-color: var(--border-pill); }
+
+    .card-list { display: flex; flex-direction: column; gap: 6px; }
+
+    /* ===== QUEUE ROWS ===== */
+    .queue-list {
+      border: 1px solid var(--border-divider);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow-panel);
+    }
+
+    .queue-row {
+      background: #fff;
+      border-left: 3px solid transparent;
+      border-bottom: 1px solid var(--border-divider);
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: background 0.1s;
+    }
+    .queue-row:last-child { border-bottom: none; }
+    .queue-row:hover { background: var(--off-white); }
+
+    .queue-type-pill {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 4px;
+      flex-shrink: 0;
+      width: 38px;
+      text-align: center;
+      letter-spacing: 0.02em;
+    }
+    .queue-type-pill.lp  { background: var(--surface-blue); color: var(--navy-dark); border: 1px solid var(--border-pill); }
+    .queue-type-pill.exp { background: var(--surface-amber); color: #7a5200; border: 1px solid var(--amber); }
+
+    .queue-row-info { flex: 1; min-width: 0; }
+    .queue-row-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--navy);
+      margin-bottom: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .queue-row-meta { font-size: 12px; color: var(--muted); }
+    .meta-dot { margin: 0 5px; color: var(--border-gray); }
+
+    /* ===== RECENTLY BUILT CARDS ===== */
+    .built-card {
+      background: #fff;
+      border: 1px solid var(--border-divider);
+      border-radius: var(--radius);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: var(--shadow-panel);
+      transition: border-color 0.1s;
+    }
+    .built-card:hover { border-color: var(--border-input); }
+    .built-card.clickable { cursor: pointer; }
+    .built-card.clickable:hover { background: var(--off-white); }
+
+    .built-info { flex: 1; min-width: 0; }
+    .built-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--navy);
+      margin-bottom: 2px;
+    }
+    .built-sub { font-size: 12px; color: var(--muted); }
+
+    .built-stat {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 500;
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    /* ===== DRAWER BACKDROP ===== */
+    .drawer-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(8,6,13,0.32);
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+    .drawer-backdrop.visible { opacity: 1; pointer-events: auto; }
+
+    /* ===== DRAWER ===== */
+    .drawer {
+      position: fixed;
+      top: 0;
+      right: 0;
+      height: 100vh;
+      width: 800px;
+      background: #fff;
+      border-left: 1px solid var(--border-divider);
+      z-index: 101;
+      display: flex;
+      flex-direction: column;
+      transform: translateX(100%);
+      transition: transform 0.22s cubic-bezier(0.32, 0, 0.2, 1);
+    }
+    .drawer.open { transform: translateX(0); box-shadow: var(--shadow-drawer); }
+
+    .drawer-header {
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      border-bottom: 1px solid var(--border-divider);
+      flex-shrink: 0;
+    }
+
+    .drawer-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--navy);
+    }
+
+    .drawer-close {
+      width: 28px;
+      height: 28px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border-input);
+      background: #fff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .drawer-close:hover { background: var(--surface); color: var(--navy); }
+
+    .drawer-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 20px;
+      background: var(--off-white);
+    }
+
+    .drawer-footer {
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      padding: 0 24px;
+      border-top: 1px solid var(--border-divider);
+      flex-shrink: 0;
+      background: var(--off-white);
+    }
+
+    /* ===== BACK LINK ===== */
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 13px;
+      color: var(--muted);
+      cursor: pointer;
+      margin-bottom: 16px;
+    }
+    .back-link:hover { color: var(--navy); }
+
+    /* ===== TICKET BANNER ===== */
+    .ticket-banner {
+      background: var(--surface-blue);
+      border: 1px solid var(--border-pill);
+      border-radius: var(--radius);
+      padding: 10px 14px;
+      margin-bottom: 20px;
+    }
+    .ticket-banner-eyebrow {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--navy-mid);
+      margin-bottom: 3px;
+    }
+    .ticket-banner-name { font-size: 14px; font-weight: 600; color: var(--navy-dark); margin-bottom: 2px; }
+    .ticket-banner-meta { font-size: 12px; color: var(--navy-mid); }
+
+    /* ===== OPTION CARDS (State 1) ===== */
+    .option-cards { display: flex; flex-direction: column; gap: 8px; }
+
+    .option-card {
+      border: 1px solid var(--border-divider);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: #fff;
+      transition: border-color 0.12s, background 0.12s;
+    }
+    .option-card:hover {
+      border-color: var(--navy-mid);
+      background: var(--surface-blue);
+    }
+
+    .option-card-body { flex: 1; min-width: 0; }
+    .option-card-title { font-size: 14px; font-weight: 600; color: var(--navy); margin-bottom: 3px; }
+    .option-card-desc  { font-size: 12px; color: var(--muted); }
+    .option-card-chevron { color: var(--border-gray); font-size: 14px; flex-shrink: 0; }
+
+    .option-tag {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 6px;
+      background: var(--surface);
+      color: var(--muted);
+      white-space: nowrap;
+      flex-shrink: 0;
+      border: 1px solid var(--border-gray);
+    }
+    .option-tag.blue {
+      background: var(--surface-blue);
+      color: var(--navy-dark);
+      border-color: var(--border-pill);
+    }
+
+    /* ===== FORM ELEMENTS ===== */
+    .form-section {
+      margin-bottom: 10px;
+      border: 1px solid var(--border-divider);
+      border-radius: 8px;
+      background: #fff;
+      overflow: hidden;
+    }
+
+    .form-section-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border-divider);
+      background: #fff;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .form-section-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--navy);
+      line-height: 1.2;
+      margin-bottom: 2px;
+    }
+
+    .form-section-desc {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.4;
+      margin-top: 2px;
+    }
+
+    .form-section-chevron {
+      font-size: 13px;
+      color: var(--muted);
+      flex-shrink: 0;
+      margin-left: 12px;
+      margin-top: 2px;
+      display: inline-block;
+      transition: transform 0.18s ease;
+    }
+
+    .form-section.collapsed .form-section-chevron {
+      transform: rotate(180deg);
+    }
+    .form-section.collapsed .form-section-body {
+      display: none;
+    }
+    .form-section.collapsed .form-section-header {
+      border-bottom: none;
+    }
+
+    .form-section-body {
+      padding: 16px 18px;
+    }
+    .form-section-body > *:last-child { margin-bottom: 0; }
+
+    .form-section-divider {
+      border: none;
+      border-top: 1px solid var(--border-divider);
+      margin: 12px 0;
+    }
+
+    .form-row { margin-bottom: 10px; }
+
+    .form-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--navy);
+      margin-bottom: 5px;
+    }
+
+    .form-input,
+    .form-select {
+      width: 100%;
+      height: 36px;
+      padding: 0 10px;
+      border: 1px solid var(--border-input);
+      border-radius: var(--radius);
+      font-family: var(--font-sans);
+      font-size: 14px;
+      color: var(--navy);
+      background: #fff;
+      outline: none;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+    .form-select {
+      background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23797979' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      padding-right: 28px;
+      cursor: pointer;
+    }
+    .form-input:focus,
+    .form-select:focus { border-color: var(--navy-mid); }
+    .form-input::placeholder { color: var(--muted); }
+
+    /* Auto-resolved field */
+    .auto-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--navy);
+      margin-bottom: 5px;
+    }
+    .auto-label .auto-chip {
+      margin-left: 6px;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 1px 5px;
+      border-radius: 3px;
+      background: var(--surface-blue);
+      color: var(--navy-mid);
+      border: 1px solid var(--border-pill);
+      vertical-align: middle;
+    }
+
+    .auto-value {
+      height: 36px;
+      display: flex;
+      align-items: center;
+      padding: 0 10px;
+      border: 1px solid var(--border-pill);
+      border-radius: var(--radius);
+      font-size: 14px;
+      color: var(--navy-dark);
+      background: var(--surface-blue);
+    }
+
+    /* Pills */
+    .pill-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
+    .pill {
+      height: 24px;
+      display: inline-flex;
+      align-items: center;
+      padding: 0 10px;
+      border-radius: var(--radius);
+      background: var(--surface-blue);
+      border: 1px solid var(--border-pill);
+      color: var(--navy);
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    /* URL Preview */
+    .url-preview-block {
+      background: var(--off-white);
+      border: 1px solid var(--border-divider);
+      border-radius: var(--radius);
+      padding: 10px 12px;
+      font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+      font-size: 12px;
+      line-height: 2;
+      word-break: break-all;
+      min-height: 56px;
+    }
+    .u-auto    { color: var(--navy-dark); font-weight: 500; }
+    .u-user    { color: var(--navy); font-weight: 600; }
+    .u-pending { color: var(--border-gray); font-style: italic; }
+
+    /* Inline notes */
+    .note-info {
+      background: var(--surface-amber);
+      border: 1px solid var(--amber);
+      border-radius: var(--radius);
+      padding: 8px 12px;
+      font-size: 12px;
+      color: #7a5200;
+      margin-top: 6px;
+      line-height: 1.5;
+    }
+    .note-warn {
+      background: var(--surface-orange);
+      border: 1px solid var(--orange);
+      border-radius: var(--radius);
+      padding: 8px 12px;
+      font-size: 12px;
+      color: #7a3500;
+      margin-top: 6px;
+      line-height: 1.5;
+    }
+
+    /* Conversion structure (auto read-only rows) */
+    .conv-rows { display: flex; flex-direction: column; gap: 6px; }
+    .conv-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      height: 36px;
+      padding: 0 10px;
+      background: var(--surface-blue);
+      border: 1px solid var(--border-pill);
+      border-radius: var(--radius);
+    }
+    .conv-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--navy-mid);
+      width: 110px;
+      flex-shrink: 0;
+    }
+    .conv-value { font-size: 13px; color: var(--navy-dark); font-weight: 500; }
+
+    /* Current config panel */
+    .config-panel {
+      background: var(--off-white);
+      border: 1px solid var(--border-divider);
+      border-radius: var(--radius);
+      padding: 10px 12px;
+    }
+    .config-panel-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+    .config-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 5px 0;
+      border-bottom: 1px solid var(--border-divider);
+      font-size: 13px;
+    }
+    .config-row:last-child { border-bottom: none; }
+    .config-lp    { color: var(--navy); font-weight: 500; }
+    .config-role  { color: var(--muted); font-size: 12px; margin-left: 6px; font-weight: 400; }
+    .config-pct   { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+
+    /* Variants table */
+    .variants-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .variants-table th {
+      text-align: left;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      padding: 5px 8px 7px;
+      border-bottom: 1px solid var(--border-divider);
+    }
+    .variants-table th:last-child { text-align: right; }
+    .variants-table td {
+      padding: 6px 8px;
+      border-bottom: 1px solid var(--border-divider);
+      vertical-align: middle;
+    }
+    .variant-role { font-size: 12px; font-weight: 500; color: var(--muted); }
+    .vt-input {
+      height: 32px;
+      padding: 0 8px;
+      border: 1px solid var(--border-input);
+      border-radius: var(--radius);
+      font-family: var(--font-sans);
+      font-size: 13px;
+      color: var(--navy);
+      outline: none;
+      width: 100%;
+    }
+    .vt-input:focus { border-color: var(--navy-mid); }
+    .vt-pct { width: 60px; text-align: right; }
+    .variant-total td { font-weight: 700; color: var(--navy); border-bottom: none; padding-top: 10px; }
+
+    /* Helper text */
+    .helper-text { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+    /* Preview legend */
+    .preview-legend {
+      display: flex;
+      gap: 14px;
+      margin-top: 6px;
+    }
+    .legend-item { font-size: 11px; color: var(--muted); display: flex; align-items: center; gap: 4px; }
+    .legend-swatch {
+      width: 10px; height: 10px; border-radius: 2px;
+    }
+    .ls-auto { background: var(--surface-blue); border: 1px solid var(--border-pill); }
+    .ls-user { background: var(--surface); border: 1px solid var(--border-gray); }
+    .ls-pend { background: #fff; border: 1px dashed var(--border-gray); }
+
+    /* ===== TRACKING MODE BUTTONS ===== */
+    .mode-btn-group {
+      display: flex;
+      gap: 6px;
+    }
+
+    .mode-btn {
+      flex: 1;
+      padding: 8px 10px;
+      border: 1px solid var(--border-input);
+      border-radius: var(--radius);
+      background: #fff;
+      cursor: pointer;
+      text-align: left;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      font-family: var(--font-sans);
+      transition: border-color 0.12s, background 0.12s;
+    }
+    .mode-btn:hover { background: var(--off-white); border-color: var(--navy-mid); }
+
+    .mode-btn-title { font-size: 13px; font-weight: 600; color: var(--navy); line-height: 1.3; }
+    .mode-btn-sub   { font-size: 11px; color: var(--muted); line-height: 1.3; }
+
+    .mode-btn.active-off {
+      background: #FAECE7;
+      border-color: #D85A30;
+    }
+    .mode-btn.active-off .mode-btn-title { color: #712B13; }
+    .mode-btn.active-off .mode-btn-sub   { color: #A5533A; }
+
+    .mode-btn.active-on {
+      background: #E6F1FB;
+      border-color: #378ADD;
+    }
+    .mode-btn.active-on .mode-btn-title { color: #0C447C; }
+    .mode-btn.active-on .mode-btn-sub   { color: #2E6AA0; }
+
+    .tracking-badge {
+      margin-top: 6px;
+      padding: 8px 10px;
+      border-radius: var(--radius);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+    .tracking-off { background: #FAECE7; border: 1px solid #D85A30; color: #712B13; }
+    .tracking-on  { background: #E6F1FB; border: 1px solid #378ADD; color: #0C447C; }
+
+    /* Instapage role badge */
+    .instapage-role-badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 1px 7px;
+      border-radius: 6px;
+      background: var(--surface-blue);
+      border: 1px solid var(--border-pill);
+      color: var(--navy-mid);
+      vertical-align: middle;
+      margin-left: 6px;
+    }
+
+    /* Preview note */
+    .preview-note {
+      margin-top: 8px;
+      padding: 8px 10px;
+      border-radius: var(--radius);
+      font-size: 12px;
+      line-height: 1.5;
+      background: var(--off-white);
+      border: 1px solid var(--border-divider);
+      color: var(--muted);
+    }
+
+    /* Green auto-assembled field */
+    .auto-value-green {
+      padding: 8px 10px;
+      border: 1px solid #9FE1CB;
+      border-radius: var(--radius);
+      font-family: 'SF Mono', 'Consolas', monospace;
+      font-size: 12px;
+      color: #085041;
+      background: #E1F5EE;
+      line-height: 1.7;
+      word-break: break-all;
+      min-height: 36px;
+    }
+    .auto-chip.green {
+      background: #E1F5EE !important;
+      border-color: #9FE1CB !important;
+      color: #085041 !important;
+    }
+
+    /* Field note */
+    .field-note {
+      margin-top: 5px;
+      padding: 3px 0 3px 8px;
+      border-left: 2px solid var(--border-divider);
+      font-size: 11.5px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    /* ===== UTM SOURCE ===== */
+    .utmsrc-badge {
+      display: inline-flex;
+      align-items: center;
+      height: 20px;
+      padding: 0 8px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .utmsrc-active  { background: #E6FBF3; border: 1px solid #5CC8A0; color: #085041; }
+    .utmsrc-unknown { background: var(--surface); border: 1px solid var(--border-gray); color: var(--muted); }
+
+    .utmsrc-badge-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 5px;
+    }
+
+    .gtm-confirm-row {
+      background: var(--off-white);
+      border: 1px solid var(--border-divider);
+      border-radius: var(--radius);
+      padding: 10px 12px;
+    }
+    .gtm-confirm-label {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      color: var(--navy);
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+    .gtm-confirm-label input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      margin-top: 1px;
+      accent-color: var(--orange);
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+
+    /* ===== COMPLETION VIEW ===== */
+    .comp-zone {
+      margin-bottom: 18px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border-divider);
+    }
+    .comp-zone:last-child { border-bottom: none; margin-bottom: 0; }
+
+    .comp-zone-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+
+    .comp-id-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 0;
+      border-bottom: 1px solid var(--border-divider);
+    }
+    .comp-id-row:last-child { border-bottom: none; }
+    .comp-id-label { font-size: 12px; color: var(--muted); width: 90px; flex-shrink: 0; }
+    .comp-id-value { font-size: 14px; font-weight: 700; color: var(--navy); flex: 1; }
+
+    .comp-url-block {
+      background: var(--off-white);
+      border: 1px solid var(--border-divider);
+      border-radius: var(--radius);
+      padding: 10px 12px;
+      margin-bottom: 8px;
+    }
+    .comp-url-block.qa-url-block {
+      background: #FFFBEB;
+      border-color: #F0C050;
+      border-left: 3px solid var(--amber);
+    }
+    .comp-url-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+    .comp-url-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--navy);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .qa-badge {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 1px 6px;
+      border-radius: 4px;
+      background: #FFF5DF;
+      border: 1px solid var(--amber);
+      color: #7a5200;
+    }
+    .comp-url-value {
+      font-family: 'SF Mono', 'Consolas', monospace;
+      font-size: 11.5px;
+      color: var(--navy);
+      word-break: break-all;
+      line-height: 1.6;
+    }
+
+    .copy-btn {
+      height: 26px;
+      padding: 0 10px;
+      border: 1px solid var(--border-input);
+      border-radius: var(--radius);
+      background: #fff;
+      font-family: var(--font-sans);
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--muted);
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: background 0.12s, color 0.12s;
+    }
+    .copy-btn:hover { background: var(--surface); color: var(--navy); }
+    .copy-btn.copied { background: #E6FBF3; border-color: #5CC8A0; color: #085041; }
+
+    .asana-field-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 6px 0;
+      border-bottom: 1px solid var(--border-divider);
+      font-size: 13px;
+    }
+    .asana-field-row:last-child { border-bottom: none; }
+    .asana-field-label { color: var(--muted); width: 110px; flex-shrink: 0; font-size: 12px; }
+    .asana-field-value { color: var(--navy); font-weight: 500; }
+
+    .comp-actions-row { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    .completion-lp-name {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--navy);
+    }
+
+    .pending-save-banner {
+      background: #FFFBEB;
+      border: 1px solid var(--amber);
+      border-left: 3px solid var(--amber);
+      border-radius: var(--radius);
+      padding: 12px 14px;
+      margin-bottom: 16px;
+      font-size: 13px;
+      color: #5a3d00;
+      line-height: 1.5;
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+
+    /* State visibility */
+    .drawer-state { display: none; }
+    .drawer-state.active { display: block; }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-badge">M</div>
+      <div class="logo-text">
+        <span class="logo-text-main">Maven Manage</span>
+        <span class="logo-text-sub">Ad Operations</span>
+      </div>
+    </div>
+    <nav class="nav-section">
+      <div class="nav-item active"><span class="nav-icon">⌂</span> Home</div>
+      <div class="nav-item"><span class="nav-icon">◈</span> Accounts</div>
+      <div class="nav-item"><span class="nav-icon">◆</span> Initiatives</div>
+      <div class="nav-item"><span class="nav-icon">⊞</span> Landing pages</div>
+      <div class="nav-item"><span class="nav-icon">↗</span> Reports</div>
+    </nav>
+  </aside>
+
+  <!-- ===== MAIN WRAPPER ===== -->
+  <div class="main-wrapper">
+
+    <!-- Page Header -->
+    <header class="page-header">
+      <div class="page-header-left">
+        <span class="page-title">Home</span>
+        <span class="page-breadcrumb">Maven Manage</span>
+      </div>
+      <div class="page-header-actions">
+        <button class="btn btn-primary btn-md" id="btn-create">+ Create</button>
+      </div>
+    </header>
+
+    <!-- Filter Bar -->
+    <div class="filter-bar">
+      <div class="search-wrap">
+        <span class="search-icon">&#9906;</span>
+        <input class="search-input" type="text" placeholder="Search LP, LPG, partner, URL...">
+      </div>
+    </div>
+
+    <!-- Content -->
+    <main class="content">
+
+      <!-- SECTION: Your Queue -->
+      <section class="section">
+        <div class="section-header">
+          <span class="section-label">Your queue</span>
+          <span class="status-badge badge-neutral">3</span>
+        </div>
+        <div class="queue-list">
+
+          <div class="queue-row type-lp">
+            <span class="queue-type-pill lp">LP</span>
+            <div class="queue-row-info">
+              <div class="queue-row-name">CCF Facebook Senior Travel</div>
+              <div class="queue-row-meta">New LP<span class="meta-dot">·</span>Facebook<span class="meta-dot">·</span>Desktop<span class="meta-dot">·</span>Ryan<span class="meta-dot">·</span>2h ago</div>
+            </div>
+            <button class="btn btn-secondary btn-sm"
+              data-ticket-type="lp"
+              data-name="CCF Facebook Senior Travel"
+              data-type-label="New LP"
+              data-platform="Facebook"
+              data-device="Desktop"
+              data-by="Ryan"
+              data-time="2h ago">Create</button>
+          </div>
+
+          <div class="queue-row type-exp">
+            <span class="queue-type-pill exp">EXP</span>
+            <div class="queue-row-info">
+              <div class="queue-row-name">Backend Exp LPG 14714 Coupons</div>
+              <div class="queue-row-meta">Experiment<span class="meta-dot">·</span>Taboola<span class="meta-dot">·</span>Lisa<span class="meta-dot">·</span>1d ago</div>
+            </div>
+            <button class="btn btn-secondary btn-sm"
+              data-ticket-type="exp"
+              data-name="Backend Exp LPG 14714 Coupons"
+              data-type-label="Experiment"
+              data-platform="Taboola"
+              data-device=""
+              data-by="Lisa"
+              data-time="1d ago">Create</button>
+          </div>
+
+          <div class="queue-row type-lp">
+            <span class="queue-type-pill lp">LP</span>
+            <div class="queue-row-info">
+              <div class="queue-row-name">GFC Bing Mobile Pricing</div>
+              <div class="queue-row-meta">New LP<span class="meta-dot">·</span>Bing<span class="meta-dot">·</span>Mobile<span class="meta-dot">·</span>Jimmy<span class="meta-dot">·</span>3d ago</div>
+            </div>
+            <button class="btn btn-secondary btn-sm"
+              data-ticket-type="lp"
+              data-name="GFC Bing Mobile Pricing"
+              data-type-label="New LP"
+              data-platform="Bing"
+              data-device="Mobile"
+              data-by="Jimmy"
+              data-time="3d ago">Create</button>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- SECTION: Recently Built -->
+      <section class="section">
+        <div class="section-header">
+          <span class="section-label">Recently built</span>
+        </div>
+        <div class="card-list">
+
+          <div class="built-card clickable"
+            data-lp-id="16215" data-lpg-id="16216" data-ds="DS12"
+            data-lp-name="CCF FB Senior Travel"
+            data-platform="Facebook" data-device="Desktop"
+            data-instapage="blog.couponcodefinder.com/ca/senior-travel-fb"
+            data-media-url="blog.couponcodefinder.com/ca/senior-travel-fb?ds=DS12&amp;utm_source=facebook&amp;ec=ec%3D1&amp;angle=price&amp;subid={{subid}}&amp;clickid={{clickid}}"
+            data-qa-url="blog.couponcodefinder.com/ca/senior-travel-fb?ds=DS12&amp;utm_source=facebook&amp;ec=ec%3D1&amp;angle=price&amp;subid=0&amp;clickid=0&amp;atnqa=1"
+            data-status="Live">
+            <span class="status-badge badge-active">
+              <span class="dot" style="background:var(--success)"></span>Live
+            </span>
+            <div class="built-info">
+              <div class="built-name">LP 16215 · CCF FB Senior Travel</div>
+              <div class="built-sub">DS12 · LPG 16216 · built 2 days ago</div>
+            </div>
+            <div class="built-stat">1,243 redirects</div>
+          </div>
+
+          <div class="built-card clickable"
+            data-lp-id="14714" data-lpg-id="14714" data-ds="DS18"
+            data-lp-name="OST Coupons Jump"
+            data-platform="Taboola" data-device="Desktop"
+            data-instapage="blog.onlineshoppingtools.com/ost/coupons-jump"
+            data-media-url="https://cos-rd.com/DS18/14714?ec=ec%3D1&amp;atnid={atnid}&amp;uxid={uxid}"
+            data-qa-url="https://cos-rd.com/DS18/14714?ec=ec%3D1&amp;atnid=0&amp;uxid=0&amp;atnqa=1"
+            data-status="Exp running">
+            <span class="status-badge badge-amber">
+              <span class="dot" style="background:var(--amber)"></span>Exp running
+            </span>
+            <div class="built-info">
+              <div class="built-name">LPG 14714 · OST Coupons Jump</div>
+              <div class="built-sub">3 variants</div>
+            </div>
+            <div class="built-stat">34 / 33 / 33</div>
+          </div>
+
+          <div class="built-card clickable"
+            data-lp-id="17890" data-lpg-id="17891" data-ds="DS14"
+            data-lp-name="GFC Bing Pricing"
+            data-platform="Bing" data-device="Mobile"
+            data-instapage="blog.getfreecoupons.com/gfc/bing-pricing"
+            data-media-url="https://cos-rd.com/DS14/17891?ec=ec%3D1&amp;atnid={atnid}&amp;uxid={uxid}"
+            data-qa-url="https://cos-rd.com/DS14/17891?ec=ec%3D1&amp;atnid=0&amp;uxid=0&amp;atnqa=1"
+            data-status="Live">
+            <span class="status-badge badge-active">
+              <span class="dot" style="background:var(--success)"></span>Live
+            </span>
+            <div class="built-info">
+              <div class="built-name">LP 17890 · GFC Bing Pricing</div>
+              <div class="built-sub">DS14 · LPG 17891 · built 5 days ago</div>
+            </div>
+            <div class="built-stat">342 redirects</div>
+          </div>
+
+          <!-- URL-pending card — shown when a campaign is saved as pending -->
+          <div class="built-card hidden" id="pending-lp-card" style="border-left:3px solid var(--amber)">
+            <span class="status-badge badge-amber">
+              <span class="dot" style="background:var(--amber)"></span>URL pending
+            </span>
+            <div class="built-info">
+              <div class="built-name" id="pending-lp-name">LP pending · —</div>
+              <div class="built-sub" id="pending-lp-sub">— · GTM setup required · just now</div>
+            </div>
+            <button class="btn btn-secondary btn-sm" id="pending-resume-btn">Resume →</button>
+          </div>
+
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ===== BACKDROP ===== -->
+  <div class="drawer-backdrop" id="drawer-backdrop"></div>
+
+  <!-- ===== DRAWER ===== -->
+  <div class="drawer" id="drawer">
+
+    <div class="drawer-header">
+      <span class="drawer-title" id="drawer-title">Create</span>
+      <button class="drawer-close" id="drawer-close">✕</button>
+    </div>
+
+    <div class="drawer-body" id="drawer-body">
+
+      <!-- ==================
+           STATE 1 — Create
+           ================== -->
+      <div class="drawer-state" id="state-1">
+        <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">What would you like to do?</p>
+        <div class="option-cards">
+
+          <div class="option-card" id="opt-campaign">
+            <div class="option-card-body">
+              <div class="option-card-title">Run a new campaign</div>
+              <div class="option-card-desc">Existing account · existing traffic source · Creates LP + LPG</div>
+            </div>
+            <span class="option-tag blue">Most frequent</span>
+            <span class="option-card-chevron">›</span>
+          </div>
+
+          <div class="option-card" id="opt-platform">
+            <div class="option-card-body">
+              <div class="option-card-title">Expand to a new traffic source</div>
+              <div class="option-card-desc">Existing account · new traffic source · Creates Initiative → LP + LPG</div>
+            </div>
+            <span class="option-tag">Scaffold → Configure</span>
+            <span class="option-card-chevron">›</span>
+          </div>
+
+          <div class="option-card" id="opt-partner">
+            <div class="option-card-body">
+              <div class="option-card-title">Onboard a new partner</div>
+              <div class="option-card-desc">New account · new traffic source · Builds full partner structure</div>
+            </div>
+            <span class="option-tag">Scaffold</span>
+            <span class="option-card-chevron">›</span>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ==============================
+           STATE 2 — Run a new campaign
+           ============================== -->
+      <div class="drawer-state" id="state-2">
+        <div id="s2-form-content">
+
+        <div class="back-link" id="back-2">‹ Back</div>
+
+        <div class="ticket-banner hidden" id="ticket-banner">
+          <div class="ticket-banner-eyebrow" id="ticket-banner-eyebrow">From queue</div>
+          <div class="ticket-banner-name" id="ticket-banner-name"></div>
+          <div class="ticket-banner-meta" id="ticket-banner-meta"></div>
+        </div>
+
+        <!-- SECTION 1: Where does this belong? -->
+        <div class="form-section">
+          <div class="form-section-header">
+            <div>
+              <div class="form-section-title">Initiative</div>
+              <div class="form-section-desc">Account · O&amp;O page</div>
+            </div>
+            <span class="form-section-chevron">∧</span>
+          </div>
+          <div class="form-section-body">
+
+          <div class="form-row">
+            <label class="form-label">Account</label>
+            <select class="form-select">
+              <option value="">Select an account...</option>
+              <option value="129">129 – Xevio</option>
+              <option value="37">37 – A – Guaranteed</option>
+              <option value="39">39 – A – Taboola</option>
+              <option value="62">62 – Advida – RevShare</option>
+              <option value="42">42 – CapitalOne Shopping</option>
+              <option value="25">25 – CompareCredit</option>
+              <option value="136">136 – Foreversongs</option>
+              <option value="126">126 – GoGoGadget</option>
+              <option value="131">131 – Investments</option>
+              <option value="134">134 – Kalshi</option>
+              <option value="124">124 – MTD Disco CC</option>
+              <option value="109">109 – Opera</option>
+              <option value="133">133 – Slick Codes Direct Buy</option>
+              <option value="75">75 – Tax</option>
+            </select>
+          </div>
+
+          <div class="form-row">
+            <label class="form-label">O&amp;O page</label>
+            <select class="form-select">
+              <option value="">Select an O&amp;O page...</option>
+              <option value="ccf">Coupon Code Finder</option>
+              <option value="ost">Online Shopping Tools</option>
+              <option value="gfc">Get Free Coupons</option>
+            </select>
+          </div>
+
+          </div>
+        </div>
+
+        <!-- SECTION 2: Traffic source -->
+        <div class="form-section">
+          <div class="form-section-header">
+            <div>
+              <div class="form-section-title">Traffic source</div>
+              <div class="form-section-desc">Platform · Device — determines URL structure</div>
+            </div>
+            <span class="form-section-chevron">∧</span>
+          </div>
+          <div class="form-section-body">
+
+          <div class="form-row">
+            <label class="form-label">Traffic source</label>
+            <select class="form-select" id="s2-platform">
+              <option value="">Select a traffic source...</option>
+              <option value="PCH Media">109 – PCH Media</option>
+              <option value="ad.net">90 – ad.net</option>
+              <option value="Advida">27 – Advida</option>
+              <option value="AOL">21 – AOL</option>
+              <option value="ATN CCF Google GDN">99 – ATN CCF Google GDN</option>
+              <option value="ATN CCF Google YT">100 – ATN CCF Google YT</option>
+              <option value="Baidu">92 – Baidu</option>
+              <option value="Baidu PE">108 – Baidu PE</option>
+              <option value="Beam">65 – Beam</option>
+              <option value="Bing">14 – Bing Ads</option>
+              <option value="BrandClick">111 – BrandClick</option>
+              <option value="Brave">57 – Brave</option>
+              <option value="Brax">2 – Brax</option>
+              <option value="CC NextDoor">122 – CC NextDoor</option>
+              <option value="CCF Google GDN">96 – CCF Google GDN</option>
+              <option value="CCF Google YT">97 – CCF Google YT</option>
+              <option value="CNN Rev Share">73 – CNN Rev Share</option>
+              <option value="Dianomi">42 – Dianomi</option>
+              <option value="Disco">119 – Disco</option>
+              <option value="Facebook">12 – Facebook</option>
+              <option value="FI NextDoor">140 – FI NextDoor</option>
+              <option value="Gemini Rev Share">75 – Gemini Rev Share</option>
+              <option value="Google GDN">60 – Google – GDN</option>
+              <option value="Google GDN Calls">137 – Google – GDN – Calls</option>
+              <option value="Google Pmax">130 – Google – Pmax</option>
+              <option value="Google YT">59 – Google – YT</option>
+              <option value="Google YT Calls">136 – Google – YT – Calls</option>
+              <option value="Google Ads">35 – Google Ads</option>
+              <option value="Google GDN Native">118 – Google GDN Native</option>
+              <option value="Inceptly">64 – Inceptly</option>
+              <option value="Infolinks">6 – Infolinks</option>
+              <option value="Intango">78 – Intango</option>
+              <option value="Inulti">121 – Inulti</option>
+              <option value="Jeeng">45 – Jeeng</option>
+              <option value="Kalshi NextDoor">142 – Kalshi NextDoor</option>
+              <option value="LiveIntent">20 – LiveIntent</option>
+              <option value="LockerDome">39 – LockerDome</option>
+              <option value="LPT Google GDN">128 – LPT – Google – GDN</option>
+              <option value="LPT Google Pmax">131 – LPT – Google – Pmax</option>
+              <option value="Maven Ads">134 – Maven Ads</option>
+              <option value="Maven Smart Bid T">54 – Maven Smart Bid – T</option>
+              <option value="Maven Smart Bid Y">53 – Maven Smart Bid – Y</option>
+              <option value="Maven Smart Bid Y CC">72 – Maven Smart Bid – Y CC</option>
+              <option value="MediaForce">63 – MediaForce</option>
+              <option value="MGID">5 – MGID</option>
+              <option value="MomentumX">74 – MomentumX</option>
+              <option value="MSN Rev Share">55 – MSN Rev Share</option>
+              <option value="Newsbreak">125 – Newsbreak</option>
+              <option value="NextDoor">51 – NextDoor</option>
+              <option value="Nextdoor Calls">135 – Nextdoor Calls</option>
+              <option value="NextDoor UK">126 – NextDoor UK</option>
+              <option value="Nextdoor Yahoo DSP">132 – Nextdoor Yahoo DSP</option>
+              <option value="Opera Third Party">116 – Opera Third Party</option>
+              <option value="Outbrain">19 – Outbrain</option>
+              <option value="Pinterest">34 – Pinterest</option>
+              <option value="PMax">129 – PMax</option>
+              <option value="Quora">32 – Quora</option>
+              <option value="Reddit">30 – Reddit</option>
+              <option value="Revcontent">15 – Revcontent</option>
+              <option value="Share-A-Sale">76 – Share-A-Sale</option>
+              <option value="Sideqik">112 – Sideqik</option>
+              <option value="Slick Codes Direct Buy">141 – Slick Codes Direct Buy</option>
+              <option value="Snap">146 – Snap</option>
+              <option value="Taboola">18 – Taboola</option>
+              <option value="Tiktok">91 – Tiktok</option>
+              <option value="Tonic">13 – Tonic</option>
+              <option value="Twitch">43 – Twitch</option>
+              <option value="Twitter">88 – Twitter</option>
+              <option value="Yahoo 6H">82 – Yahoo 6H</option>
+              <option value="Yahoo DSP 6H">83 – Yahoo DSP – 6H</option>
+              <option value="YahooDsp">31 – YahooDsp</option>
+              <option value="Zemanta">1 – Zemanta</option>
+              <option value="Zeropark">10 – Zeropark</option>
+            </select>
+          </div>
+
+          <div class="form-row">
+            <label class="form-label">Device</label>
+            <select class="form-select" id="s2-device">
+              <option value="">Select...</option>
+              <option>Desktop</option><option>Mobile</option>
+            </select>
+          </div>
+
+          <hr class="form-section-divider">
+
+          <div class="form-row">
+            <label class="auto-label">Data source <span class="auto-chip">auto</span></label>
+            <div class="auto-value" id="s2-auto-ds">—</div>
+          </div>
+
+          <div class="form-row">
+            <label class="auto-label">Initiative <span class="auto-chip">auto</span></label>
+            <div class="auto-value" id="s2-auto-initiative">—</div>
+          </div>
+
+          <hr class="form-section-divider">
+
+          <div class="form-row">
+            <div class="mode-btn-group">
+              <button class="mode-btn" id="mode-off">
+                <span class="mode-btn-title">Pre-lander off</span>
+                <span class="mode-btn-sub">Facebook · Google</span>
+              </button>
+              <button class="mode-btn" id="mode-on">
+                <span class="mode-btn-title">Pre-lander on</span>
+                <span class="mode-btn-sub">Taboola · Bing · Outbrain</span>
+              </button>
+            </div>
+            <div class="tracking-badge tracking-off hidden" id="tracking-badge-off">
+              Pre-lander off — URL goes directly to the Instapage page. Used for Facebook and Google.
+            </div>
+            <div class="tracking-badge tracking-on hidden" id="tracking-badge-on">
+              Pre-lander on — User lands on O&amp;O page first, then redirects to client landing page.
+            </div>
+          </div>
+
+          </div>
+        </div>
+
+        <!-- SECTION 3: Page -->
+        <div class="form-section">
+          <div class="form-section-header">
+            <div>
+              <div class="form-section-title">Landing Page</div>
+              <div class="form-section-desc">Instapage URL · angle · landing URL</div>
+            </div>
+            <span class="form-section-chevron">∧</span>
+          </div>
+          <div class="form-section-body">
+
+          <div class="form-row">
+            <label class="form-label">
+              Instapage URL
+              <span class="instapage-role-badge" id="instapage-role-badge">base for landing URL</span>
+            </label>
+            <input type="text" class="form-input" id="s2-instapage" placeholder="e.g. blog.couponcodefinder.com/ca/travel-budget-fb">
+            <div class="field-note hidden" id="instapage-note-on">
+              This becomes the Pre-lander URL — the first page the user sees after the ad click.
+            </div>
+          </div>
+
+          <div class="form-row">
+            <label class="form-label">Angle</label>
+            <select class="form-select" id="s2-angle">
+              <option value="">Select...</option>
+              <option value="price">Price</option>
+              <option value="quote">Quote</option>
+              <option value="comparison">Comparison</option>
+              <option value="review">Review</option>
+            </select>
+          </div>
+
+          <div class="form-row hidden" id="prelander-url-row">
+            <label class="auto-label">Pre-lander URL <span class="auto-chip green">auto</span></label>
+            <div class="auto-value-green" id="s2-prelander-url">
+              <span style="color:#9FE1CB;font-style:italic">Waiting for Instapage URL...</span>
+            </div>
+            <div class="field-note">Assembled from Instapage URL + tracking params. Sheba reviews before saving.</div>
+          </div>
+
+          <div class="form-row hidden" id="client-url-row">
+            <label class="form-label">Client landing URL</label>
+            <input type="text" class="form-input" placeholder="e.g. couponcodefinder.com">
+            <div class="field-note">Used by MavenTrack /go redirect after user clicks CTA on pre-lander.</div>
+          </div>
+
+          </div>
+        </div>
+
+        <!-- SECTION 4: Experience -->
+        <div class="form-section" id="utm-section">
+          <div class="form-section-header">
+            <div>
+              <div class="form-section-title">Experience</div>
+              <div class="form-section-desc">EC · popup · continuation · UTM source</div>
+            </div>
+            <span class="form-section-chevron">∧</span>
+          </div>
+          <div class="form-section-body">
+
+          <div class="form-row">
+            <label class="form-label">EC</label>
+            <select class="form-select" id="s2-ec">
+              <option value="">Select...</option>
+              <option value="ec=0">ec=0</option>
+              <option value="ec=1">ec=1</option>
+            </select>
+          </div>
+
+          <div class="form-row">
+            <label class="form-label">Popup</label>
+            <select class="form-select" id="s2-popup">
+              <option value="">Select...</option>
+              <option value="popup=1">popup=1</option>
+              <option value="none">none</option>
+            </select>
+          </div>
+
+          <div class="form-row">
+            <label class="form-label">Continuation</label>
+            <select class="form-select">
+              <option value="">Select...</option>
+              <option>Yes</option><option>No</option>
+            </select>
+          </div>
+
+          <hr class="form-section-divider">
+
+          <div id="utm-existing-view">
+            <div class="form-row">
+              <label class="form-label">expertm_source</label>
+              <select class="form-select" id="s2-utm-select">
+                <option value="">Select...</option>
+                <option value="ccf_facebook_desktop">ccf_facebook_desktop</option>
+                <option value="ccf_facebook_mobile">ccf_facebook_mobile</option>
+                <option value="ost_taboola_desktop">ost_taboola_desktop</option>
+                <option value="gfc_bing_mobile">gfc_bing_mobile</option>
+                <option value="__new__">+ Add new source</option>
+              </select>
+              <div class="utmsrc-badge-wrap hidden" id="utm-status-wrap">
+                <span class="utmsrc-badge" id="utm-status-badge"></span>
+                <span class="helper-text" id="utm-status-note" style="margin-top:0"></span>
+              </div>
+            </div>
+          </div>
+
+          <div id="utm-new-view" class="hidden">
+            <div class="form-row">
+              <label class="form-label">New expertm_source</label>
+              <input type="text" class="form-input" id="s2-utm-new-input" placeholder="e.g. ccf_facebook_desktop">
+              <div class="helper-text">This source doesn't exist yet — GTM setup required before going live.</div>
+            </div>
+            <div class="form-row">
+              <div class="gtm-confirm-row">
+                <label class="gtm-confirm-label">
+                  <input type="checkbox" id="gtm-checkbox">
+                  <span>I've added this source to the GTM container</span>
+                </label>
+                <div class="helper-text" style="padding-left:24px;margin-top:2px">Check this after updating the GTM workspace. You can save as pending without this.</div>
+              </div>
+            </div>
+            <div class="form-row" style="margin-bottom:0">
+              <a href="#" id="utm-use-existing-link" class="back-link" style="margin-bottom:0;font-size:12px">← Use existing instead</a>
+            </div>
+          </div>
+
+          </div>
+        </div>
+
+        <div class="form-section">
+          <div class="form-section-header">
+            <div>
+              <div class="form-section-title" id="url-preview-label">URL preview</div>
+              <div class="form-section-desc">Live preview of the assembled media URL</div>
+            </div>
+            <span class="form-section-chevron">∧</span>
+          </div>
+          <div class="form-section-body">
+          <div class="url-preview-block" id="s2-url-preview">
+            <span class="u-pending">Waiting for traffic source selection...</span>
+          </div>
+          <div class="preview-note hidden" id="s2-preview-note"></div>
+          <div class="preview-legend">
+            <span class="legend-item"><span class="legend-swatch ls-auto"></span>Auto-resolved</span>
+            <span class="legend-item"><span class="legend-swatch ls-user"></span>User input</span>
+            <span class="legend-item"><span class="legend-swatch ls-pend"></span>Pending</span>
+          </div>
+          </div>
+        </div>
+
+        </div><!-- /s2-form-content -->
+
+        <!-- PENDING BANNER — shown on resume from a pending LP -->
+        <div class="pending-save-banner hidden" id="s2-pending-banner">
+          <span>⏳</span>
+          <div>
+            <strong>URL pending</strong> — GTM setup still required for
+            <strong id="pending-banner-source">expertm_source</strong>.
+            Complete GTM setup, check the box above, then generate the URL.
+          </div>
+        </div>
+
+        <!-- COMPLETION VIEW — shown after URL generation -->
+        <div id="s2-completion" class="hidden">
+
+          <div style="margin-bottom:20px">
+            <div class="comp-zone-title" style="margin-bottom:4px">Campaign built</div>
+            <div class="completion-lp-name" id="comp-lp-name">—</div>
+          </div>
+
+          <!-- Zone 1: IDs -->
+          <div class="comp-zone">
+            <div class="comp-zone-title">IDs</div>
+            <div class="comp-id-row">
+              <span class="comp-id-label">LP ID</span>
+              <span class="comp-id-value" id="comp-lp-id">—</span>
+            </div>
+            <div class="comp-id-row">
+              <span class="comp-id-label">LPG ID</span>
+              <span class="comp-id-value" id="comp-lpg-id">—</span>
+            </div>
+            <div class="comp-id-row">
+              <span class="comp-id-label">Data source</span>
+              <span class="comp-id-value" id="comp-ds">—</span>
+            </div>
+          </div>
+
+          <!-- Zone 2: URLs -->
+          <div class="comp-zone">
+            <div class="comp-zone-title">URLs</div>
+            <div class="comp-url-block">
+              <div class="comp-url-header">
+                <span class="comp-url-label">Media URL</span>
+                <button class="copy-btn" data-copy-target="comp-media-url">Copy</button>
+              </div>
+              <div class="comp-url-value" id="comp-media-url">—</div>
+            </div>
+            <div class="comp-url-block qa-url-block">
+              <div class="comp-url-header">
+                <span class="comp-url-label">QA URL <span class="qa-badge">QA only</span></span>
+                <button class="copy-btn" data-copy-target="comp-qa-url">Copy</button>
+              </div>
+              <div class="comp-url-value" id="comp-qa-url">—</div>
+            </div>
+          </div>
+
+          <!-- Zone 3: Asana write-back -->
+          <div class="comp-zone">
+            <div class="comp-zone-title">Asana write-back</div>
+            <div class="asana-field-row">
+              <span class="asana-field-label">LP name</span>
+              <span class="asana-field-value" id="comp-asana-name">—</span>
+            </div>
+            <div class="asana-field-row">
+              <span class="asana-field-label">LP ID</span>
+              <span class="asana-field-value" id="comp-asana-lpid">—</span>
+            </div>
+            <div class="asana-field-row">
+              <span class="asana-field-label">Media URL</span>
+              <span class="asana-field-value" id="comp-asana-url" style="font-size:11px;font-family:'SF Mono',monospace;word-break:break-all">—</span>
+            </div>
+            <div class="asana-field-row">
+              <span class="asana-field-label">Status</span>
+              <span class="asana-field-value" id="comp-asana-status">—</span>
+            </div>
+          </div>
+
+          <!-- Zone 4: Next actions -->
+          <div class="comp-zone">
+            <div class="comp-zone-title">Next</div>
+            <div class="comp-actions-row">
+              <button class="btn btn-secondary btn-sm">View in Instapage ↗</button>
+              <button class="btn btn-secondary btn-sm">Open in Asana ↗</button>
+              <button class="btn btn-tertiary btn-sm" onclick="closeDrawer()">Done</button>
+            </div>
+          </div>
+
+        </div><!-- /s2-completion -->
+
+      </div>
+
+      <!-- ====================================
+           STATE 3 — Expand to a new traffic source
+           ==================================== -->
+      <div class="drawer-state" id="state-3">
+
+        <div class="back-link" id="back-3">‹ Back</div>
+
+        <div class="form-section">
+          <div class="form-section-header">
+            <div>
+              <div class="form-section-title">Select partner</div>
+              <div class="form-section-desc">Choose the account to expand to a new traffic source</div>
+            </div>
+            <span class="form-section-chevron">∧</span>
+          </div>
+          <div class="form-section-body">
+          <div class="form-row">
+            <label class="form-label">Account</label>
+            <select class="form-select">
+              <option value="">Select...</option>
+              <option>CCF</option><option>OST</option><option>GFC</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <label class="auto-label">Current traffic sources <span class="auto-chip">auto</span></label>
+            <div class="pill-list">
+              <span class="pill">Facebook</span>
+              <span class="pill">Bing</span>
+            </div>
+          </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <div class="form-section-header">
+            <div>
+              <div class="form-section-title">New traffic source</div>
+              <div class="form-section-desc">Select the traffic source to add to this account</div>
+            </div>
+            <span class="form-section-chevron">∧</span>
+          </div>
+          <div class="form-section-body">
+          <div class="form-row">
+            <label class="form-label">Traffic source</label>
+            <select class="form-select" id="s3-platform">
+              <option value="">Select a traffic source...</option>
+              <option value="PCH Media">109 – PCH Media</option>
+              <option value="ad.net">90 – ad.net</option>
+              <option value="Advida">27 – Advida</option>
+              <option value="AOL">21 – AOL</option>
+              <option value="ATN CCF Google GDN">99 – ATN CCF Google GDN</option>
+              <option value="ATN CCF Google YT">100 – ATN CCF Google YT</option>
+              <option value="Baidu">92 – Baidu</option>
+              <option value="Baidu PE">108 – Baidu PE</option>
+              <option value="Beam">65 – Beam</option>
+              <option value="Bing">14 – Bing Ads</option>
+              <option value="BrandClick">111 – BrandClick</option>
+              <option value="Brave">57 – Brave</option>
+              <option value="Brax">2 – Brax</option>
+              <option value="CC NextDoor">122 – CC NextDoor</option>
+              <option value="CCF Google GDN">96 – CCF Google GDN</option>
+              <option value="CCF Google YT">97 – CCF Google YT</option>
+              <option value="CNN Rev Share">73 – CNN Rev Share</option>
+              <option value="Dianomi">42 – Dianomi</option>
+              <option value="Disco">119 – Disco</option>
+              <option value="Facebook">12 – Facebook</option>
+              <option value="FI NextDoor">140 – FI NextDoor</option>
+              <option value="Gemini Rev Share">75 – Gemini Rev Share</option>
+              <option value="Google GDN">60 – Google – GDN</option>
+              <option value="Google GDN Calls">137 – Google – GDN – Calls</option>
+              <option value="Google Pmax">130 – Google – Pmax</option>
+              <option value="Google YT">59 – Google – YT</option>
+              <option value="Google YT Calls">136 – Google – YT – Calls</option>
+              <option value="Google Ads">35 – Google Ads</option>
+              <option value="Google GDN Native">118 – Google GDN Native</option>
+              <option value="Inceptly">64 – Inceptly</option>
+              <option value="Infolinks">6 – Infolinks</option>
+              <option value="Intango">78 – Intango</option>
+              <option value="Inulti">121 – Inulti</option>
+              <option value="Jeeng">45 – Jeeng</option>
+              <option value="Kalshi NextDoor">142 – Kalshi NextDoor</option>
+              <option value="LiveIntent">20 – LiveIntent</option>
+              <option value="LockerDome">39 – LockerDome</option>
+              <option value="LPT Google GDN">128 – LPT – Google – GDN</option>
+              <option value="LPT Google Pmax">131 – LPT – Google – Pmax</option>
+              <option value="Maven Ads">134 – Maven Ads</option>
+              <option value="Maven Smart Bid T">54 – Maven Smart Bid – T</option>
+              <option value="Maven Smart Bid Y">53 – Maven Smart Bid – Y</option>
+              <option value="Maven Smart Bid Y CC">72 – Maven Smart Bid – Y CC</option>
+              <option value="MediaForce">63 – MediaForce</option>
+              <option value="MGID">5 – MGID</option>
+              <option value="MomentumX">74 – MomentumX</option>
+              <option value="MSN Rev Share">55 – MSN Rev Share</option>
+              <option value="Newsbreak">125 – Newsbreak</option>
+              <option value="NextDoor">51 – NextDoor</option>
+              <option value="Nextdoor Calls">135 – Nextdoor Calls</option>
+              <option value="NextDoor UK">126 – NextDoor UK</option>
+              <option value="Nextdoor Yahoo DSP">132 – Nextdoor Yahoo DSP</option>
+              <option value="Opera Third Party">116 – Opera Third Party</option>
+              <option value="Outbrain">19 – Outbrain</option>
+              <option value="Pinterest">34 – Pinterest</option>
+              <option value="PMax">129 – PMax</option>
+              <option value="Quora">32 – Quora</option>
+              <option value="Reddit">30 – Reddit</option>
+              <option value="Revcontent">15 – Revcontent</option>
+              <option value="Share-A-Sale">76 – Share-A-Sale</option>
+              <option value="Sideqik">112 – Sideqik</option>
+              <option value="Slick Codes Direct Buy">141 – Slick Codes Direct Buy</option>
+              <option value="Snap">146 – Snap</option>
+              <option value="Taboola">18 – Taboola</option>
+              <option value="Tiktok">91 – Tiktok</option>
+              <option value="Tonic">13 – Tonic</option>
+              <option value="Twitch">43 – Twitch</option>
+              <option value="Twitter">88 – Twitter</option>
+              <option value="Yahoo 6H">82 – Yahoo 6H</option>
+              <option value="Yahoo DSP 6H">83 – Yahoo DSP – 6H</option>
+              <option value="YahooDsp">31 – YahooDsp</option>
+              <option value="Zemanta">1 – Zemanta</option>
+              <option value="Zeropark">10 – Zeropark</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <label class="form-label">Device</label>
+            <select class="form-select">
+              <option value="">Select...</option>
+              <option>Desktop</option><option>Mobile</option>
+            </select>
+          </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <div class="form-section-header">
+            <div>
+              <div class="form-section-title">Auto-resolved</div>
+              <div class="form-section-desc">Fields computed from your selections above</div>
+            </div>
+            <span class="form-section-chevron">∧</span>
+          </div>
+          <div class="form-section-body">
+          <div class="form-row">
+            <label class="auto-label">Data source <span class="auto-chip">auto</span></label>
+            <div class="auto-value" id="s3-auto-ds">—</div>
+          </div>
+          <div class="form-row">
+            <label class="auto-label">Initiative config <span class="auto-chip">auto</span></label>
+            <div class="auto-value" id="s3-auto-initiative">—</div>
+          </div>
+          <div class="note-warn hidden" id="s3-gtm-warn">
+            ⚠ Pre-lander off traffic source selected. A GTM container update will be required before this initiative can go live.
+          </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ==================================
+           STATE 4 — Onboard a new partner
+           ================================== -->
+      <div class="drawer-state" id="state-4">
+
+        <div class="back-link" id="back-4">‹ Back</div>
+
+        <div class="form-section">
+          <div class="form-section-header">
+            <div>
+              <div class="form-section-title">Partner basics</div>
+              <div class="form-section-desc">Enter the partner name and revenue configuration</div>
+            </div>
+            <span class="form-section-chevron">∧</span>
+          </div>
+          <div class="form-section-body">
+          <div class="form-row">
+            <label class="form-label">Partner name</label>
+            <input type="text" class="form-input" placeholder="e.g. QuoteWizard">
+          </div>
+          <div class="form-row">
+            <label class="form-label">Account</label>
+            <input type="text" class="form-input" placeholder="e.g. Auto Insurance">
+          </div>
+          <div class="form-row">
+            <label class="form-label">Revenue type</label>
+            <select class="form-select" id="s4-rev-type">
+              <option value="">Select...</option>
+              <option value="standard">Standard</option>
+              <option value="revshare">Rev share</option>
+            </select>
+            <div class="note-info hidden" id="s4-revshare-note">
+              ℹ Rev share creates two linked initiatives: an internal Trading Desk initiative and an external partner initiative, connected via a destination initiative.
+            </div>
+          </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <div class="form-section-header">
+            <div>
+              <div class="form-section-title">First traffic source</div>
+              <div class="form-section-desc">Set the initial traffic source for this partner</div>
+            </div>
+            <span class="form-section-chevron">∧</span>
+          </div>
+          <div class="form-section-body">
+          <div class="form-row">
+            <label class="form-label">Traffic source</label>
+            <select class="form-select">
+              <option value="">Select a traffic source...</option>
+              <option value="PCH Media">109 – PCH Media</option>
+              <option value="ad.net">90 – ad.net</option>
+              <option value="Advida">27 – Advida</option>
+              <option value="AOL">21 – AOL</option>
+              <option value="Baidu">92 – Baidu</option>
+              <option value="Bing">14 – Bing Ads</option>
+              <option value="Brave">57 – Brave</option>
+              <option value="Brax">2 – Brax</option>
+              <option value="Dianomi">42 – Dianomi</option>
+              <option value="Facebook">12 – Facebook</option>
+              <option value="Google GDN">60 – Google – GDN</option>
+              <option value="Google Pmax">130 – Google – Pmax</option>
+              <option value="Google YT">59 – Google – YT</option>
+              <option value="Google Ads">35 – Google Ads</option>
+              <option value="Infolinks">6 – Infolinks</option>
+              <option value="LiveIntent">20 – LiveIntent</option>
+              <option value="MGID">5 – MGID</option>
+              <option value="Newsbreak">125 – Newsbreak</option>
+              <option value="NextDoor">51 – NextDoor</option>
+              <option value="Outbrain">19 – Outbrain</option>
+              <option value="Pinterest">34 – Pinterest</option>
+              <option value="Reddit">30 – Reddit</option>
+              <option value="Revcontent">15 – Revcontent</option>
+              <option value="Snap">146 – Snap</option>
+              <option value="Taboola">18 – Taboola</option>
+              <option value="Tiktok">91 – Tiktok</option>
+              <option value="Twitter">88 – Twitter</option>
+              <option value="YahooDsp">31 – YahooDsp</option>
+              <option value="Zemanta">1 – Zemanta</option>
+              <option value="Zeropark">10 – Zeropark</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <label class="form-label">Device</label>
+            <select class="form-select">
+              <option value="">Select...</option>
+              <option>Desktop</option><option>Mobile</option>
+            </select>
+          </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <div class="form-section-header">
+            <div>
+              <div class="form-section-title">Workspace</div>
+              <div class="form-section-desc">Define the workspace and brand domain</div>
+            </div>
+            <span class="form-section-chevron">∧</span>
+          </div>
+          <div class="form-section-body">
+          <div class="form-row">
+            <label class="form-label">Workspace name</label>
+            <input type="text" class="form-input" placeholder="e.g. Maven Core">
+          </div>
+          <div class="form-row">
+            <label class="form-label">Brand domain</label>
+            <input type="text" class="form-input" placeholder="e.g. example.com">
+          </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <div class="form-section-header">
+            <div>
+              <div class="form-section-title">Conversion structure</div>
+              <div class="form-section-desc">Auto-configured from partner and revenue type</div>
+            </div>
+            <span class="form-section-chevron">∧</span>
+          </div>
+          <div class="form-section-body">
+          <div class="conv-rows">
+            <div class="conv-row">
+              <span class="conv-label">Conv. sources</span>
+              <span class="conv-value">Pre-filled from partner config</span>
+            </div>
+            <div class="conv-row">
+              <span class="conv-label">Revenue source</span>
+              <span class="conv-value">Pre-filled from revenue type</span>
+            </div>
+            <div class="conv-row">
+              <span class="conv-label">Perf. source</span>
+              <span class="conv-value">Pre-filled from traffic source</span>
+            </div>
+          </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ==================================
+           STATE 5 — Set up an experiment
+           ================================== -->
+      <div class="drawer-state" id="state-5">
+
+        <div class="form-section">
+          <div class="form-section-header">
+            <div>
+              <div class="form-section-title">Existing LPG</div>
+              <div class="form-section-desc">The LPG that will run this experiment</div>
+            </div>
+            <span class="form-section-chevron">∧</span>
+          </div>
+          <div class="form-section-body">
+          <div class="form-row">
+            <label class="auto-label">LPG <span class="auto-chip">auto</span></label>
+            <div class="auto-value" id="s5-lpg">LPG 14714 · OST Coupons Jump · Initiative OST-001</div>
+          </div>
+          <div class="form-row">
+            <div class="config-panel">
+              <div class="config-panel-title">Current configuration</div>
+              <div class="config-row">
+                <span><span class="config-lp">LP 14714</span><span class="config-role">(control)</span></span>
+                <span class="config-pct">50%</span>
+              </div>
+              <div class="config-row">
+                <span><span class="config-lp">LP 14715</span><span class="config-role">(variant A)</span></span>
+                <span class="config-pct">50%</span>
+              </div>
+            </div>
+          </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <div class="form-section-header">
+            <div>
+              <div class="form-section-title">Variants</div>
+              <div class="form-section-desc">Define the LP variants and traffic split</div>
+            </div>
+            <span class="form-section-chevron">∧</span>
+          </div>
+          <div class="form-section-body">
+          <table class="variants-table">
+            <thead>
+              <tr>
+                <th style="width:88px">Role</th>
+                <th>LP ID</th>
+                <th style="width:68px;text-align:right">Traffic %</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="variant-role">Control</span></td>
+                <td><input type="text" class="vt-input" value="14714"></td>
+                <td><input type="text" class="vt-input vt-pct" value="34"></td>
+              </tr>
+              <tr>
+                <td><span class="variant-role">Variant A</span></td>
+                <td><input type="text" class="vt-input" value="14715"></td>
+                <td><input type="text" class="vt-input vt-pct" value="33"></td>
+              </tr>
+              <tr>
+                <td><span class="variant-role">Variant B</span></td>
+                <td><input type="text" class="vt-input" placeholder="LP ID"></td>
+                <td><input type="text" class="vt-input vt-pct" value="33"></td>
+              </tr>
+              <tr class="variant-total">
+                <td colspan="2" style="font-size:13px">Total</td>
+                <td style="text-align:right;font-size:13px">100%</td>
+              </tr>
+            </tbody>
+          </table>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <div class="form-section-header">
+            <div>
+              <div class="form-section-title">Experiment ID</div>
+              <div class="form-section-desc">GrowthBook experiment identifier appended to each LP URL</div>
+            </div>
+            <span class="form-section-chevron">∧</span>
+          </div>
+          <div class="form-section-body">
+          <div class="form-row">
+            <label class="form-label">GrowthBook experiment ID</label>
+            <input type="text" class="form-input" placeholder="exp-XXXXXXXX">
+            <div class="helper-text">Appended to each LP URL as &amp;expid= after QA passes.</div>
+          </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ==============================
+           STATE 6 — View built LP
+           ============================== -->
+      <div class="drawer-state" id="state-6">
+
+        <div style="margin-bottom:20px">
+          <div class="comp-zone-title" style="margin-bottom:4px">Campaign</div>
+          <div class="completion-lp-name" id="s6-lp-name">—</div>
+        </div>
+
+        <div class="comp-zone">
+          <div class="comp-zone-title">IDs</div>
+          <div class="comp-id-row">
+            <span class="comp-id-label">LP ID</span>
+            <span class="comp-id-value" id="s6-lp-id">—</span>
+          </div>
+          <div class="comp-id-row">
+            <span class="comp-id-label">LPG ID</span>
+            <span class="comp-id-value" id="s6-lpg-id">—</span>
+          </div>
+          <div class="comp-id-row">
+            <span class="comp-id-label">Data source</span>
+            <span class="comp-id-value" id="s6-ds">—</span>
+          </div>
+        </div>
+
+        <div class="comp-zone">
+          <div class="comp-zone-title">URLs</div>
+          <div class="comp-url-block">
+            <div class="comp-url-header">
+              <span class="comp-url-label">Media URL</span>
+              <button class="copy-btn" data-copy-target="s6-media-url">Copy</button>
+            </div>
+            <div class="comp-url-value" id="s6-media-url">—</div>
+          </div>
+          <div class="comp-url-block qa-url-block">
+            <div class="comp-url-header">
+              <span class="comp-url-label">QA URL <span class="qa-badge">QA only</span></span>
+              <button class="copy-btn" data-copy-target="s6-qa-url">Copy</button>
+            </div>
+            <div class="comp-url-value" id="s6-qa-url">—</div>
+          </div>
+        </div>
+
+      </div>
+
+    </div><!-- /drawer-body -->
+
+    <div class="drawer-footer" id="drawer-footer"></div>
+
+  </div><!-- /drawer -->
+
+  <script>
+    const PLATFORMS = {
+      Facebook: {
+        ds: 'DS12',
+        tracking: 'Pre-lander off · no alias · {{double-curly}} macros',
+        mode: 'off',
+        macro: k => `{{${k}}}`
+      },
+      Taboola: {
+        ds: 'DS18',
+        tracking: 'Pre-lander on · alias domain · {single-curly} macros',
+        mode: 'on',
+        macro: k => `{${k}}`
+      },
+      Bing: {
+        ds: 'DS14',
+        tracking: 'Pre-lander on · alias domain · {single-curly} macros',
+        mode: 'on',
+        macro: k => `{${k}}`
+      },
+      Outbrain: {
+        ds: 'DS10',
+        tracking: 'Pre-lander on · alias domain · {single-curly} macros',
+        mode: 'on',
+        macro: k => `{${k}}`
+      }
+    };
+
+    let drawerContext = null;
+    let utmMode       = 'existing'; // 'existing' | 'new'
+    let pendingLpData = null;
+    let viewedLpData  = null;
+
+    const drawer      = document.getElementById('drawer');
+    const backdrop    = document.getElementById('drawer-backdrop');
+    const drawerTitle = document.getElementById('drawer-title');
+    const drawerFooter = document.getElementById('drawer-footer');
+    const drawerBody  = document.getElementById('drawer-body');
+
+    const TITLES = {
+      1: 'Create',
+      2: 'Run a new campaign',
+      3: 'Expand to a new traffic source',
+      4: 'Onboard a new partner',
+      5: 'Set up an experiment',
+      6: 'LP details'
+    };
+
+    const FOOTERS = {
+      1: `<button class="btn btn-ghost btn-md" onclick="closeDrawer()">Cancel</button>`,
+      2: `<button class="btn btn-ghost btn-md" onclick="closeDrawer()">Cancel</button>
+          <button class="btn btn-primary btn-md" id="btn-save-pending" style="display:none" onclick="handleSavePending()">Save as pending →</button>
+          <button class="btn btn-primary btn-md" id="btn-generate" onclick="handleGenerateUrl()">Generate URL →</button>`,
+      3: `<button class="btn btn-ghost btn-md" onclick="closeDrawer()">Cancel</button>
+          <button class="btn btn-primary btn-md">Create Initiative →</button>`,
+      4: `<button class="btn btn-ghost btn-md" onclick="closeDrawer()">Cancel</button>
+          <button class="btn btn-primary btn-md">Create partner structure →</button>`,
+      5: `<button class="btn btn-ghost btn-md" onclick="closeDrawer()">Cancel</button>
+          <button class="btn btn-primary btn-md">Apply to LPG →</button>`,
+      6: `<button class="btn btn-ghost btn-md" onclick="closeDrawer()">Close</button>
+          <button class="btn btn-primary btn-md" onclick="editBuiltLp()">Edit →</button>`
+    };
+
+    function openDrawer() {
+      drawer.classList.add('open');
+      backdrop.classList.add('visible');
+    }
+
+    function closeDrawer() {
+      drawer.classList.remove('open');
+      backdrop.classList.remove('visible');
+      drawerContext = null;
+    }
+
+    function showState(n) {
+      document.querySelectorAll('.drawer-state').forEach(el => el.classList.remove('active'));
+      document.getElementById('state-' + n).classList.add('active');
+      drawerTitle.textContent = TITLES[n];
+      drawerFooter.innerHTML = FOOTERS[n];
+      drawerBody.scrollTop = 0;
+      if (n === 2) initState2();
+      if (n === 5) initState5();
+    }
+
+    function initState2() {
+      const banner    = document.getElementById('ticket-banner');
+      const bannerName = document.getElementById('ticket-banner-name');
+      const bannerMeta = document.getElementById('ticket-banner-meta');
+      const backLink  = document.getElementById('back-2');
+      const platSel   = document.getElementById('s2-platform');
+      const devSel    = document.getElementById('s2-device');
+
+      if (drawerContext) {
+        banner.classList.remove('hidden');
+        bannerName.textContent = drawerContext.name;
+        const parts = [drawerContext.typeLabel, drawerContext.platform];
+        if (drawerContext.device) parts.push(drawerContext.device);
+        parts.push('submitted by ' + drawerContext.by, drawerContext.time);
+        bannerMeta.textContent = parts.join(' · ');
+        backLink.classList.add('hidden');
+        if (drawerContext.platform) {
+          platSel.value = drawerContext.platform;
+          updateS2Auto(drawerContext.platform);
+        }
+        if (drawerContext.device) devSel.value = drawerContext.device;
+      } else {
+        banner.classList.add('hidden');
+        backLink.classList.remove('hidden');
+        platSel.value = '';
+        updateS2Auto('');
+        setMode('off');
+      }
+      renderUrlPreview();
+
+      // Reset UTM + completion state
+      utmMode = 'existing';
+      document.getElementById('utm-existing-view').classList.remove('hidden');
+      document.getElementById('utm-new-view').classList.add('hidden');
+      document.getElementById('s2-utm-select').value = '';
+      document.getElementById('utm-status-wrap').classList.add('hidden');
+      document.getElementById('s2-utm-new-input').value = '';
+      document.getElementById('gtm-checkbox').checked = false;
+      document.getElementById('s2-form-content').classList.remove('hidden');
+      document.getElementById('s2-completion').classList.add('hidden');
+      document.getElementById('s2-pending-banner').classList.add('hidden');
+      updateGenerateButton();
+    }
+
+    // ===== TRACKING MODE =====
+    const MODE_CONFIGS = {
+      off: {
+        instapageRole:  'base for landing URL',
+        previewLabel:   'Landing URL preview',
+        previewNote:    'Pre-lander off — this URL is the media URL handed to analysts. No alias domain.'
+      },
+      on: {
+        instapageRole:  'O&O pre-lander page',
+        previewLabel:   'Media URL preview (alias)',
+        previewNote:    'Pre-lander on — alias domain replaces Instapage URL. Pre-lander URL stored separately on the LP.'
+      }
+    };
+
+    function setMode(mode) {
+      const cfg = MODE_CONFIGS[mode];
+
+      // Toggle buttons
+      document.getElementById('mode-off').classList.toggle('active-off', mode === 'off');
+      document.getElementById('mode-on').classList.toggle('active-on',  mode === 'on');
+
+      // Description banner
+      document.getElementById('tracking-badge-off').classList.toggle('hidden', mode !== 'off');
+      document.getElementById('tracking-badge-on').classList.toggle('hidden',  mode !== 'on');
+
+      // Instapage role badge + on-mode note
+      document.getElementById('instapage-role-badge').textContent = cfg.instapageRole;
+      document.getElementById('instapage-note-on').classList.toggle('hidden', mode !== 'on');
+
+      // Page URL: show extra rows in ON mode only
+      document.getElementById('prelander-url-row').classList.toggle('hidden', mode !== 'on');
+      document.getElementById('client-url-row').classList.toggle('hidden',    mode !== 'on');
+
+      // URL preview section label
+      document.getElementById('url-preview-label').textContent = cfg.previewLabel;
+
+      // Preview note
+      const note = document.getElementById('s2-preview-note');
+      note.textContent = cfg.previewNote;
+      note.classList.remove('hidden');
+
+      updatePrelanderUrl();
+      renderUrlPreview();
+    }
+
+    function updatePrelanderUrl() {
+      const el        = document.getElementById('s2-prelander-url');
+      const instapage = document.getElementById('s2-instapage').value.trim();
+      if (instapage) {
+        el.innerHTML =
+          `<span style="color:#085041">${instapage}</span>` +
+          `<span style="color:#2C7A5C">?popup=1&amp;utm_source=n&amp;utm_medium=atn` +
+          `&amp;atnid={atnid}&amp;uxid={uxid}&amp;atnds={dsid}&amp;ec=0&amp;uxid0={creative}</span>`;
+      } else {
+        el.innerHTML = `<span style="color:#9FE1CB;font-style:italic">Waiting for Instapage URL...</span>`;
+      }
+    }
+
+    function updateS2Auto(platform) {
+      const cfg = PLATFORMS[platform];
+      document.getElementById('s2-auto-ds').textContent         = cfg ? cfg.ds : '—';
+      document.getElementById('s2-auto-initiative').textContent = cfg
+        ? `Auto-resolved from account + ${platform} + device`
+        : '—';
+      if (cfg) setMode(cfg.mode);
+    }
+
+    function renderUrlPreview() {
+      const el       = document.getElementById('s2-url-preview');
+      const platform = document.getElementById('s2-platform').value;
+      const angle    = document.getElementById('s2-angle').value;
+      const ec       = document.getElementById('s2-ec').value;
+      const popup    = document.getElementById('s2-popup').value;
+      const mode     = document.getElementById('mode-off').classList.contains('active-off') ? 'off' : 'on';
+
+      if (!platform) {
+        el.innerHTML = '<span class="u-pending">Waiting for traffic source selection...</span>';
+        return;
+      }
+
+      const cfg   = PLATFORMS[platform];
+      const macro = cfg.macro;
+      const parts = [];
+
+      if (mode === 'off') {
+        // Pre-lander off: Instapage URL + DS param + platform macros
+        const instapage = document.getElementById('s2-instapage').value.trim();
+        parts.push(instapage
+          ? `<span class="u-user">${instapage}</span>`
+          : `<span class="u-pending">[instapage-url]</span>`);
+        parts.push(`<span class="u-auto">?ds=${cfg.ds}</span>`);
+        parts.push(`<span class="u-auto">&amp;utm_source=${platform.toLowerCase()}</span>`);
+        parts.push(ec    ? `<span class="u-user">&amp;${ec}</span>`        : `<span class="u-pending">&amp;ec=?</span>`);
+        parts.push(angle ? `<span class="u-user">&amp;angle=${angle}</span>` : `<span class="u-pending">&amp;angle=?</span>`);
+        if (popup && popup !== 'none') parts.push(`<span class="u-user">&amp;${popup}</span>`);
+        parts.push(`<span class="u-auto">&amp;subid=${macro('subid')}&amp;clickid=${macro('clickid')}</span>`);
+      } else {
+        // Pre-lander on: alias domain (cos-rd.com) is the media URL
+        parts.push(`<span class="u-auto">https://cos-rd.com/${cfg.ds}/</span>`);
+        parts.push(`<span class="u-pending">[lpg-id]</span>`);
+        parts.push(`<span class="u-auto">?</span>`);
+        parts.push(ec    ? `<span class="u-user">${ec}</span>`   : `<span class="u-pending">ec=?</span>`);
+        if (popup && popup !== 'none') parts.push(`<span class="u-user">&amp;${popup}</span>`);
+        parts.push(`<span class="u-auto">&amp;atnid=${macro('atnid')}&amp;uxid=${macro('uxid')}</span>`);
+      }
+
+      el.innerHTML = parts.join('');
+    }
+
+    function updateS3Auto(platform) {
+      const cfg = PLATFORMS[platform];
+      document.getElementById('s3-auto-ds').textContent        = cfg ? cfg.ds : '—';
+      document.getElementById('s3-auto-initiative').textContent = cfg
+        ? `New initiative scaffolded for ${platform} traffic source · device`
+        : '—';
+      document.getElementById('s3-gtm-warn').classList.toggle('hidden', !(cfg && cfg.mode === 'off'));
+    }
+
+    function initState5() {
+      if (drawerContext) {
+        document.getElementById('s5-lpg').textContent =
+          `LPG 14714 · ${drawerContext.name} · Initiative OST-001`;
+      }
+    }
+
+    // ===== UTM SOURCE + COMPLETION =====
+    function showUtmExistingView() {
+      utmMode = 'existing';
+      document.getElementById('utm-existing-view').classList.remove('hidden');
+      document.getElementById('utm-new-view').classList.add('hidden');
+      updateGenerateButton();
+    }
+
+    function showUtmNewView() {
+      utmMode = 'new';
+      document.getElementById('utm-existing-view').classList.add('hidden');
+      document.getElementById('utm-new-view').classList.remove('hidden');
+      document.getElementById('s2-utm-select').value = '';
+      updateGenerateButton();
+    }
+
+    function updateGenerateButton() {
+      var btnGenerate = document.getElementById('btn-generate');
+      var btnPending  = document.getElementById('btn-save-pending');
+      if (!btnGenerate) return;
+      if (utmMode === 'new') {
+        var gtmBox     = document.getElementById('gtm-checkbox');
+        var gtmChecked = gtmBox && gtmBox.checked;
+        if (gtmChecked) {
+          if (btnPending) btnPending.style.display = 'none';
+          btnGenerate.disabled       = false;
+          btnGenerate.style.opacity  = '';
+          btnGenerate.style.cursor   = '';
+        } else {
+          if (btnPending) btnPending.style.display = '';
+          btnGenerate.disabled       = true;
+          btnGenerate.style.opacity  = '0.45';
+          btnGenerate.style.cursor   = 'not-allowed';
+        }
+      } else {
+        if (btnPending) btnPending.style.display = 'none';
+        btnGenerate.disabled       = false;
+        btnGenerate.style.opacity  = '';
+        btnGenerate.style.cursor   = '';
+      }
+    }
+
+    function buildMediaUrl(lpgId) {
+      var platform = document.getElementById('s2-platform').value;
+      if (!platform) return '(no platform selected)';
+      var cfg      = PLATFORMS[platform];
+      var macro    = cfg.macro;
+      var mode     = document.getElementById('mode-off').classList.contains('active-off') ? 'off' : 'on';
+      var instapage = document.getElementById('s2-instapage').value.trim();
+      var ec       = document.getElementById('s2-ec').value;
+      var popup    = document.getElementById('s2-popup').value;
+      var angle    = document.getElementById('s2-angle').value;
+      var url = '';
+      if (mode === 'off') {
+        url = (instapage || '[instapage-url]') +
+          '?ds=' + cfg.ds + '&utm_source=' + platform.toLowerCase() +
+          (ec    ? '&' + ec              : '&ec=?') +
+          (angle ? '&angle=' + angle     : '') +
+          (popup && popup !== 'none' ? '&' + popup : '') +
+          '&subid=' + macro('subid') + '&clickid=' + macro('clickid');
+      } else {
+        var id = lpgId || '[lpg-id]';
+        url = 'https://cos-rd.com/' + cfg.ds + '/' + id + '?' +
+          (ec    ? ec    : 'ec=?') +
+          (popup && popup !== 'none' ? '&' + popup : '') +
+          '&atnid=' + macro('atnid') + '&uxid=' + macro('uxid');
+      }
+      return url;
+    }
+
+    function handleGenerateUrl() {
+      var lpId  = 17000 + Math.floor(Math.random() * 999);
+      var lpgId = lpId + 1;
+      var platform = document.getElementById('s2-platform').value || 'Facebook';
+      var cfg      = PLATFORMS[platform] || PLATFORMS['Facebook'];
+      var mediaUrl = buildMediaUrl(lpgId);
+      var qaUrl    = mediaUrl
+        .replace(/\{\{[^}]+\}\}/g, '0')
+        .replace(/\{[^}]+\}/g, '0')
+        .replace('[lpg-id]', String(lpgId))
+        + '&atnqa=1';
+      var bannerNameEl = document.getElementById('ticket-banner-name');
+      var lpName = (bannerNameEl && bannerNameEl.textContent.trim()) || 'New LP';
+
+      document.getElementById('comp-lp-name').textContent   = 'LP ' + lpId + ' \u00b7 ' + lpName;
+      document.getElementById('comp-lp-id').textContent     = 'LP ' + lpId;
+      document.getElementById('comp-lpg-id').textContent    = 'LPG ' + lpgId;
+      document.getElementById('comp-ds').textContent        = cfg.ds;
+      document.getElementById('comp-media-url').textContent = mediaUrl;
+      document.getElementById('comp-qa-url').textContent    = qaUrl;
+      document.getElementById('comp-asana-name').textContent  = lpName;
+      document.getElementById('comp-asana-lpid').textContent  = 'LP ' + lpId;
+      document.getElementById('comp-asana-url').textContent   = mediaUrl;
+      document.getElementById('comp-asana-status').textContent = 'Writing to Asana...';
+      document.getElementById('comp-asana-status').style.color = '';
+
+      document.getElementById('s2-form-content').classList.add('hidden');
+      document.getElementById('s2-completion').classList.remove('hidden');
+      drawerFooter.innerHTML = '<button class="btn btn-primary btn-md" onclick="closeDrawer()">Done</button>';
+      drawerBody.scrollTop = 0;
+      fakeAsanaWrite();
+    }
+
+    function handleSavePending() {
+      var platform = document.getElementById('s2-platform').value || 'Facebook';
+      var cfg      = PLATFORMS[platform] || PLATFORMS['Facebook'];
+      var bannerNameEl = document.getElementById('ticket-banner-name');
+      var lpName   = (bannerNameEl && bannerNameEl.textContent.trim()) || 'New LP';
+      var utmSource = document.getElementById('s2-utm-new-input').value.trim() || 'new_source_pending';
+
+      pendingLpData = {
+        name:      lpName,
+        ds:        cfg.ds,
+        platform:  platform,
+        utmSource: utmSource,
+        context:   drawerContext ? Object.assign({}, drawerContext) : null
+      };
+
+      var card = document.getElementById('pending-lp-card');
+      if (card) {
+        document.getElementById('pending-lp-name').textContent = 'LP pending \u00b7 ' + lpName;
+        document.getElementById('pending-lp-sub').textContent  = cfg.ds + ' \u00b7 GTM setup required \u00b7 just now';
+        card.classList.remove('hidden');
+      }
+      closeDrawer();
+    }
+
+    function resumePendingLp() {
+      if (!pendingLpData) return;
+      drawerContext = pendingLpData.context;
+      openDrawer();
+      showState(2);
+      setTimeout(function() {
+        var banner = document.getElementById('s2-pending-banner');
+        if (banner) {
+          banner.classList.remove('hidden');
+          document.getElementById('pending-banner-source').textContent = pendingLpData.utmSource;
+        }
+        showUtmNewView();
+        document.getElementById('s2-utm-new-input').value = pendingLpData.utmSource;
+        updateGenerateButton();
+      }, 50);
+    }
+
+    function fakeAsanaWrite() {
+      setTimeout(function() {
+        var el = document.getElementById('comp-asana-status');
+        if (el) {
+          el.textContent = 'Written \u2713';
+          el.style.color = '#085041';
+        }
+      }, 1400);
+    }
+
+    // ---- Event listeners ----
+    backdrop.addEventListener('click', closeDrawer);
+    document.getElementById('drawer-close').addEventListener('click', closeDrawer);
+
+    document.getElementById('btn-create').addEventListener('click', () => {
+      drawerContext = null;
+      openDrawer();
+      showState(1);
+    });
+
+    document.getElementById('opt-campaign').addEventListener('click', () => showState(2));
+    document.getElementById('opt-platform').addEventListener('click', () => showState(3));
+    document.getElementById('opt-partner').addEventListener('click',  () => showState(4));
+
+    document.getElementById('back-2').addEventListener('click', () => showState(1));
+    document.getElementById('back-3').addEventListener('click', () => showState(1));
+    document.getElementById('back-4').addEventListener('click', () => showState(1));
+
+    document.querySelectorAll('.btn-secondary[data-ticket-type]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        drawerContext = {
+          ticketType: btn.dataset.ticketType,
+          name:       btn.dataset.name,
+          typeLabel:  btn.dataset.typeLabel,
+          platform:   btn.dataset.platform,
+          device:     btn.dataset.device,
+          by:         btn.dataset.by,
+          time:       btn.dataset.time
+        };
+        openDrawer();
+        showState(drawerContext.ticketType === 'exp' ? 5 : 2);
+      });
+    });
+
+    document.getElementById('s2-platform').addEventListener('change', e => {
+      updateS2Auto(e.target.value);
+    });
+
+    // Mode buttons — allow manual override
+    document.getElementById('mode-off').addEventListener('click', () => setMode('off'));
+    document.getElementById('mode-on').addEventListener('click',  () => setMode('on'));
+
+    ['s2-angle', 's2-ec', 's2-popup'].forEach(id =>
+      document.getElementById(id).addEventListener('change', renderUrlPreview)
+    );
+    document.getElementById('s2-instapage').addEventListener('input', () => {
+      updatePrelanderUrl();
+      renderUrlPreview();
+    });
+
+    document.getElementById('s3-platform').addEventListener('change', e => {
+      updateS3Auto(e.target.value);
+    });
+
+    document.getElementById('s4-rev-type').addEventListener('change', e => {
+      document.getElementById('s4-revshare-note').classList.toggle('hidden', e.target.value !== 'revshare');
+    });
+
+    // UTM select
+    document.getElementById('s2-utm-select').addEventListener('change', function(e) {
+      var val = e.target.value;
+      if (val === '__new__') { showUtmNewView(); return; }
+      var wrap  = document.getElementById('utm-status-wrap');
+      var badge = document.getElementById('utm-status-badge');
+      var note  = document.getElementById('utm-status-note');
+      if (val) {
+        wrap.classList.remove('hidden');
+        var isActive = (val === 'ccf_facebook_desktop' || val === 'ost_taboola_desktop');
+        badge.className   = 'utmsrc-badge ' + (isActive ? 'utmsrc-active' : 'utmsrc-unknown');
+        badge.textContent = isActive ? 'Active' : 'Unknown';
+        note.textContent  = isActive ? 'GTM confirmed' : 'GTM status unknown';
+      } else {
+        wrap.classList.add('hidden');
+      }
+      updateGenerateButton();
+    });
+
+    // GTM checkbox
+    document.getElementById('gtm-checkbox').addEventListener('change', updateGenerateButton);
+
+    // Use existing link
+    document.getElementById('utm-use-existing-link').addEventListener('click', function(e) {
+      e.preventDefault();
+      showUtmExistingView();
+    });
+
+    // Pending LP resume
+    document.getElementById('pending-resume-btn').addEventListener('click', resumePendingLp);
+
+    // Recently built — click to view LP details
+    document.querySelectorAll('.built-card.clickable').forEach(function(card) {
+      card.addEventListener('click', function(e) {
+        if (e.target.closest('button')) return; // don't fire on Resume → button
+        viewedLpData = {
+          lpId:      card.dataset.lpId,
+          lpgId:     card.dataset.lpgId,
+          ds:        card.dataset.ds,
+          lpName:    card.dataset.lpName,
+          platform:  card.dataset.platform,
+          device:    card.dataset.device,
+          instapage: card.dataset.instapage,
+          media:     card.dataset.mediaUrl,
+          qa:        card.dataset.qaUrl
+        };
+        document.getElementById('s6-lp-name').textContent   = 'LP ' + viewedLpData.lpId + ' \u00b7 ' + viewedLpData.lpName;
+        document.getElementById('s6-lp-id').textContent     = 'LP ' + viewedLpData.lpId;
+        document.getElementById('s6-lpg-id').textContent    = 'LPG ' + viewedLpData.lpgId;
+        document.getElementById('s6-ds').textContent        = viewedLpData.ds;
+        document.getElementById('s6-media-url').textContent = viewedLpData.media;
+        document.getElementById('s6-qa-url').textContent    = viewedLpData.qa;
+        drawerContext = null;
+        openDrawer();
+        showState(6);
+      });
+    });
+
+    function editBuiltLp() {
+      if (!viewedLpData) return;
+      drawerContext = null;
+      showState(2);
+      setTimeout(function() {
+        // Show edit banner
+        var banner   = document.getElementById('ticket-banner');
+        var eyebrow  = document.getElementById('ticket-banner-eyebrow');
+        var bannerName = document.getElementById('ticket-banner-name');
+        var bannerMeta = document.getElementById('ticket-banner-meta');
+        banner.classList.remove('hidden');
+        eyebrow.textContent    = 'Editing existing LP';
+        bannerName.textContent = 'LP ' + viewedLpData.lpId + ' \u00b7 ' + viewedLpData.lpName;
+        bannerMeta.textContent = viewedLpData.ds + ' \u00b7 ' + (viewedLpData.platform || '') + (viewedLpData.device ? ' \u00b7 ' + viewedLpData.device : '');
+        document.getElementById('back-2').classList.add('hidden');
+        // Pre-fill form
+        if (viewedLpData.platform) {
+          document.getElementById('s2-platform').value = viewedLpData.platform;
+          updateS2Auto(viewedLpData.platform);
+        }
+        if (viewedLpData.device) {
+          document.getElementById('s2-device').value = viewedLpData.device;
+        }
+        if (viewedLpData.instapage) {
+          document.getElementById('s2-instapage').value = viewedLpData.instapage;
+          updatePrelanderUrl();
+          renderUrlPreview();
+        }
+      }, 50);
+    }
+
+    // Collapsible form sections
+    document.addEventListener('click', function(e) {
+      var header = e.target.closest('.form-section-header');
+      if (!header) return;
+      header.closest('.form-section').classList.toggle('collapsed');
+    });
+
+    // Copy URL button delegation
+    drawerBody.addEventListener('click', function(e) {
+      var btn = e.target.closest('.copy-btn');
+      if (!btn) return;
+      var targetId = btn.dataset.copyTarget;
+      if (!targetId) return;
+      var el   = document.getElementById(targetId);
+      var text = el ? el.textContent : '';
+      if (navigator.clipboard) navigator.clipboard.writeText(text).catch(function() {});
+      btn.textContent = 'Copied!';
+      btn.classList.add('copied');
+      setTimeout(function() {
+        btn.textContent = 'Copy';
+        btn.classList.remove('copied');
+      }, 2000);
+    });
+  </script>
+</body>
+</html>

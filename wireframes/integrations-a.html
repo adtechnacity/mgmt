@@ -1,0 +1,1482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Maven Manage — Integrations</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"></noscript>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://mcp.figma.com/mcp/html-to-design/capture.js" async></script>
+  <style>
+    /* ===== TABLE ACTION CELL ===== */
+    .tbl-action-cell { text-align: right; width: 68px; white-space: nowrap; }
+
+    /* Icon buttons (eye + pencil) */
+    .row-icon-btn {
+      width: 26px; height: 26px; padding: 0;
+      background: none; border: none; cursor: pointer;
+      display: inline-flex; align-items: center; justify-content: center;
+      color: #C0C0CC; font-size: 15px;
+      border-radius: 4px;
+      transition: color 0.12s, background 0.12s;
+    }
+    .row-icon-btn:hover { color: #383F60; background: #F0F0F8; }
+
+    /* ===== INACTIVE STATUS BADGE ===== */
+    .sb-inactive { background: var(--color-background-tertiary); color: var(--color-text-secondary); border: 0.5px solid var(--color-border-secondary); }
+
+    /* ===== ACCOUNT ID PILL ===== */
+    .ts-id-pill {
+      display: inline-block;
+      font-family: var(--font-mono); font-size: 10px; font-weight: 600;
+      color: var(--color-text-secondary);
+      background: var(--color-background-tertiary);
+      border: 0.5px solid var(--color-border-secondary);
+      border-radius: 4px;
+      padding: 1px 8px;
+      flex-shrink: 0;
+    }
+
+    /* ===== SORTABLE COLUMN HEADERS ===== */
+    .lp-table th.th-sortable { cursor: pointer; user-select: none; }
+    .lp-table th.th-sortable:hover { background: #EEEEF5; }
+    .sort-icon { font-size: 10px; color: var(--color-text-tertiary); margin-left: 3px; }
+    .sort-icon.active { color: var(--color-navy); }
+
+    /* ===== DRAWER INNER ===== */
+
+    /* Drawer header sub-line */
+    .drawer-header-inner {
+      display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0;
+    }
+    .drawer-subtitle {
+      display: flex; align-items: center; gap: 7px;
+      font-size: 12px; color: var(--color-text-secondary);
+    }
+
+    /* Accordion sections */
+    .acc-section {
+      background: var(--color-background-primary);
+      border: 0.5px solid var(--color-border-secondary);
+      border-radius: var(--border-radius-md);
+      margin-bottom: 14px;
+      overflow: hidden;
+    }
+    .acc-hdr {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 14px;
+      border-bottom: 0.5px solid var(--color-border-secondary);
+      cursor: pointer; user-select: none;
+    }
+    .acc-hdr-pb  { background: #FFF8EC; border-bottom-color: #F0DFB4; }
+    .acc-hdr-api { background: #EEF2FF; border-bottom-color: #C5CFED; }
+    .acc-toggle { font-size: 9px; color: var(--color-text-secondary); transition: transform 0.15s; flex-shrink: 0; }
+    .acc-section.collapsed .acc-toggle { transform: rotate(180deg); }
+    .acc-title { flex: 1; font-family: var(--font-display); font-size: 13px; font-weight: 700; }
+    .acc-hdr-pb  .acc-title { color: #6B4200; }
+    .acc-hdr-api .acc-title { color: var(--color-navy); }
+    .acc-add-btn {
+      height: 28px; padding: 0 12px;
+      background: var(--color-navy); color: #fff;
+      border: none; border-radius: var(--border-radius-sm);
+      font-family: var(--font-body); font-size: 12px; font-weight: 600;
+      cursor: pointer; white-space: nowrap;
+      transition: background 0.1s;
+    }
+    .acc-add-btn:hover { background: var(--color-navy-lt); }
+    .acc-section.collapsed .acc-body { display: none; }
+
+    /* Impl table */
+    .impl-table {
+      width: 100%; border-collapse: collapse;
+      border: 0.5px solid var(--color-border-secondary);
+      border-radius: var(--border-radius-sm);
+      overflow: hidden;
+      font-size: 12px;
+    }
+    .impl-table thead tr {
+      background: var(--color-background-secondary);
+      border-bottom: 0.5px solid var(--color-border-secondary);
+    }
+    .impl-table th {
+      padding: 7px 11px; text-align: left;
+      font-family: var(--font-display); font-size: 10px;
+      font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
+      color: var(--color-text-secondary);
+    }
+    .impl-table td {
+      padding: 8px 11px;
+      border-bottom: 0.5px solid var(--color-border-tertiary);
+      vertical-align: middle;
+    }
+    .impl-table tbody tr:last-child td { border-bottom: none; }
+    .impl-table .mono {
+      font-family: var(--font-mono); font-size: 11px; color: var(--color-navy-lt);
+    }
+    .impl-table .url-cell {
+      font-family: var(--font-mono); font-size: 10px;
+      color: var(--color-text-secondary);
+      max-width: 260px; overflow: hidden;
+      text-overflow: ellipsis; white-space: nowrap;
+    }
+    .impl-status-active   { color: #03BF00; font-size: 13px; }
+    .impl-status-inactive { color: #DC0700; font-size: 13px; }
+
+    /* Row action icon buttons */
+    .impl-action-btn {
+      width: 26px; height: 26px;
+      border: 0.5px solid var(--color-border-secondary);
+      border-radius: var(--border-radius-sm);
+      background: transparent; color: var(--color-text-secondary);
+      cursor: pointer; font-size: 12px;
+      display: inline-flex; align-items: center; justify-content: center;
+      transition: background 0.1s, color 0.1s, border-color 0.1s;
+    }
+    .impl-action-btn:hover { background: var(--color-background-secondary); }
+    .impl-action-btn.del:hover { background: #FFF5F5; color: #DC0700; border-color: #FFD8D8; }
+
+    /* See details btn */
+    .see-details-btn {
+      height: 24px; padding: 0 9px;
+      border: 0.5px solid var(--color-border-secondary);
+      border-radius: var(--border-radius-sm);
+      background: transparent;
+      font-family: var(--font-body); font-size: 11px; font-weight: 600;
+      color: var(--color-text-secondary); cursor: pointer;
+      transition: background 0.1s;
+    }
+    .see-details-btn:hover { background: var(--color-background-tertiary); }
+
+    /* Platform account block */
+    .pa-block {
+      background: var(--color-background-primary);
+      border: 0.5px solid var(--color-border-secondary);
+      border-radius: var(--border-radius-md);
+      margin-bottom: 14px;
+      overflow: hidden;
+    }
+    .pa-header {
+      display: flex; align-items: center;
+      padding: 11px 14px;
+      border-bottom: 0.5px solid var(--color-border-secondary);
+      background: var(--color-background-secondary);
+    }
+    .pa-name { flex: 1; font-family: var(--font-display); font-size: 13px; font-weight: 600; }
+    .pa-block .acc-section { border: none; border-radius: 0; margin-bottom: 0; }
+    .pa-block .acc-section + .acc-section { border-top: 0.5px solid var(--color-border-secondary); }
+    .add-pa-btn-wrap { padding: 12px 0 4px; }
+
+    /* Inline add form */
+    .impl-inline-form {
+      display: none;
+      padding: 12px 14px;
+      border-top: 0.5px solid var(--color-border-tertiary);
+      background: var(--color-background-secondary);
+      gap: 8px; flex-wrap: wrap; align-items: flex-end;
+    }
+    .impl-inline-form.visible { display: flex; }
+
+    .iif-field {
+      display: flex; flex-direction: column; gap: 3px;
+    }
+    .iif-field label {
+      font-size: 10px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.05em; color: var(--color-text-secondary);
+    }
+    .iif-field input, .iif-field select {
+      height: 30px; padding: 0 9px;
+      border: 0.5px solid var(--color-border-secondary);
+      border-radius: var(--border-radius-sm);
+      background: var(--color-background-primary);
+      font-family: var(--font-body); font-size: 12px;
+      color: var(--color-text-primary);
+      min-width: 130px; outline: none;
+    }
+    .iif-field input:focus, .iif-field select:focus { border-color: var(--color-navy-lt); }
+    .iif-field input::placeholder { color: var(--color-text-tertiary); }
+
+    .iif-btns { display: flex; gap: 5px; align-items: flex-end; padding-bottom: 1px; }
+
+    /* ===== API DETAILS MODAL ===== */
+    .modal-backdrop {
+      position: fixed; inset: 0;
+      background: rgba(8, 6, 13, 0.36);
+      z-index: 200; display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none; transition: opacity 0.18s;
+    }
+    .modal-backdrop.visible { opacity: 1; pointer-events: auto; }
+
+    .modal-box {
+      background: var(--color-background-primary);
+      border: 0.5px solid var(--color-border-secondary);
+      border-radius: var(--border-radius-lg);
+      width: 480px; max-width: calc(100vw - 48px);
+      box-shadow: 0 8px 32px rgba(8,6,13,0.18);
+      overflow: hidden;
+      transform: translateY(8px) scale(0.98);
+      transition: transform 0.18s;
+    }
+    .modal-backdrop.visible .modal-box {
+      transform: translateY(0) scale(1);
+    }
+    .modal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 16px;
+      border-bottom: 0.5px solid var(--color-border-tertiary);
+    }
+    .modal-title {
+      font-family: var(--font-display); font-size: 14px;
+      font-weight: 700; color: var(--color-navy);
+    }
+    .modal-close {
+      width: 26px; height: 26px;
+      border: 0.5px solid var(--color-border-secondary);
+      border-radius: var(--border-radius-sm);
+      background: transparent; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; color: var(--color-text-secondary);
+    }
+    .modal-close:hover { background: var(--color-background-secondary); }
+    .modal-body { padding: 16px; }
+    .modal-row {
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 8px 0; border-bottom: 0.5px solid var(--color-border-tertiary);
+      font-size: 13px;
+    }
+    .modal-row:last-child { border-bottom: none; }
+    .modal-row-label {
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.05em; color: var(--color-text-secondary);
+      width: 110px; flex-shrink: 0; padding-top: 1px;
+    }
+    .modal-row-value { font-size: 13px; color: var(--color-text-primary); flex: 1; }
+    .modal-row-value .mono { font-family: var(--font-mono); font-size: 12px; color: var(--color-navy-lt); }
+    .modal-footer {
+      display: flex; justify-content: flex-end;
+      padding: 12px 16px;
+      border-top: 0.5px solid var(--color-border-tertiary);
+    }
+
+    /* ===== ADD TRAFFIC SOURCE MODAL ===== */
+    .add-ts-modal-box { width: 520px; }
+    .add-ts-modal-body { padding: 20px; max-height: 62vh; overflow-y: auto; }
+
+    .atm-field { margin-bottom: 20px; }
+    .atm-field:last-child { margin-bottom: 0; }
+    .atm-label {
+      display: block; font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.05em;
+      color: var(--color-text-secondary); margin-bottom: 8px;
+    }
+    .atm-required { color: #DC0700; margin-left: 2px; }
+
+    /* Custom searchable dropdown */
+    .atm-dropdown { position: relative; }
+    .atm-dropdown-trigger {
+      width: 100%; height: 36px; padding: 0 12px;
+      border: 0.5px solid var(--color-border-secondary);
+      border-radius: var(--border-radius-sm);
+      background: var(--color-background-primary);
+      font-family: var(--font-body); font-size: 13px;
+      color: var(--color-text-tertiary);
+      display: flex; align-items: center; justify-content: space-between;
+      cursor: pointer; transition: border-color 0.15s;
+    }
+    .atm-dropdown-trigger.has-value { color: var(--color-text-primary); }
+    .atm-dropdown.open .atm-dropdown-trigger { border-color: var(--color-navy-lt); }
+    .atm-dropdown-arrow { font-size: 8px; color: var(--color-text-secondary); transition: transform 0.15s; }
+    .atm-dropdown.open .atm-dropdown-arrow { transform: rotate(180deg); }
+    .atm-dropdown-panel {
+      display: none; position: absolute; top: calc(100% + 3px); left: 0; right: 0;
+      background: var(--color-background-primary);
+      border: 0.5px solid var(--color-border-secondary);
+      border-radius: var(--border-radius-sm);
+      box-shadow: 0 4px 16px rgba(8,6,13,0.1);
+      z-index: 300; overflow: hidden;
+    }
+    .atm-dropdown.open .atm-dropdown-panel { display: block; }
+    .atm-search-wrap {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 12px;
+      border-bottom: 0.5px solid var(--color-border-tertiary);
+    }
+    .atm-search-icon { font-size: 12px; color: var(--color-text-tertiary); }
+    .atm-search {
+      flex: 1; border: none; outline: none;
+      font-family: var(--font-body); font-size: 13px;
+      color: var(--color-text-primary); background: transparent;
+    }
+    .atm-search::placeholder { color: var(--color-text-tertiary); }
+    .atm-option-list { max-height: 180px; overflow-y: auto; }
+    .atm-option {
+      padding: 8px 12px; font-size: 13px; color: var(--color-text-primary);
+      cursor: pointer; transition: background 0.1s;
+    }
+    .atm-option:hover { background: var(--color-background-secondary); }
+    .atm-option.selected { color: var(--color-navy); font-weight: 600; background: #EEF2FF; }
+    .atm-option.hidden { display: none; }
+
+    /* Configurations checkboxes */
+    .atm-check-row { display: flex; gap: 20px; }
+    .atm-check-lbl {
+      display: flex; align-items: center; gap: 7px;
+      font-size: 13px; color: var(--color-text-primary); cursor: pointer;
+    }
+    .atm-check-lbl input[type="checkbox"] {
+      width: 15px; height: 15px; cursor: pointer;
+      accent-color: var(--color-navy);
+    }
+
+    /* Account list */
+    .atm-acct-list {
+      border: 0.5px solid var(--color-border-secondary);
+      border-radius: var(--border-radius-sm); overflow: hidden;
+    }
+    .atm-acct-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 12px;
+      border-bottom: 0.5px solid var(--color-border-tertiary);
+      cursor: pointer; transition: background 0.1s;
+    }
+    .atm-acct-row:last-child { border-bottom: none; }
+    .atm-acct-row:hover { background: var(--color-background-secondary); }
+    .atm-acct-row input[type="checkbox"] {
+      width: 15px; height: 15px; flex-shrink: 0;
+      cursor: pointer; accent-color: var(--color-navy);
+    }
+    .atm-acct-name { font-size: 13px; color: var(--color-text-primary); flex: 1; }
+
+    .atm-modal-footer {
+      display: flex; justify-content: flex-end; gap: 8px;
+      padding: 12px 16px;
+      border-top: 0.5px solid var(--color-border-tertiary);
+    }
+
+    /* ===== ID BADGE ===== */
+    .id-badge {
+      display: inline-block;
+      font-family: var(--font-mono); font-size: 10px; font-weight: 600;
+      color: var(--color-text-secondary);
+      background: var(--color-background-tertiary);
+      border: 0.5px solid var(--color-border-secondary);
+      border-radius: var(--border-radius-sm);
+      padding: 1px 5px;
+    }
+
+    /* ===== ACCOUNT PILLS ===== */
+    .acct-pills { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; }
+    .acct-pill {
+      font-size: 10px; font-weight: 600;
+      background: var(--color-background-tertiary);
+      border: 0.5px solid var(--color-border-secondary);
+      border-radius: 10px; padding: 1px 7px;
+      color: var(--color-text-secondary); white-space: nowrap;
+    }
+    .acct-pill-more { font-size: 10px; color: var(--color-text-tertiary); white-space: nowrap; }
+
+    /* ===== MORE TOOLTIP ===== */
+    .more-hint {
+      position: relative;
+      display: inline-block;
+      color: var(--color-text-tertiary);
+      font-size: 12px;
+      margin-top: 1px;
+      cursor: default;
+    }
+    .more-hint:hover .more-tip { display: block; }
+    .more-tip {
+      display: none;
+      position: absolute;
+      left: 0; top: calc(100% + 4px);
+      background: #1C1B22;
+      color: #F0F0F4;
+      border-radius: 5px;
+      padding: 7px 10px;
+      font-size: 11px;
+      white-space: nowrap;
+      z-index: 150;
+      box-shadow: 0 3px 12px rgba(0,0,0,0.22);
+      pointer-events: none;
+    }
+    .more-tip-row { display: flex; align-items: center; gap: 6px; padding: 2px 0; }
+    .more-tip-id { font-family: var(--font-mono); font-size: 10px; opacity: 0.6; }
+
+    /* ===== ALPHA BAR ===== */
+    .alpha-bar {
+      display: flex; align-items: center; gap: 3px;
+      padding: 8px 24px;
+      background: #fff;
+      border-bottom: 0.5px solid #EEF0F6;
+      overflow-x: auto; flex-shrink: 0;
+    }
+    .alpha-bar::-webkit-scrollbar { display: none; }
+    .alpha-btn {
+      min-width: 30px; height: 30px;
+      border: 1px solid #D5D9E5;
+      border-radius: 4px;
+      background: #fff;
+      font-family: var(--font-display); font-size: 13px; font-weight: 600;
+      color: #797979;
+      cursor: pointer; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.1s, color 0.1s, border-color 0.1s;
+    }
+    .alpha-btn:hover:not(.empty) {
+      background: #FAFAFB;
+      border-color: #002483;
+      color: #002483;
+    }
+    .alpha-btn.active {
+      background: #002483;
+      color: #fff;
+      border-color: #002483;
+    }
+    .alpha-btn.empty {
+      color: #D5D9E5;
+      border-color: #EEF0F6;
+      cursor: default;
+    }
+    .alpha-btn-all { min-width: 42px; font-size: 13px; }
+
+    /* ===== API ENTRY (DRAWER REPLACE-CONTENT) ===== */
+    .drawer-back-btn {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-family: var(--font-body); font-size: 12px; font-weight: 500;
+      color: var(--color-text-secondary); cursor: pointer;
+      background: none; border: none; padding: 0;
+    }
+    .drawer-back-btn:hover { color: var(--color-navy); }
+    .drawer-back-arrow { font-size: 13px; line-height: 1; }
+
+    .api-entry-desc {
+      font-size: 12px; color: var(--color-text-secondary);
+      margin: 0 0 18px 0;
+    }
+    .ae-field { margin-bottom: 16px; }
+    .ae-field-label {
+      display: block;
+      font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.05em;
+      color: var(--color-text-secondary);
+      margin-bottom: 6px;
+    }
+    .ae-field-input,
+    .ae-field-select {
+      width: 100%; height: 36px; padding: 0 11px;
+      font-family: var(--font-body); font-size: 13px;
+      color: var(--color-text-primary);
+      background: var(--color-background-secondary);
+      border: 0.5px solid var(--color-border-secondary);
+      border-radius: var(--border-radius-sm);
+      outline: none; box-sizing: border-box;
+    }
+    .ae-field-input:focus,
+    .ae-field-select:focus {
+      border-color: var(--color-navy-lt);
+      background: var(--color-background-primary);
+    }
+    .ae-toggle-row {
+      display: flex; align-items: center; gap: 10px;
+      margin: 18px 0 22px 0;
+    }
+    .ae-toggle {
+      position: relative; display: inline-block;
+      width: 38px; height: 22px;
+      background: #D5D9E5; border-radius: 11px;
+      cursor: pointer; transition: background 0.15s;
+      flex-shrink: 0;
+    }
+    .ae-toggle::after {
+      content: ''; position: absolute;
+      width: 18px; height: 18px;
+      background: #fff; border-radius: 50%;
+      top: 2px; left: 2px;
+      transition: transform 0.15s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+    }
+    .ae-toggle.active { background: #FF8000; }
+    .ae-toggle.active::after { transform: translateX(16px); }
+    .ae-toggle-label { font-size: 13px; font-weight: 600; color: var(--color-text-primary); }
+    .ae-section-title {
+      font-family: var(--font-display); font-size: 13px; font-weight: 700;
+      color: var(--color-navy);
+      margin: 14px 0 10px 0;
+    }
+    .ae-detail-row {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 10px; margin-bottom: 10px;
+    }
+    .ae-detail-add {
+      margin-top: 4px;
+      font-family: var(--font-body); font-size: 12px; font-weight: 600;
+      color: var(--color-navy); cursor: pointer;
+      background: none; border: none; padding: 4px 0;
+    }
+    .ae-detail-add:hover { color: var(--color-navy-lt); }
+
+    /* ===== FIGMA DESIGN SYSTEM OVERRIDES ===== */
+
+    /* Color tokens */
+    :root {
+      --color-text-primary:         #383F60;
+      --color-text-secondary:       #797979;
+      --color-navy-lt:              #002483;
+      --color-background-secondary: #FAFAFB;
+    }
+
+    /* Page header */
+    .page-header { height: 60px; }
+    .page-header-title { font-size: 20px; font-weight: 700; color: #383F60; }
+    .page-header-count { font-size: 20px; font-weight: 400; color: #797979; margin-left: 3px; }
+
+    /* Sidebar */
+    .logo-name { color: #002483 !important; }
+    .nav-group-title { color: #797979 !important; }
+    .nav-item { color: #383F60 !important; font-weight: 400 !important; }
+    .nav-item:hover { background: #F5F5F5 !important; color: #383F60 !important; }
+    .nav-item.active {
+      color: #002483 !important;
+      font-weight: 600 !important;
+      background: #EEF4FF !important;
+      border-left-color: #002483 !important;
+    }
+
+    /* Filter bar */
+    .filter-bar { height: 54px; }
+    .filter-select {
+      height: 33px !important;
+      border: 1px solid #D5D9E5 !important;
+      color: #797979 !important;
+      border-radius: 4px !important;
+    }
+    .filter-select:focus { border-color: #002483 !important; }
+    .search-field input {
+      height: 33px !important;
+      border: 1px solid #D5D9E5 !important;
+    }
+    .search-field input:focus { border-color: #002483 !important; }
+
+    .ds-reset-link {
+      font-size: 13px; color: #002483; cursor: pointer;
+      white-space: nowrap; text-decoration: none;
+      margin-left: 8px; flex-shrink: 0;
+    }
+    .ds-reset-link:hover { text-decoration: underline; }
+
+    /* ===== STYLE GUIDE TABLE (flat rows + dividers) ===== */
+    .lp-table-wrap {
+      background: #fff !important;
+      border: 0.5px solid #E8E8EF !important;
+      border-radius: 6px !important;
+      overflow: hidden !important;
+    }
+    #ts-table {
+      border-collapse: collapse !important;
+      border-spacing: 0 !important;
+    }
+    /* Header */
+    #ts-table thead th {
+      font-size: 12px !important;
+      font-weight: 700 !important;
+      text-transform: none !important;
+      letter-spacing: 0 !important;
+      color: #383F60 !important;
+      background: #FAFAFB !important;
+      border-top: none !important;
+      border-left: none !important;
+      border-right: none !important;
+      border-bottom: 1px solid #EEEFF4 !important;
+      border-radius: 0 !important;
+      padding: 11px 16px !important;
+    }
+    /* Body rows */
+    #ts-table tbody tr { height: 44px; background: #fff; border-bottom: none !important; }
+    #ts-table tbody tr:hover { background: transparent !important; }
+    #ts-table tbody tr:hover td { background: #F7F7FB !important; }
+    #ts-table tbody tr td {
+      border-top: none !important;
+      border-bottom: 1px solid #EEEFF4 !important;
+      border-left: none !important;
+      border-right: none !important;
+      border-radius: 0 !important;
+      font-size: 14px !important;
+      color: #797979 !important;
+      padding: 0 16px !important;
+      vertical-align: middle;
+    }
+    #ts-table tbody tr:last-child td { border-bottom: none !important; }
+    /* Primary name column stays dark */
+    .lp-name { font-size: 14px !important; font-weight: 500 !important; color: #383F60 !important; }
+    .lp-date { font-size: 14px !important; color: #797979 !important; }
+
+    /* Sort icons */
+    .sort-icon { color: #797979 !important; }
+    .sort-icon.active { color: #002483 !important; }
+
+    /* Primary button */
+    .btn-primary { background: #383F60 !important; border-color: #383F60 !important; }
+    .btn-primary:hover { background: #4F5988 !important; border-color: #4F5988 !important; }
+
+    /* ===== EMPTY TABLE STATE ===== */
+    .ts-empty-state {
+      padding: 52px 0; text-align: center;
+      display: none;
+    }
+    .ts-empty-state-title {
+      font-family: var(--font-display); font-size: 14px;
+      font-weight: 600; color: var(--color-text-primary); margin-bottom: 4px;
+    }
+    .ts-empty-state-desc { font-size: 13px; color: var(--color-text-secondary); }
+  </style>
+</head>
+<body>
+<div class="app-shell">
+
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark">M</div>
+      <span class="logo-name">Maven Manage</span>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-group-title">Manage</div>
+      <a class="nav-item" href="index.html"><span class="nav-icon">⊞</span> Campaigns</a>
+      <a class="nav-item"><span class="nav-icon">◈</span> Accounts</a>
+      <a class="nav-item" href="initiatives.html"><span class="nav-icon">◆</span> Initiatives</a>
+      <a class="nav-item"><span class="nav-icon">↺</span> Global Continuations</a>
+
+      <div class="nav-group-title">Tasks</div>
+
+      <div class="nav-group-title">Configure</div>
+      <a class="nav-item" href="emailimports.html"><span class="nav-icon">✉</span> Email Imports</a>
+
+      <div class="nav-group-title">Tools</div>
+
+      <div class="nav-group-title">Conversion Engine</div>
+      <a class="nav-item active" href="integrations-a.html"><span class="nav-icon">⇄</span> Integrations</a>
+      <a class="nav-item" href="accounts.html"><span class="nav-icon">◈</span> Accounts</a>
+      <a class="nav-item" href="configure.html"><span class="nav-icon">⚙</span> Configurations</a>
+    </nav>
+  </aside>
+
+  <!-- ===== MAIN ===== -->
+  <div class="main-wrapper">
+
+    <!-- Page header -->
+    <header class="page-header">
+      <span class="page-header-title">Integrations<span class="page-header-count" id="page-ts-count"></span></span>
+      <div class="page-header-actions">
+        <button class="btn btn-ghost btn-md">Export</button>
+        <button class="btn btn-primary btn-md" id="btn-add-ts">+ Add traffic source</button>
+      </div>
+    </header>
+
+
+    <!-- Filter bar -->
+    <div class="filter-bar">
+      <div class="search-field">
+        <span class="search-icon">&#9906;</span>
+        <input type="text" id="ts-search" placeholder="Search traffic sources..." oninput="applyFilter()">
+      </div>
+      <select class="filter-select" id="ts-acct-filter" onchange="applyFilter()">
+        <option value="">All accounts</option>
+        <option value="62">Advida - RevShare</option>
+        <option value="25">CompareCredit</option>
+        <option value="133">CoolBuyTech Direct Buy</option>
+        <option value="126">GoGoGadget</option>
+        <option value="131">Investments</option>
+      </select>
+      <select class="filter-select" id="ts-status-filter" onchange="applyFilter()">
+        <option value="">All statuses</option>
+        <option value="active">Active</option>
+        <option value="inactive">Inactive</option>
+      </select>
+      <a class="ds-reset-link" id="ds-reset-all" onclick="resetAllFilters()">Reset All</a>
+    </div>
+
+    <!-- Alpha bar -->
+    <div class="alpha-bar" id="alpha-bar">
+      <!-- injected by JS -->
+    </div>
+
+    <!-- Table -->
+    <div class="content">
+      <div class="lp-table-wrap">
+        <table class="lp-table" id="ts-table">
+          <thead>
+            <tr>
+              <th style="width:52px;">ID <span class="sort-icon" id="sort-icon-id" style="cursor:pointer;" onclick="sortTable('id')">↕</span></th>
+              <th class="th-sortable" onclick="sortTable('name')">Traffic Source <span class="sort-icon" id="sort-icon-name">↕</span></th>
+              <th style="width:90px;">Postbacks</th>
+              <th style="width:60px;">APIs</th>
+              <th style="width:120px;">Status</th>
+              <th style="width:110px;">Updated</th>
+              <th style="width:68px;">Action</th>
+            </tr>
+          </thead>
+          <tbody id="ts-tbody">
+            <!-- rows injected by JS -->
+          </tbody>
+        </table>
+        <div class="ts-empty-state" id="ts-empty-state">
+          <div class="ts-empty-state-title">No traffic sources match this filter.</div>
+          <div class="ts-empty-state-desc"><span id="ts-empty-clear" style="color:var(--color-navy-lt);cursor:pointer;">Clear filter</span></div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /main-wrapper -->
+
+  <!-- ===== DRAWER BACKDROP ===== -->
+  <div class="drawer-backdrop" id="drawer-backdrop"></div>
+
+  <!-- ===== TRAFFIC SOURCE DRAWER ===== -->
+  <div class="drawer" id="ts-drawer">
+    <div class="drawer-header">
+      <div class="drawer-header-inner">
+        <span class="drawer-title" id="drawer-ts-name">Google Ads</span>
+        <div class="drawer-subtitle" id="drawer-ts-subtitle">
+          <!-- injected by JS -->
+        </div>
+      </div>
+      <button class="drawer-close" id="drawer-close" title="Close">✕</button>
+    </div>
+
+    <div class="drawer-body" id="drawer-body">
+      <!-- injected by JS -->
+    </div>
+
+    <div class="drawer-footer">
+      <button class="btn btn-ghost btn-md" onclick="closeDrawer()">Close</button>
+      <div class="drawer-footer-right">
+        <button class="btn btn-primary btn-md" id="drawer-save">Save changes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== ADD TRAFFIC SOURCE MODAL ===== -->
+  <div class="modal-backdrop" id="add-ts-modal-backdrop">
+    <div class="modal-box add-ts-modal-box">
+      <div class="modal-header">
+        <span class="modal-title">Add New Traffic Source</span>
+        <button class="modal-close" onclick="closeAddTsModal()">✕</button>
+      </div>
+      <div class="add-ts-modal-body">
+
+        <!-- Account -->
+        <div class="atm-field">
+          <label class="atm-label">Account <span class="atm-required">*</span></label>
+          <div class="atm-dropdown" id="atm-acct-dropdown">
+            <button class="atm-dropdown-trigger" id="atm-acct-trigger" onclick="toggleAtmAcctDropdown()" type="button">
+              <span id="atm-acct-selected">Select</span>
+              <span class="atm-dropdown-arrow">▼</span>
+            </button>
+            <div class="atm-dropdown-panel">
+              <div class="atm-search-wrap">
+                <span class="atm-search-icon">&#9906;</span>
+                <input type="text" class="atm-search" id="atm-acct-search" placeholder="Search accounts..." oninput="filterAtmAcct(this.value)">
+              </div>
+              <div class="atm-option-list" id="atm-acct-list"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Traffic Source -->
+        <div class="atm-field">
+          <label class="atm-label">Traffic Source <span class="atm-required">*</span></label>
+          <div class="atm-dropdown" id="atm-ts-dropdown">
+            <button class="atm-dropdown-trigger" id="atm-ts-trigger" onclick="toggleAtmDropdown()" type="button">
+              <span id="atm-ts-selected">Select</span>
+              <span class="atm-dropdown-arrow">▼</span>
+            </button>
+            <div class="atm-dropdown-panel">
+              <div class="atm-search-wrap">
+                <span class="atm-search-icon">&#9906;</span>
+                <input type="text" class="atm-search" id="atm-ts-search" placeholder="Search..." oninput="filterAtmTs(this.value)">
+              </div>
+              <div class="atm-option-list" id="atm-ts-list"><!-- injected --></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Available Configurations -->
+        <div class="atm-field">
+          <label class="atm-label">Available Configurations</label>
+          <div class="atm-check-row">
+            <label class="atm-check-lbl">
+              <input type="checkbox" id="atm-cfg-api"> <span>API</span>
+            </label>
+            <label class="atm-check-lbl">
+              <input type="checkbox" id="atm-cfg-postback" checked> <span>Postback</span>
+            </label>
+          </div>
+        </div>
+
+      </div>
+      <div class="atm-modal-footer">
+        <button class="btn btn-ghost btn-md" onclick="closeAddTsModal()">Cancel</button>
+        <button class="btn btn-primary btn-md" onclick="applyAddTs()">Apply</button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /app-shell -->
+
+<script>
+/* ===================================================
+   DATA
+   =================================================== */
+var TS_DATA = [
+  {id:'aol',name:'AOL',init:'A',status:'inactive',updated:'Feb 2026',accts:0,pb:0,api:0,accounts:[]},
+  {id:'appnexus',name:'AppNexus',init:'A',status:'inactive',updated:'Feb 2026',accts:0,pb:0,api:0,accounts:[]},
+  {id:'baidu-uk',name:'Baidu UK',init:'B',status:'inactive',updated:'Jan 2026',accts:0,pb:0,api:0,accounts:[]},
+  {id:'brandclick',name:'BrandClick',init:'B',status:'inactive',updated:'Mar 2026',accts:0,pb:0,api:0,accounts:[]},
+  {id:'brave',name:'Brave',init:'B',status:'inactive',updated:'Mar 2026',accts:0,pb:0,api:0,accounts:[]},
+  {id:'fi-nextdoor',name:'FI NextDoor',init:'F',status:'active',updated:'Apr 22',accts:1,pb:0,api:1,accounts:[{name:'Fisher Investments',postbacks:[],apis:[{param:'lead_id',impl:'NextDoor Lead API',status:'active'}]}]},
+  {id:'google-gdn-calls',name:'Google - GDN - Calls',init:'G',status:'active',updated:'Apr 21',accts:1,pb:0,api:1,accounts:[{name:'CapitalOne Shopping',postbacks:[],apis:[{param:'gclid',impl:'Google GDN Calls API',status:'active'}]}]},
+  {id:'google-yt-calls',name:'Google - YT - Calls',init:'G',status:'active',updated:'Apr 22',accts:1,pb:0,api:1,accounts:[{name:'CapitalOne Shopping',postbacks:[],apis:[{param:'gclid',impl:'Google YT Calls API',status:'active'}]}]},
+  {id:'infolinks',name:'Infolinks',init:'I',status:'inactive',updated:'Mar 2026',accts:0,pb:0,api:0,accounts:[]},
+  {id:'jeeng',name:'Jeeng',init:'J',status:'inactive',updated:'Feb 2026',accts:0,pb:0,api:0,accounts:[]},
+  {id:'kalshi-nextdoor',name:'Kalshi NextDoor',init:'K',status:'active',updated:'Apr 20',accts:1,pb:0,api:1,accounts:[{name:'Kalshi',postbacks:[],apis:[{param:'lead_id',impl:'Kalshi NextDoor API',status:'active'}]}]},
+  {id:'lpt-google-pmax',name:'LPT - Google - Pmax',init:'L',status:'active',updated:'Today',accts:1,pb:0,api:1,accounts:[{name:'CapitalOne Shopping',postbacks:[],apis:[{param:'conversion_id',impl:'Google Pmax API',status:'active'}]}]},
+  {id:'maven-ads',name:'Maven Ads',init:'M',status:'active',updated:'Apr 22',accts:1,pb:1,api:0,accounts:[{name:'CapitalOne Shopping',postbacks:[{param:'maven_click_id',type:'click',url:'https://maven.adtechnacity.com/postback?cid={maven_click_id}&payout={payout}'}],apis:[]}]},
+  {id:'native-ads',name:'Native Ads',init:'N',status:'inactive',updated:'Mar 2026',accts:0,pb:0,api:0,accounts:[]},
+  {id:'nextdoor-calls',name:'Nextdoor Calls',init:'N',status:'active',updated:'Apr 21',accts:1,pb:0,api:1,accounts:[{name:'Smarter Advisors',postbacks:[],apis:[{param:'lead_id',impl:'Nextdoor Calls API',status:'active'}]}]},
+  {id:'nextdoor-yahoo-dsp',name:'Nextdoor Yahoo DSP',init:'N',status:'active',updated:'Apr 19',accts:1,pb:1,api:0,accounts:[{name:'Fisher Investments',postbacks:[{param:'yclid',type:'click',url:'https://analytics.yahoo.com/s2s/pixel?yclid={yclid}&event=click'}],apis:[]}]},
+  {id:'opera',name:'Opera',init:'O',status:'inactive',updated:'Mar 2026',accts:0,pb:0,api:0,accounts:[]},
+  {id:'reddit',name:'Reddit',init:'R',status:'inactive',updated:'Mar 2026',accts:0,pb:0,api:0,accounts:[]},
+  {id:'slick-codes',name:'Slick Codes Direct Buy',init:'S',status:'active',updated:'Apr 18',accts:1,pb:1,api:0,accounts:[{name:'CCF — Coupon Code Finder',postbacks:[{param:'sub_id',type:'click',url:'https://slickcodes.com/postback?sub_id={sub_id}&payout={payout}'}],apis:[]}]},
+  {id:'snap',name:'Snap',init:'S',status:'inactive',updated:'Mar 2026',accts:0,pb:0,api:0,accounts:[]},
+  {id:'tiktok',name:'Tiktok',init:'T',status:'inactive',updated:'Feb 2026',accts:0,pb:0,api:0,accounts:[]},
+  {id:'tonic',name:'Tonic',init:'T',status:'inactive',updated:'Mar 2026',accts:0,pb:0,api:0,accounts:[]},
+  {id:'twitch',name:'Twitch',init:'T',status:'inactive',updated:'Feb 2026',accts:0,pb:0,api:0,accounts:[]}
+];
+
+/* ===================================================
+   GROUPS
+   =================================================== */
+var GROUPS = [
+  { id:25,  name:'CompareCredit', tsIds:['maven-ads','nextdoor-yahoo-dsp'] },
+  { id:131, name:'Investments',   tsIds:['fi-nextdoor','kalshi-nextdoor'] },
+  { id:133, name:'Direct Buys',   tsIds:['slick-codes'] }
+];
+
+/* Build reverse map: tsId → [{id, name}] */
+var tsGroupMap = {};
+GROUPS.forEach(function(g) {
+  g.tsIds.forEach(function(tsId) {
+    if (!tsGroupMap[tsId]) tsGroupMap[tsId] = [];
+    tsGroupMap[tsId].push({ id: g.id, name: g.name });
+  });
+});
+
+/* Build numeric ID lookup: tsId → sequential number */
+var tsNumIdMap = {};
+(function() {
+  var used = {};
+  TS_DATA.forEach(function(ts) {
+    var n;
+    do { n = Math.floor(Math.random() * 90) + 10; } while (used[n]);
+    used[n] = true;
+    tsNumIdMap[ts.id] = n;
+  });
+})();
+
+/* Build set of all assigned TS IDs */
+var assignedTsIds = {};
+GROUPS.forEach(function(g) { g.tsIds.forEach(function(id) { assignedTsIds[id] = true; }); });
+
+/* ===================================================
+   XSS UTILITY
+   =================================================== */
+function escHtml(s) {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+/* ===================================================
+   RENDER TABLE ROWS
+   =================================================== */
+function buildTsRow(ts) {
+  var pbStr = ts.pb === 0
+    ? '<span style="color:var(--color-text-tertiary);">0</span>'
+    : ts.pb;
+
+  var apiStr = ts.api === 0
+    ? '<span style="color:var(--color-text-tertiary);">0</span>'
+    : ts.api;
+
+  var statusHtml = ts.status === 'active'
+    ? '<span class="status-badge sb-active"><span class="dot" style="background:#085041;"></span>Active</span>'
+    : '<span class="status-badge sb-inactive"><span class="dot" style="background:var(--color-text-secondary);"></span>Inactive</span>';
+
+  var nid = tsNumIdMap[ts.id];
+  return '<tr data-ts-id="' + escHtml(ts.id) + '" data-ts-name="' + escHtml(ts.name) + '" data-status="' + escHtml(ts.status) + '" onclick="openTsDrawer(\'' + escHtml(ts.id) + '\')">'
+    + '<td style="font-family:var(--font-mono);font-size:13px;color:#797979;">' + nid + '</td>'
+    + '<td><div class="lp-name">' + escHtml(ts.name) + '</div></td>'
+    + '<td>' + pbStr + '</td>'
+    + '<td>' + apiStr + '</td>'
+    + '<td>' + statusHtml + '</td>'
+    + '<td><span class="lp-date">' + escHtml(ts.updated) + '</span></td>'
+    + '<td class="tbl-action-cell">'
+    + '<button class="row-icon-btn" title="View" onclick="event.stopPropagation();openTsDrawer(\'' + escHtml(ts.id) + '\')">'
+    + '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>'
+    + '</button>'
+    + '<button class="row-icon-btn" title="Edit" onclick="event.stopPropagation();">'
+    + '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>'
+    + '</button>'
+    + '</td>'
+    + '</tr>';
+}
+
+var sortState = { col: null, dir: 'asc' };
+
+function getSortedData() {
+  if (!sortState.col) return TS_DATA;
+  var data = TS_DATA.slice();
+  data.sort(function(a, b) {
+    var aKey, bKey;
+    if (sortState.col === 'name') {
+      aKey = a.name.toLowerCase();
+      bKey = b.name.toLowerCase();
+      if (aKey < bKey) return sortState.dir === 'asc' ? -1 : 1;
+      if (aKey > bKey) return sortState.dir === 'asc' ? 1 : -1;
+    } else if (sortState.col === 'id') {
+      return sortState.dir === 'asc'
+        ? tsNumIdMap[a.id] - tsNumIdMap[b.id]
+        : tsNumIdMap[b.id] - tsNumIdMap[a.id];
+    }
+    return 0;
+  });
+  return data;
+}
+
+function sortTable(col) {
+  if (sortState.col === col) {
+    sortState.dir = sortState.dir === 'asc' ? 'desc' : 'asc';
+  } else {
+    sortState.col = col;
+    sortState.dir = 'asc';
+  }
+  document.querySelectorAll('.sort-icon').forEach(function(el) {
+    el.textContent = '↕';
+    el.classList.remove('active');
+  });
+  var icon = document.getElementById('sort-icon-' + col);
+  if (icon) {
+    icon.textContent = sortState.dir === 'asc' ? '↑' : '↓';
+    icon.classList.add('active');
+  }
+  renderTableRows();
+}
+
+function renderTableRows() {
+  var tbody = document.getElementById('ts-tbody');
+  tbody.innerHTML = getSortedData().map(function(ts) { return buildTsRow(ts); }).join('');
+}
+
+/* ===================================================
+   ALPHA BAR
+   =================================================== */
+var activeLetter = null;
+
+function buildAlphaBar() {
+  var letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+
+  document.getElementById('alpha-bar').innerHTML =
+    '<button class="alpha-btn alpha-btn-all active" data-letter="" onclick="setAlphaFilter(\'\')" >All</button>'
+    + '<span style="width:1px;background:#E8E8EF;margin:0 4px;align-self:stretch;flex-shrink:0;"></span>'
+    + letters.map(function(letter) {
+      return '<button class="alpha-btn"'
+        + ' data-letter="' + letter + '"'
+        + ' onclick="setAlphaFilter(\'' + letter + '\')"'
+        + '>' + letter + '</button>';
+    }).join('');
+}
+
+function setAlphaFilter(letter) {
+  /* Empty string = "All"; clicking same letter again also resets to All */
+  activeLetter = (letter === '' || activeLetter === letter) ? null : letter;
+  document.querySelectorAll('.alpha-btn').forEach(function(btn) {
+    var isAll = btn.dataset.letter === '' && activeLetter === null;
+    var isLetter = btn.dataset.letter === activeLetter;
+    btn.classList.toggle('active', isAll || isLetter);
+  });
+  applyFilter();
+}
+
+/* ===================================================
+   FILTER
+   =================================================== */
+function applyFilter() {
+  var q = (document.getElementById('ts-search').value || '').toLowerCase();
+  var acctFilter = document.getElementById('ts-acct-filter').value;
+  var statusFilter = document.getElementById('ts-status-filter').value;
+
+  var rows = document.querySelectorAll('#ts-tbody tr[data-ts-id]');
+  var visible = 0;
+  rows.forEach(function(row) {
+    var tsId = row.dataset.tsId;
+    var tsName = (row.dataset.tsName || '').toLowerCase();
+    var tsStatus = row.dataset.status;
+
+    var matchSearch = !q || tsName.indexOf(q) !== -1;
+    var matchAcct = !acctFilter || (tsGroupMap[tsId] && tsGroupMap[tsId].some(function(g) {
+      return String(g.id) === acctFilter;
+    }));
+    var matchStatus = !statusFilter || tsStatus === statusFilter;
+    var matchAlpha = !activeLetter || (row.dataset.tsName || '').charAt(0).toUpperCase() === activeLetter;
+
+    var show = matchSearch && matchAcct && matchStatus && matchAlpha;
+    row.style.display = show ? '' : 'none';
+    if (show) visible++;
+  });
+
+  document.getElementById('ts-empty-state').style.display = visible === 0 ? 'block' : 'none';
+}
+
+function resetAllFilters() {
+  document.getElementById('ts-search').value = '';
+  document.getElementById('ts-acct-filter').value = '';
+  document.getElementById('ts-status-filter').value = '';
+  activeLetter = null;
+  document.querySelectorAll('.alpha-btn').forEach(function(btn) {
+    btn.classList.toggle('active', btn.dataset.letter === '');
+  });
+  applyFilter();
+}
+
+document.getElementById('ts-empty-clear').addEventListener('click', resetAllFilters);
+
+/* ===================================================
+   DRAWER
+   =================================================== */
+var drawer   = document.getElementById('ts-drawer');
+var backdrop = document.getElementById('drawer-backdrop');
+
+function closeDrawer() {
+  drawer.classList.remove('open');
+  backdrop.classList.remove('visible');
+}
+
+document.getElementById('drawer-close').addEventListener('click', closeDrawer);
+backdrop.addEventListener('click', closeDrawer);
+
+var currentTsId = null;
+
+function openTsDrawer(tsId) {
+  var ts = null;
+  for (var i = 0; i < TS_DATA.length; i++) {
+    if (TS_DATA[i].id === tsId) { ts = TS_DATA[i]; break; }
+  }
+  if (!ts) return;
+  currentTsId = tsId;
+
+  // Header
+  document.getElementById('drawer-ts-name').textContent = ts.name;
+  var subtitleEl = document.getElementById('drawer-ts-subtitle');
+  subtitleEl.innerHTML = '<span>' + ts.pb + ' Postback' + (ts.pb !== 1 ? 's' : '')
+    + ', ' + ts.api + ' API Integration' + (ts.api !== 1 ? 's' : '') + '</span>';
+
+  // Body
+  var bodyEl = document.getElementById('drawer-body');
+  bodyEl.innerHTML = renderDrawerBody(ts);
+
+  // Footer
+  var saveBtn = document.getElementById('drawer-save');
+  saveBtn.textContent = 'Save changes';
+  saveBtn.onclick = null;
+
+  // Wire up buttons inside drawer
+  wireDrawerButtons(ts);
+
+  drawer.classList.add('open');
+  backdrop.classList.add('visible');
+}
+
+/* ===================================================
+   RENDER DRAWER BODY
+   =================================================== */
+function renderDrawerBody(ts) {
+  if (ts.accounts.length === 0) {
+    return '<div style="padding:40px 0;text-align:center;color:var(--color-text-tertiary);font-size:13px;">No platform accounts configured.<br><span style="font-size:12px;">Add a platform account to begin setting up postbacks and APIs.</span></div>';
+  }
+
+  var html = '';
+  ts.accounts.forEach(function(acct, acctIdx) {
+    var uid = ts.id + '-' + acctIdx;
+    html += buildPaBlock(acct, uid);
+  });
+  return html;
+}
+
+function buildPaBlock(acct, uid) {
+  var html = '<div class="pa-block">';
+
+  // Platform account header
+  html += '<div class="pa-header">'
+    + '<span class="pa-name">' + escHtml(acct.name) + '</span>'
+    + '</div>';
+
+  // ---- Postback accordion ----
+  html += '<div class="acc-section" id="acc-pb-' + uid + '">';
+  html += '<div class="acc-hdr acc-hdr-pb" onclick="toggleAcc(\'acc-pb-' + uid + '\')">'
+    + '<span class="acc-toggle">&#9650;</span>'
+    + '<span class="acc-title">Server to Server (Postback)</span>'
+    + '<button class="acc-add-btn" onclick="event.stopPropagation();showAccForm(\'' + uid + '\',\'pb\')">Add Postback</button>'
+    + '</div>';
+  html += '<div class="acc-body">';
+  html += '<table class="impl-table">';
+  html += '<thead><tr><th>Parameter</th><th>API URL</th><th style="width:58px;">Status</th><th style="width:68px;">Actions</th></tr></thead>';
+  html += '<tbody id="pb-tbody-' + uid + '">';
+  if (acct.postbacks.length === 0) {
+    html += '<tr id="pb-empty-' + uid + '"><td colspan="4" style="color:var(--color-text-tertiary);font-size:12px;padding:10px 11px;">No postbacks configured.</td></tr>';
+  } else {
+    acct.postbacks.forEach(function(pb, idx) { html += renderPbRow(pb, idx); });
+  }
+  html += '</tbody></table>';
+  html += '<div class="impl-inline-form" id="pb-form-' + uid + '">'
+    + '<div class="iif-field"><label>Parameter</label><input type="text" placeholder="e.g. gclid" id="pb-param-' + uid + '"></div>'
+    + '<div class="iif-field" style="flex:1;min-width:200px;"><label>API URL</label><input type="text" placeholder="https://..." id="pb-url-' + uid + '" style="width:100%;"></div>'
+    + '<div class="iif-field"><label>Status</label>'
+    + '<select id="pb-status-' + uid + '"><option value="active">Active</option><option value="inactive">Inactive</option></select></div>'
+    + '<div class="iif-btns">'
+    + '<button class="btn btn-primary btn-sm" onclick="savePbRow(\'' + uid + '\')">Save</button>'
+    + '<button class="btn btn-ghost btn-sm" onclick="hideAccForm(\'' + uid + '\',\'pb\')">Cancel</button>'
+    + '</div></div>';
+  html += '</div>'; // /acc-body
+  html += '</div>'; // /acc-section pb
+
+  // ---- API accordion ----
+  html += '<div class="acc-section" id="acc-api-' + uid + '">';
+  html += '<div class="acc-hdr acc-hdr-api" onclick="toggleAcc(\'acc-api-' + uid + '\')">'
+    + '<span class="acc-toggle">&#9650;</span>'
+    + '<span class="acc-title">API</span>'
+    + '<button class="acc-add-btn" onclick="event.stopPropagation();showAccForm(\'' + uid + '\',\'api\')">Add API</button>'
+    + '</div>';
+  html += '<div class="acc-body">';
+  html += '<table class="impl-table">';
+  html += '<thead><tr><th>Parameter</th><th>Implementation</th><th style="width:96px;">API Input</th><th style="width:58px;">Status</th><th style="width:68px;">Actions</th></tr></thead>';
+  html += '<tbody id="api-tbody-' + uid + '">';
+  if (acct.apis.length === 0) {
+    html += '<tr id="api-empty-' + uid + '"><td colspan="5" style="color:var(--color-text-tertiary);font-size:12px;padding:10px 11px;">No APIs configured.</td></tr>';
+  } else {
+    acct.apis.forEach(function(api, idx) { html += renderApiRow(api, idx); });
+  }
+  html += '</tbody></table>';
+  html += '<div class="impl-inline-form" id="api-form-' + uid + '">'
+    + '<div class="iif-field"><label>Parameter</label><input type="text" placeholder="e.g. pixel_id" id="api-param-' + uid + '"></div>'
+    + '<div class="iif-field"><label>Implementation</label><input type="text" placeholder="e.g. Facebook" id="api-impl-' + uid + '"></div>'
+    + '<div class="iif-field"><label>Status</label>'
+    + '<select id="api-status-' + uid + '"><option value="active">Active</option><option value="inactive">Inactive</option></select></div>'
+    + '<div class="iif-btns">'
+    + '<button class="btn btn-primary btn-sm" onclick="saveApiRow(\'' + uid + '\')">Save</button>'
+    + '<button class="btn btn-ghost btn-sm" onclick="hideAccForm(\'' + uid + '\',\'api\')">Cancel</button>'
+    + '</div></div>';
+  html += '</div>'; // /acc-body
+  html += '</div>'; // /acc-section api
+
+  html += '</div>'; // /pa-block
+  return html;
+}
+
+function renderPbRow(pb, idx) {
+  var status = pb.status || 'active';
+  var statusHtml = status === 'active'
+    ? '<span class="impl-status-active">&#9679;</span>'
+    : '<span class="impl-status-inactive">&#9679;</span>';
+  return '<tr>'
+    + '<td><span class="mono">' + escHtml(pb.param) + '</span></td>'
+    + '<td><span class="url-cell" title="' + escHtml(pb.url) + '">' + escHtml(pb.url) + '</span></td>'
+    + '<td>' + statusHtml + '</td>'
+    + '<td style="white-space:nowrap;">'
+    + '<button class="impl-action-btn" title="Edit">&#9998;</button> '
+    + '<button class="impl-action-btn del" title="Delete" onclick="removeImplRow(this)">&#10006;</button>'
+    + '</td>'
+    + '</tr>';
+}
+
+function renderApiRow(api, idx) {
+  var statusHtml = api.status === 'active'
+    ? '<span class="impl-status-active">&#9679;</span>'
+    : '<span class="impl-status-inactive">&#9679;</span>';
+  return '<tr>'
+    + '<td><span class="mono">' + escHtml(api.param) + '</span></td>'
+    + '<td>' + escHtml(api.impl) + '</td>'
+    + '<td><button class="see-details-btn" onclick="openApiEntry(\'' + escHtml(api.param) + '\',\'' + escHtml(api.impl) + '\',\'' + escHtml(api.status) + '\')">See Details</button></td>'
+    + '<td>' + statusHtml + '</td>'
+    + '<td style="white-space:nowrap;">'
+    + '<button class="impl-action-btn" title="Edit">&#9998;</button> '
+    + '<button class="impl-action-btn del" title="Delete" onclick="removeImplRow(this)">&#10006;</button>'
+    + '</td>'
+    + '</tr>';
+}
+
+/* ===================================================
+   ACCORDION + FORM HELPERS
+   =================================================== */
+function wireDrawerButtons(ts) { /* no-op: buttons use inline onclick */ }
+
+function toggleAcc(sectionId) {
+  document.getElementById(sectionId).classList.toggle('collapsed');
+}
+
+function showAccForm(uid, type) {
+  var formEl = document.getElementById(type + '-form-' + uid);
+  if (!formEl) return;
+  formEl.classList.add('visible');
+  var first = formEl.querySelector('input');
+  if (first) first.focus();
+}
+
+function hideAccForm(uid, type) {
+  var formEl = document.getElementById(type + '-form-' + uid);
+  if (formEl) formEl.classList.remove('visible');
+  ['param', 'url', 'impl'].forEach(function(f) {
+    var el = document.getElementById(type + '-' + f + '-' + uid);
+    if (el) el.value = '';
+  });
+  var statusEl = document.getElementById(type + '-status-' + uid);
+  if (statusEl) statusEl.value = 'active';
+}
+
+function savePbRow(uid) {
+  var param  = document.getElementById('pb-param-' + uid);
+  var url    = document.getElementById('pb-url-' + uid);
+  var status = document.getElementById('pb-status-' + uid);
+  if (!param || !param.value.trim()) { if (param) param.focus(); return; }
+  if (!url   || !url.value.trim())   { if (url)   url.focus();   return; }
+
+  var pb = { param: param.value.trim(), url: url.value.trim(), status: status ? status.value : 'active' };
+
+  var emptyRow = document.getElementById('pb-empty-' + uid);
+  if (emptyRow) emptyRow.remove();
+
+  var tbody = document.getElementById('pb-tbody-' + uid);
+  if (!tbody) return;
+
+  var tr = document.createElement('tr');
+  tr.innerHTML = renderPbRow(pb, 0).replace(/^<tr>/, '').replace(/<\/tr>$/, '');
+  tbody.appendChild(tr);
+  hideAccForm(uid, 'pb');
+}
+
+function saveApiRow(uid) {
+  var param  = document.getElementById('api-param-' + uid);
+  var impl   = document.getElementById('api-impl-' + uid);
+  var status = document.getElementById('api-status-' + uid);
+  if (!param || !param.value.trim()) { if (param) param.focus(); return; }
+  if (!impl  || !impl.value.trim())  { if (impl)  impl.focus();  return; }
+
+  var api = { param: param.value.trim(), impl: impl.value.trim(), status: status ? status.value : 'active' };
+
+  var emptyRow = document.getElementById('api-empty-' + uid);
+  if (emptyRow) emptyRow.remove();
+
+  var tbody = document.getElementById('api-tbody-' + uid);
+  if (!tbody) return;
+
+  var tr = document.createElement('tr');
+  tr.innerHTML = renderApiRow(api, 0).replace(/^<tr>/, '').replace(/<\/tr>$/, '');
+  tbody.appendChild(tr);
+  hideAccForm(uid, 'api');
+}
+
+function removeImplRow(btn) {
+  var tr = btn.closest('tr');
+  if (tr) tr.remove();
+}
+
+/* ===================================================
+   API ENTRY VIEW (drawer replace-content)
+   =================================================== */
+function openApiEntry(param, impl, status) {
+  if (!currentTsId) return;
+  var ts = null;
+  for (var i = 0; i < TS_DATA.length; i++) {
+    if (TS_DATA[i].id === currentTsId) { ts = TS_DATA[i]; break; }
+  }
+  if (!ts) return;
+
+  document.getElementById('drawer-ts-name').textContent = 'API Entry';
+  document.getElementById('drawer-ts-subtitle').innerHTML =
+    '<button class="drawer-back-btn" onclick="closeApiEntry()">'
+    + '<span class="drawer-back-arrow">←</span>'
+    + '<span>Back to ' + escHtml(ts.name) + '</span>'
+    + '</button>';
+
+  var isActive = (status === 'active');
+  document.getElementById('drawer-body').innerHTML =
+    '<div class="api-entry-desc">Add or edit the required API fields provided by the traffic source</div>'
+    + '<div class="ae-field">'
+    +   '<label class="ae-field-label">Parameter</label>'
+    +   '<input type="text" class="ae-field-input" value="' + escHtml(param) + '">'
+    + '</div>'
+    + '<div class="ae-field">'
+    +   '<label class="ae-field-label">Implementation</label>'
+    +   '<select class="ae-field-select"><option>' + escHtml(impl) + '</option></select>'
+    + '</div>'
+    + '<div class="ae-toggle-row">'
+    +   '<div class="ae-toggle' + (isActive ? ' active' : '') + '" onclick="this.classList.toggle(\'active\')"></div>'
+    +   '<span class="ae-toggle-label">' + (isActive ? 'Active' : 'Inactive') + '</span>'
+    + '</div>'
+    + '<div class="ae-section-title">Input Details</div>'
+    + '<div class="ae-detail-row">'
+    +   '<input type="text" class="ae-field-input" placeholder="dataset_id">'
+    +   '<input type="text" class="ae-field-input" placeholder="Value">'
+    + '</div>'
+    + '<div class="ae-detail-row">'
+    +   '<input type="text" class="ae-field-input" placeholder="Key">'
+    +   '<input type="text" class="ae-field-input" placeholder="Value">'
+    + '</div>'
+    + '<button class="ae-detail-add">+ Add input</button>';
+
+  var saveBtn = document.getElementById('drawer-save');
+  saveBtn.textContent = 'Save entry';
+  saveBtn.onclick = closeApiEntry;
+}
+
+function closeApiEntry() {
+  if (currentTsId) openTsDrawer(currentTsId);
+}
+
+/* ===================================================
+   ADD TRAFFIC SOURCE MODAL
+   =================================================== */
+var addTsBackdrop = document.getElementById('add-ts-modal-backdrop');
+
+var ALL_ACCOUNTS = [
+  { id:62,  name:'Advida - RevShare' },
+  { id:25,  name:'CompareCredit' },
+  { id:133, name:'CoolBuyTech Direct Buy' },
+  { id:126, name:'GoGoGadget' },
+  { id:131, name:'Investments' },
+  { id:107, name:'LeafFilter' },
+  { id:129, name:'Xevio' },
+  { id:48,  name:'360i - Discover' },
+  { id:42,  name:'CapitalOne Shopping' },
+  { id:43,  name:'Dashlane' },
+  { id:136, name:'Foreversongs' },
+  { id:134, name:'Kalshi' },
+  { id:124, name:'MTD Disco CC' },
+  { id:109, name:'Opera' },
+  { id:75,  name:'Tax' }
+];
+
+function openAddTsModal() {
+  /* Populate TS options */
+  document.getElementById('atm-ts-list').innerHTML = TS_DATA.map(function(ts, idx) {
+    var nid = idx + 1;
+    return '<div class="atm-option" data-id="' + escHtml(ts.id) + '" onclick="selectAtmTs(\'' + escHtml(ts.id) + '\',\'' + escHtml(ts.name) + '\',' + nid + ')">'
+      + '<span style="font-family:var(--font-mono);font-size:10px;color:var(--color-text-tertiary);margin-right:6px;">ID.' + nid + '</span>'
+      + escHtml(ts.name)
+      + '</div>';
+  }).join('');
+
+  /* Populate account list */
+  document.getElementById('atm-acct-list').innerHTML = ALL_ACCOUNTS.map(function(a) {
+    return '<div class="atm-option" data-id="' + a.id + '" onclick="selectAtmAcct(' + a.id + ',\'' + escHtml(a.name) + '\')">'
+      + '<span style="font-family:var(--font-mono);font-size:10px;color:var(--color-text-tertiary);margin-right:6px;">ID.' + a.id + '</span>'
+      + escHtml(a.name)
+      + '</div>';
+  }).join('');
+
+  /* Reset */
+  document.getElementById('atm-ts-selected').textContent = 'Select';
+  document.getElementById('atm-ts-trigger').classList.remove('has-value');
+  document.getElementById('atm-ts-search').value = '';
+  document.getElementById('atm-acct-selected').textContent = 'Select';
+  document.getElementById('atm-acct-trigger').classList.remove('has-value');
+  document.getElementById('atm-acct-search').value = '';
+  document.getElementById('atm-cfg-api').checked = false;
+  document.getElementById('atm-cfg-postback').checked = true;
+  document.getElementById('atm-ts-dropdown').classList.remove('open');
+  document.getElementById('atm-acct-dropdown').classList.remove('open');
+
+  addTsBackdrop.classList.add('visible');
+}
+
+function closeAddTsModal() {
+  addTsBackdrop.classList.remove('visible');
+  document.getElementById('atm-ts-dropdown').classList.remove('open');
+  document.getElementById('atm-acct-dropdown').classList.remove('open');
+}
+
+function toggleAtmDropdown() {
+  document.getElementById('atm-ts-dropdown').classList.toggle('open');
+}
+
+function toggleAtmAcctDropdown() {
+  document.getElementById('atm-acct-dropdown').classList.toggle('open');
+}
+
+function selectAtmAcct(id, name) {
+  document.getElementById('atm-acct-selected').textContent = 'ID.' + id + '  ' + name;
+  document.getElementById('atm-acct-trigger').classList.add('has-value');
+  document.querySelectorAll('#atm-acct-list .atm-option').forEach(function(opt) {
+    opt.classList.toggle('selected', opt.dataset.id === String(id));
+  });
+  document.getElementById('atm-acct-dropdown').classList.remove('open');
+}
+
+function filterAtmAcct(q) {
+  q = q.toLowerCase();
+  document.querySelectorAll('#atm-acct-list .atm-option').forEach(function(opt) {
+    opt.classList.toggle('hidden', opt.textContent.toLowerCase().indexOf(q) === -1);
+  });
+}
+
+function selectAtmTs(id, name, nid) {
+  document.getElementById('atm-ts-selected').textContent = 'ID.' + nid + '  ' + name;
+  document.getElementById('atm-ts-trigger').classList.add('has-value');
+  document.querySelectorAll('#atm-ts-list .atm-option').forEach(function(opt) {
+    opt.classList.toggle('selected', opt.dataset.id === id);
+  });
+  document.getElementById('atm-ts-dropdown').classList.remove('open');
+}
+
+function filterAtmTs(q) {
+  q = q.toLowerCase();
+  document.querySelectorAll('#atm-ts-list .atm-option').forEach(function(opt) {
+    opt.classList.toggle('hidden', opt.textContent.toLowerCase().indexOf(q) === -1);
+  });
+}
+
+function applyAddTs() { closeAddTsModal(); }
+
+addTsBackdrop.addEventListener('click', function(e) {
+  if (e.target === addTsBackdrop) closeAddTsModal();
+});
+
+document.addEventListener('click', function(e) {
+  var dd = document.getElementById('atm-ts-dropdown');
+  if (dd && !dd.contains(e.target)) dd.classList.remove('open');
+  var dda = document.getElementById('atm-acct-dropdown');
+  if (dda && !dda.contains(e.target)) dda.classList.remove('open');
+});
+
+document.getElementById('btn-add-ts').addEventListener('click', openAddTsModal);
+
+/* ===================================================
+   DRAWER SAVE (stub)
+   =================================================== */
+document.getElementById('drawer-save').addEventListener('click', function() {
+  this.textContent = 'Saved!';
+  var btn = this;
+  setTimeout(function() { btn.textContent = 'Save changes'; }, 1400);
+});
+
+/* ===================================================
+   INIT
+   =================================================== */
+buildAlphaBar();
+renderTableRows();
+document.getElementById('page-ts-count').textContent = ' (' + TS_DATA.length + ')';
+</script>
+</body>
+</html>

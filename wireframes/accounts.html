@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Maven Manage — Accounts</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"></noscript>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+
+    /* ===== ACCOUNT SELECTOR BAR ===== */
+    .acct-selector-bar {
+      display: flex; align-items: center; gap: 10px;
+      padding: 0 32px; height: 52px;
+      background: var(--color-background-primary);
+      border-bottom: 0.5px solid var(--color-border-secondary);
+      flex-shrink: 0;
+    }
+    .acct-selector-label {
+      font-size: 12px; font-weight: 600; color: var(--color-text-secondary);
+      text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap;
+    }
+    .acct-selector-select {
+      height: 34px; padding: 0 32px 0 12px;
+      border: 0.5px solid var(--color-border-secondary);
+      border-radius: var(--border-radius-sm);
+      background: var(--color-background-primary);
+      font-family: var(--font-display); font-size: 13px; font-weight: 600;
+      color: var(--color-navy);
+      appearance: none; -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%236B7280' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 10px center;
+      cursor: pointer; outline: none; min-width: 240px;
+      transition: border-color 0.15s;
+    }
+    .acct-selector-select:focus { border-color: var(--color-navy-lt); }
+    .acct-selector-divider {
+      width: 0.5px; height: 20px;
+      background: var(--color-border-secondary); flex-shrink: 0;
+    }
+    .acct-add-link {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 13px; font-weight: 600; color: var(--color-navy-lt);
+      cursor: pointer; background: none; border: none; padding: 0;
+      transition: color 0.1s;
+    }
+    .acct-add-link:hover { color: var(--color-navy); }
+
+    /* ===== STATS ROW ===== */
+    .stats-row {
+      display: flex; gap: 14px; padding: 16px 32px;
+      background: var(--color-background-primary);
+      border-bottom: 0.5px solid var(--color-border-secondary);
+      flex-shrink: 0;
+    }
+    .stat-card {
+      flex: 1; min-width: 0;
+      background: var(--color-background-secondary);
+      border: 0.5px solid var(--color-border-secondary);
+      border-radius: var(--border-radius-md);
+      padding: 12px 14px;
+    }
+    .stat-card-label {
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.06em; color: var(--color-text-secondary); margin-bottom: 4px;
+    }
+    .stat-card-value {
+      font-family: var(--font-display); font-size: 22px;
+      font-weight: 700; color: var(--color-navy); line-height: 1.15;
+    }
+    .stat-card-sub { font-size: 11px; color: var(--color-text-secondary); margin-top: 2px; }
+
+    /* ===== CONTENT AREA ===== */
+    .content-area {
+      flex: 1; overflow-y: auto;
+      padding: 24px 32px;
+      background: var(--color-background-tertiary);
+    }
+
+    /* ===== TS TABLE BLOCK ===== */
+    .ts-block {
+      background: var(--color-background-primary);
+      border: 0.5px solid var(--color-border-secondary);
+      border-radius: var(--border-radius-md);
+      overflow: hidden;
+    }
+    .ts-block-hdr {
+      display: flex; align-items: center; gap: 10px;
+      padding: 14px 20px;
+      border-bottom: 0.5px solid var(--color-border-secondary);
+    }
+    .ts-block-title {
+      flex: 1; font-family: var(--font-display);
+      font-size: 14px; font-weight: 700; color: var(--color-text-primary);
+    }
+    .ts-block-count {
+      font-size: 11px; font-weight: 600; color: var(--color-text-secondary);
+      background: var(--color-background-tertiary);
+      border: 0.5px solid var(--color-border-secondary);
+      border-radius: 20px; padding: 1px 8px;
+    }
+    .ts-block-add {
+      height: 30px; padding: 0 12px;
+      border: 0.5px solid var(--color-border-secondary);
+      border-radius: var(--border-radius-sm);
+      background: var(--color-background-primary);
+      font-family: var(--font-body); font-size: 12px; font-weight: 600;
+      color: var(--color-text-secondary); cursor: pointer;
+      transition: background 0.1s, border-color 0.1s, color 0.1s;
+    }
+    .ts-block-add:hover {
+      background: var(--color-background-secondary);
+      color: var(--color-navy); border-color: var(--color-navy-lt);
+    }
+
+    /* ===== TS TABLE ===== */
+    .ts-table { width: 100%; border-collapse: collapse; }
+    .ts-table thead tr {
+      background: var(--color-background-secondary);
+      border-bottom: 0.5px solid var(--color-border-secondary);
+    }
+    .ts-table th {
+      padding: 9px 16px; text-align: left;
+      font-family: var(--font-display); font-size: 11px;
+      font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
+      color: var(--color-text-secondary);
+    }
+    .ts-table td {
+      padding: 13px 16px;
+      border-bottom: 0.5px solid var(--color-border-tertiary);
+      vertical-align: middle; font-size: 13px;
+    }
+    .ts-table tbody tr:last-child td { border-bottom: none; }
+    .ts-table tbody tr { transition: background 0.1s; }
+    .ts-table tbody tr:hover { background: var(--color-background-secondary); }
+    .ts-table tbody tr:hover .row-actions { opacity: 1; }
+
+    .ts-name-cell {
+      font-family: var(--font-display); font-size: 13px;
+      font-weight: 600; color: var(--color-text-primary);
+    }
+    .ts-count { font-size: 13px; color: var(--color-text-primary); }
+    .ts-count-zero { color: var(--color-text-tertiary); }
+
+    .status-active   { display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:#03BF00; }
+    .status-inactive { display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:var(--color-text-secondary); }
+
+    .row-actions {
+      display: flex; gap: 5px; justify-content: flex-end;
+      opacity: 0; transition: opacity 0.1s;
+    }
+    .row-action-btn {
+      width: 26px; height: 26px;
+      border: 0.5px solid var(--color-border-secondary);
+      border-radius: var(--border-radius-sm);
+      background: transparent; color: var(--color-text-secondary);
+      cursor: pointer; font-size: 12px;
+      display: inline-flex; align-items: center; justify-content: center;
+      transition: background 0.1s, color 0.1s, border-color 0.1s;
+    }
+    .row-action-btn:hover { background: var(--color-background-secondary); }
+    .row-action-btn.del:hover { background:#FFF5F5;color:#DC0700;border-color:#FFD8D8; }
+
+    /* ===== GROUP HEADER ROWS ===== */
+    .group-hdr-row td {
+      background: var(--color-background-secondary);
+      padding: 8px 16px !important;
+      border-bottom: 0.5px solid var(--color-border-secondary) !important;
+      cursor: pointer; user-select: none;
+    }
+    .group-hdr-inner {
+      display: flex; align-items: center; gap: 8px;
+    }
+    .group-toggle {
+      font-size: 9px; color: var(--color-text-secondary);
+      transition: transform 0.15s; flex-shrink: 0;
+    }
+    .group-hdr-row.collapsed .group-toggle { transform: rotate(180deg); }
+    .group-name-lbl {
+      font-family: var(--font-display); font-size: 12px;
+      font-weight: 700; color: var(--color-text-primary);
+    }
+    .group-count-badge {
+      font-size: 11px; font-weight: 600; color: var(--color-text-secondary);
+      background: var(--color-background-tertiary);
+      border: 0.5px solid var(--color-border-secondary);
+      border-radius: 10px; padding: 0 7px;
+    }
+    .group-add-ts-btn {
+      margin-left: auto;
+      height: 24px; padding: 0 9px;
+      border: 0.5px solid var(--color-border-secondary);
+      border-radius: var(--border-radius-sm);
+      background: transparent;
+      font-family: var(--font-body); font-size: 11px; font-weight: 600;
+      color: var(--color-text-secondary); cursor: pointer;
+      transition: background 0.1s, color 0.1s, border-color 0.1s;
+    }
+    .group-add-ts-btn:hover {
+      background: var(--color-background-primary);
+      color: var(--color-navy); border-color: var(--color-navy-lt);
+    }
+    .group-row.group-hidden { display: none; }
+    .group-row td:first-child { padding-left: 32px; }
+
+    /* empty state */
+    .ts-empty {
+      padding: 48px 20px; text-align: center;
+    }
+    .ts-empty-title {
+      font-family: var(--font-display); font-size: 13px; font-weight: 600;
+      color: var(--color-text-secondary); margin-bottom: 4px;
+    }
+    .ts-empty-desc { font-size: 12px; color: var(--color-text-tertiary); }
+
+    /* ===== DRAWER ===== */
+    .drawer-header-inner {
+      display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0;
+    }
+    .drawer-subtitle {
+      font-size: 12px; color: var(--color-text-secondary);
+    }
+    .drawer-field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 16px; }
+    .drawer-field label {
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.05em; color: var(--color-text-secondary);
+    }
+    .drawer-field input,
+    .drawer-field select {
+      height: 34px; padding: 0 10px;
+      border: 0.5px solid var(--color-border-secondary);
+      border-radius: var(--border-radius-sm);
+      background: var(--color-background-primary);
+      font-family: var(--font-body); font-size: 13px;
+      color: var(--color-text-primary); outline: none;
+      transition: border-color 0.15s;
+    }
+    .drawer-field input:focus,
+    .drawer-field select:focus { border-color: var(--color-navy-lt); }
+    .drawer-field input::placeholder { color: var(--color-text-tertiary); }
+    .drawer-field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .drawer-section-label {
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.05em; color: var(--color-text-secondary);
+      margin: 20px 0 10px; padding-bottom: 8px;
+      border-bottom: 0.5px solid var(--color-border-tertiary);
+    }
+    .drawer-section-label:first-child { margin-top: 0; }
+    .drawer-integration-link {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 12px; font-weight: 600; color: var(--color-navy-lt);
+      text-decoration: none; margin-top: 4px;
+    }
+    .drawer-integration-link:hover { color: var(--color-navy); }
+    .drawer-summary-row {
+      display: flex; gap: 16px; margin-bottom: 16px;
+    }
+    .drawer-summary-card {
+      flex: 1; background: var(--color-background-secondary);
+      border: 0.5px solid var(--color-border-secondary);
+      border-radius: var(--border-radius-sm);
+      padding: 10px 12px;
+    }
+    .drawer-summary-label {
+      font-size: 10px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.05em; color: var(--color-text-tertiary); margin-bottom: 3px;
+    }
+    .drawer-summary-value {
+      font-size: 18px; font-weight: 700; color: var(--color-navy);
+      font-family: var(--font-display);
+    }
+
+    /* ===== ID BADGE ===== */
+    .id-badge {
+      display: inline-block;
+      font-family: var(--font-mono); font-size: 11px; font-weight: 600;
+      color: var(--color-text-secondary);
+      background: var(--color-background-tertiary);
+      border: 0.5px solid var(--color-border-secondary);
+      border-radius: var(--border-radius-sm);
+      padding: 1px 6px;
+      letter-spacing: 0.01em;
+    }
+
+    /* ===== BACK BAR ===== */
+    .back-bar {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 16px;
+    }
+    .back-btn {
+      display: inline-flex; align-items: center; gap: 5px;
+      height: 28px; padding: 0 11px;
+      border: 0.5px solid var(--color-border-secondary);
+      border-radius: var(--border-radius-sm);
+      background: var(--color-background-primary);
+      font-family: var(--font-body); font-size: 12px; font-weight: 600;
+      color: var(--color-text-secondary); cursor: pointer;
+      transition: background 0.1s;
+    }
+    .back-btn:hover { background: var(--color-background-secondary); }
+    .back-crumb {
+      font-size: 13px; color: var(--color-text-secondary);
+      display: flex; align-items: center; gap: 6px;
+    }
+    .back-crumb-current {
+      font-family: var(--font-display); font-weight: 600;
+      color: var(--color-text-primary);
+      display: flex; align-items: center; gap: 6px;
+    }
+
+    /* Clickable group rows */
+    .group-table-row { cursor: pointer; }
+    .group-table-row:hover td { background: var(--color-background-secondary); }
+
+  </style>
+</head>
+<body>
+<div class="app-shell">
+
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark">M</div>
+      <span class="logo-name">Maven Manage</span>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-group-title">Manage</div>
+      <a class="nav-item" href="index.html"><span class="nav-icon">⊞</span> Campaigns</a>
+      <a class="nav-item"><span class="nav-icon">◈</span> Accounts</a>
+      <a class="nav-item" href="initiatives.html"><span class="nav-icon">◆</span> Initiatives</a>
+      <a class="nav-item"><span class="nav-icon">↺</span> Global Continuations</a>
+
+      <div class="nav-group-title">Tasks</div>
+
+      <div class="nav-group-title">Configure</div>
+      <a class="nav-item" href="emailimports.html"><span class="nav-icon">✉</span> Email Imports</a>
+
+      <div class="nav-group-title">Tools</div>
+
+      <div class="nav-group-title">Conversion Engine</div>
+      <a class="nav-item" href="integrations-a.html"><span class="nav-icon">⇄</span> Integrations</a>
+      <a class="nav-item active" href="accounts.html"><span class="nav-icon">◈</span> Accounts</a>
+      <a class="nav-item" href="configure.html"><span class="nav-icon">⚙</span> Configurations</a>
+    </nav>
+  </aside>
+
+  <!-- ===== MAIN ===== -->
+  <div class="main-wrapper">
+
+    <!-- Page header -->
+    <header class="page-header">
+      <span class="page-header-title">Accounts</span>
+      <div class="page-header-actions">
+        <button class="btn btn-ghost btn-md">Export</button>
+        <button class="btn btn-primary btn-md" id="btn-add-account">+ Add Account</button>
+      </div>
+    </header>
+
+    <!-- Stats row -->
+    <div class="stats-row" id="stats-row">
+      <!-- injected by JS -->
+    </div>
+
+    <!-- Content -->
+    <div class="content-area" id="content-area">
+      <!-- injected by JS -->
+    </div>
+
+  </div><!-- /main-wrapper -->
+
+  <!-- ===== DRAWER BACKDROP ===== -->
+  <div class="drawer-backdrop" id="drawer-backdrop"></div>
+
+  <!-- ===== DRAWER ===== -->
+  <div class="drawer" id="acct-drawer">
+    <div class="drawer-header">
+      <div class="drawer-header-inner">
+        <span class="drawer-title" id="drawer-title">Edit</span>
+        <div class="drawer-subtitle" id="drawer-subtitle"></div>
+      </div>
+      <button class="drawer-close" id="drawer-close" title="Close">✕</button>
+    </div>
+    <div class="drawer-body" id="drawer-body"></div>
+    <div class="drawer-footer">
+      <button class="btn btn-ghost btn-md" onclick="closeDrawer()">Close</button>
+      <div class="drawer-footer-right">
+        <button class="btn btn-primary btn-md" id="drawer-save">Save changes</button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /app-shell -->
+
+<script>
+/* ===================================================
+   DATA
+   =================================================== */
+var ACCOUNTS = [
+  { id:107, name:'LeafFilter', status:'active', sources:[
+    {id:'s-107-1', name:'Google Ads', pb:3, api:2, status:'active'},
+    {id:'s-107-2', name:'Facebook',   pb:2, api:1, status:'active'},
+    {id:'s-107-3', name:'Taboola',    pb:2, api:1, status:'active'},
+    {id:'s-107-4', name:'Outbrain',   pb:1, api:0, status:'active'}
+  ]},
+  { id:129, name:'Xevio', status:'active', sources:[
+    {id:'s-129-1', name:'Taboola',           pb:2, api:1, status:'active'},
+    {id:'s-129-2', name:'Outbrain',          pb:1, api:0, status:'active'},
+    {id:'s-129-3', name:'Newsbreak - Xevio', pb:2, api:1, status:'active'}
+  ]},
+  { id:48, name:'360i - Discover', status:'active', sources:[
+    {id:'s-48-1', name:'Google Ads', pb:3, api:2, status:'active'},
+    {id:'s-48-2', name:'Facebook',   pb:2, api:1, status:'active'},
+    {id:'s-48-3', name:'Criteo',     pb:2, api:1, status:'active'},
+    {id:'s-48-4', name:'Taboola',    pb:1, api:0, status:'active'},
+    {id:'s-48-5', name:'Bing Ads',   pb:1, api:0, status:'inactive'}
+  ]},
+  { id:62, name:'Advida - RevShare', status:'active', sources:[
+    {id:'s-62-1', name:'Taboola',  pb:2, api:0, status:'active'},
+    {id:'s-62-2', name:'Outbrain', pb:1, api:0, status:'active'}
+  ]},
+  { id:42, name:'CapitalOne Shopping', status:'active', sources:[
+    {id:'s-42-1', name:'Google Ads', pb:3, api:2, status:'active'},
+    {id:'s-42-2', name:'Facebook',   pb:2, api:1, status:'active'},
+    {id:'s-42-3', name:'Taboola',    pb:2, api:1, status:'active'},
+    {id:'s-42-4', name:'Outbrain',   pb:1, api:0, status:'active'},
+    {id:'s-42-5', name:'Zemanta',    pb:1, api:0, status:'active'},
+    {id:'s-42-6', name:'Reddit',     pb:1, api:1, status:'active'},
+    {id:'s-42-7', name:'Bing Ads',   pb:1, api:0, status:'inactive'}
+  ]},
+  { id:25, name:'CompareCredit', status:'active', sources:[
+    {id:'s-25-1', name:'Google Ads', pb:2, api:1, status:'active'},
+    {id:'s-25-2', name:'Facebook',   pb:2, api:1, status:'active'},
+    {id:'s-25-3', name:'Taboola',    pb:1, api:0, status:'active'}
+  ]},
+  { id:133, name:'CoolBuyTech Direct Buy', status:'active', sources:[
+    {id:'s-133-1', name:'Taboola',  pb:2, api:0, status:'active'},
+    {id:'s-133-2', name:'Outbrain', pb:1, api:0, status:'active'}
+  ]},
+  { id:43, name:'Dashlane', status:'active', sources:[
+    {id:'s-43-1', name:'Google Ads', pb:2, api:1, status:'active'},
+    {id:'s-43-2', name:'Facebook',   pb:1, api:1, status:'active'},
+    {id:'s-43-3', name:'Taboola',    pb:2, api:0, status:'active'},
+    {id:'s-43-4', name:'Reddit',     pb:1, api:1, status:'active'}
+  ]},
+  { id:136, name:'Foreversongs', status:'active', sources:[
+    {id:'s-136-1', name:'Facebook',              pb:1, api:1, status:'active'},
+    {id:'s-136-2', name:'ForeverSongs Default',  pb:2, api:0, status:'active'},
+    {id:'s-136-3', name:'ForeverSongs NextDoor', pb:1, api:0, status:'active'}
+  ]},
+  { id:126, name:'GoGoGadget', status:'active', sources:[
+    {id:'s-126-1', name:'Google Ads', pb:2, api:1, status:'active'}
+  ]},
+  { id:131, name:'Investments', status:'active', sources:[
+    {id:'s-131-1', name:'Google Ads', pb:2, api:1, status:'active'},
+    {id:'s-131-2', name:'Facebook',   pb:1, api:1, status:'active'},
+    {id:'s-131-3', name:'Linkedin',   pb:1, api:0, status:'active'},
+    {id:'s-131-4', name:'Taboola',    pb:2, api:1, status:'active'},
+    {id:'s-131-5', name:'Bing Ads',   pb:1, api:0, status:'inactive'}
+  ]},
+  { id:134, name:'Kalshi', status:'active', sources:[
+    {id:'s-134-1', name:'Google Ads', pb:2, api:1, status:'active'},
+    {id:'s-134-2', name:'Facebook',   pb:1, api:1, status:'active'}
+  ]},
+  { id:124, name:'MTD Disco CC', status:'active', sources:[
+    {id:'s-124-1', name:'Taboola',  pb:2, api:1, status:'active'},
+    {id:'s-124-2', name:'Outbrain', pb:1, api:0, status:'active'},
+    {id:'s-124-3', name:'Zemanta',  pb:1, api:0, status:'active'}
+  ]},
+  { id:109, name:'Opera', status:'active', sources:[
+    {id:'s-109-1', name:'Google Ads', pb:2, api:1, status:'active'},
+    {id:'s-109-2', name:'Taboola',    pb:2, api:1, status:'active'},
+    {id:'s-109-3', name:'Outbrain',   pb:2, api:0, status:'active'},
+    {id:'s-109-4', name:'Opera',      pb:1, api:0, status:'active'}
+  ]},
+  { id:75, name:'Tax', status:'active', sources:[
+    {id:'s-75-1', name:'Google Ads', pb:2, api:1, status:'active'},
+    {id:'s-75-2', name:'Facebook',   pb:1, api:1, status:'active'}
+  ]}
+];
+
+/* All available integrations (from Integrations page) */
+var ALL_INTEGRATIONS = [
+  'Anura','Bing Ads','CouponNew Direct Buy','CouponsOff Direct Buy','Criteo',
+  'DailyMaven','DealOMG Direct Buy','DealsDay Direct Buy','Ebay','Expedia',
+  'Facebook','ForeverSongs Default','ForeverSongs NextDoor','FriendsFamily',
+  'GCG Organic','GoodRX','Google Ads','Infolinks','Innovid','Interactive Offers',
+  'Iponweb','Jeeng','Linkedin','Liveintent','Maven Smart Bid - DSP',
+  'Maven Trading Desk','MaxDeals Direct Buy','Maximus','Maximus-Gemini','MOTIV31',
+  'MotorMaven','MSN Guaranteed','Native Ads','Newsbreak - Xevio','Newsmax',
+  'OneNews','Online Shopping Tools','Opera','Opera Mobile','Opera Rich Hints',
+  'Outbrain','Patch','Pocket','Pocket CA','Pocket DE','Pocket FR','Pocket Hits',
+  'Pocket Mobile','Pocket UK','PubExchange','Quizlet','RealCodes Direct Buy',
+  'Reddit','Revcontent','Roundforest','Rumble Ads','Self-Finder','Snap','Spigot',
+  'Spotter','Springs Publishing','StackAdapt','System1','Taboola','Telebrands',
+  'TikTok','Tonic','TopDealX Direct Buy','Tradedesk','TripAdvisor','Twitch',
+  'Union Sq Media','Voluum','Yahoo','Yahoo DSP','Zemanta','Zeropark','Zillow'
+];
+
+/* ===================================================
+   STATE
+   =================================================== */
+var currentAccount = null;  // null = list view, set = detail view
+var editingSource  = null;
+
+/* ===================================================
+   UTILITY
+   =================================================== */
+function escHtml(s) {
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function getAccount(id) {
+  return ACCOUNTS.find(function(a){ return a.id === parseInt(id); }) || ACCOUNTS[0];
+}
+
+/* ===================================================
+   RENDER STATS
+   =================================================== */
+function renderStats() {
+  if (!currentAccount) {
+    renderGlobalStats();
+  } else {
+    renderGroupStats(currentAccount);
+  }
+}
+
+function renderGlobalStats() {
+  var totalSrc = ACCOUNTS.reduce(function(n,a){ return n + a.sources.length; }, 0);
+  var totalPb  = ACCOUNTS.reduce(function(n,a){ return n + a.sources.reduce(function(x,s){ return x+s.pb; },0); }, 0);
+  var totalApi = ACCOUNTS.reduce(function(n,a){ return n + a.sources.reduce(function(x,s){ return x+s.api; },0); }, 0);
+  var activeGrps = ACCOUNTS.filter(function(a){ return a.status==='active'; }).length;
+
+  document.getElementById('stats-row').innerHTML =
+    stat('Groups',           ACCOUNTS.length, activeGrps + ' active') +
+    stat('Traffic Sources',  totalSrc,        'Across all groups') +
+    stat('Postbacks',        totalPb,         'S2S implementations') +
+    stat('Active APIs',      totalApi,        'Authenticated');
+}
+
+function renderGroupStats(a) {
+  var active   = a.sources.filter(function(s){ return s.status==='active'; }).length;
+  var inactive = a.sources.length - active;
+  var totalPb  = a.sources.reduce(function(n,s){ return n+s.pb; }, 0);
+  var totalApi = a.sources.reduce(function(n,s){ return n+s.api; }, 0);
+
+  document.getElementById('stats-row').innerHTML =
+    stat('Traffic Sources', a.sources.length, active+' active · '+inactive+' inactive') +
+    stat('Postbacks',       totalPb,          'S2S implementations') +
+    stat('Active APIs',     totalApi,         'Authenticated') +
+    stat('All Groups',      ACCOUNTS.length,  '<span style="color:var(--color-navy-lt);cursor:pointer;" onclick="backToList()">← Back to list</span>');
+}
+
+function stat(label, val, sub) {
+  return '<div class="stat-card">'
+    + '<div class="stat-card-label">' + label + '</div>'
+    + '<div class="stat-card-value">' + val + '</div>'
+    + '<div class="stat-card-sub">' + sub + '</div>'
+    + '</div>';
+}
+
+/* ===================================================
+   RENDER GROUPS TABLE (list view)
+   =================================================== */
+function renderGroupsTable() {
+  var html = '<div class="ts-block">'
+    + '<div class="ts-block-hdr">'
+    + '<span class="ts-block-title">Groups</span>'
+    + '<span class="ts-block-count">' + ACCOUNTS.length + '</span>'
+    + '</div>'
+    + '<table class="ts-table">'
+    + '<thead><tr>'
+    + '<th style="width:72px;">ID</th>'
+    + '<th>Name</th>'
+    + '<th style="width:130px;">Traffic Sources</th>'
+    + '<th style="width:110px;">Postbacks</th>'
+    + '<th style="width:80px;">APIs</th>'
+    + '<th style="width:100px;">Status</th>'
+    + '<th style="width:52px;"></th>'
+    + '</tr></thead>'
+    + '<tbody>';
+
+  ACCOUNTS.forEach(function(a) {
+    var totalPb  = a.sources.reduce(function(n,s){ return n+s.pb;  }, 0);
+    var totalApi = a.sources.reduce(function(n,s){ return n+s.api; }, 0);
+    var statusHtml = a.status === 'active'
+      ? '<span class="status-active">&#9679; Active</span>'
+      : '<span class="status-inactive">&#9679; Inactive</span>';
+
+    html += '<tr class="group-table-row" onclick="openGroup(' + a.id + ')">'
+      + '<td><span class="id-badge">#' + a.id + '</span></td>'
+      + '<td><span class="ts-name-cell">' + escHtml(a.name) + '</span></td>'
+      + '<td><span class="ts-count">' + a.sources.length + '</span></td>'
+      + '<td><span class="ts-count">' + totalPb + '</span></td>'
+      + '<td><span class="ts-count">' + totalApi + '</span></td>'
+      + '<td>' + statusHtml + '</td>'
+      + '<td><div class="row-actions" onclick="event.stopPropagation();">'
+      +   '<button class="row-action-btn" title="Edit" onclick="openEditGroupDrawer(' + a.id + ')">&#9998;</button>'
+      + '</div></td>'
+      + '</tr>';
+  });
+
+  html += '</tbody></table></div>';
+  document.getElementById('content-area').innerHTML = html;
+}
+
+/* ===================================================
+   OPEN / BACK GROUP DETAIL
+   =================================================== */
+function openGroup(id) {
+  currentAccount = getAccount(id);
+  renderStats();
+  renderGroupDetail();
+}
+
+function backToList() {
+  currentAccount = null;
+  renderGlobalStats();
+  renderGroupsTable();
+}
+
+/* ===================================================
+   RENDER GROUP DETAIL (traffic sources for one group)
+   =================================================== */
+function renderGroupDetail() {
+  var a = currentAccount;
+  var html = '<div class="back-bar">'
+    + '<button class="back-btn" onclick="backToList()">&#8592; All Groups</button>'
+    + '<span class="back-crumb">/ <span class="back-crumb-current"><span class="id-badge">#' + a.id + '</span> ' + escHtml(a.name) + '</span></span>'
+    + '</div>';
+
+  html += '<div class="ts-block">'
+    + '<div class="ts-block-hdr">'
+    + '<span class="ts-block-title">Traffic Sources</span>'
+    + '<span class="ts-block-count">' + a.sources.length + '</span>'
+    + '<button class="ts-block-add" onclick="openAddSourceDrawer()">+ Add Traffic Source</button>'
+    + '</div>';
+
+  if (a.sources.length === 0) {
+    html += '<div class="ts-empty">'
+      + '<div class="ts-empty-title">No traffic sources linked yet.</div>'
+      + '<div class="ts-empty-desc">Add a traffic source from the Integrations list to start sending conversion events for this group.</div>'
+      + '</div>';
+  } else {
+    html += buildFlatTable(a.sources);
+  }
+
+  html += '</div>';
+  document.getElementById('content-area').innerHTML = html;
+}
+
+function buildFlatTable(sources) {
+  var html = '<table class="ts-table">'
+    + '<thead><tr>'
+    + '<th>Traffic Source</th>'
+    + '<th style="width:120px;">Postbacks</th>'
+    + '<th style="width:80px;">APIs</th>'
+    + '<th style="width:100px;">Status</th>'
+    + '<th style="width:72px;"></th>'
+    + '</tr></thead>'
+    + '<tbody id="ts-tbody">';
+  sources.forEach(function(s) { html += buildRow(s); });
+  html += '</tbody></table>';
+  return html;
+}
+
+
+function buildRowCells(s) {
+  var pbHtml = s.pb === 0
+    ? '<span class="ts-count ts-count-zero">0</span>'
+    : '<span class="ts-count">' + s.pb + '</span>';
+  var apiHtml = s.api === 0
+    ? '<span class="ts-count ts-count-zero">0</span>'
+    : '<span class="ts-count">' + s.api + '</span>';
+  var statusHtml = s.status === 'active'
+    ? '<span class="status-active">&#9679; Active</span>'
+    : '<span class="status-inactive">&#9679; Inactive</span>';
+  return '<td><span class="ts-name-cell">' + escHtml(s.name) + '</span></td>'
+    + '<td>' + pbHtml + '</td>'
+    + '<td>' + apiHtml + '</td>'
+    + '<td>' + statusHtml + '</td>'
+    + '<td><div class="row-actions">'
+    +   '<button class="row-action-btn" title="Edit" onclick="openEditSourceDrawer(\'' + escHtml(s.id) + '\')">&#9998;</button>'
+    +   '<button class="row-action-btn del" title="Remove" onclick="removeSource(\'' + escHtml(s.id) + '\')">&#10006;</button>'
+    + '</div></td>';
+}
+
+function buildRow(s) {
+  return '<tr>' + buildRowCells(s) + '</tr>';
+}
+
+/* ===================================================
+   REMOVE SOURCE
+   =================================================== */
+function removeSource(id) {
+  currentAccount.sources = currentAccount.sources.filter(function(s){ return s.id !== id; });
+  renderStats();
+  renderGroupDetail();
+}
+
+/* ===================================================
+   DRAWER
+   =================================================== */
+var drawer   = document.getElementById('acct-drawer');
+var backdrop = document.getElementById('drawer-backdrop');
+
+function closeDrawer() {
+  drawer.classList.remove('open');
+  backdrop.classList.remove('visible');
+  editingSource = null;
+}
+document.getElementById('drawer-close').addEventListener('click', closeDrawer);
+backdrop.addEventListener('click', closeDrawer);
+document.addEventListener('keydown', function(e){ if(e.key==='Escape') closeDrawer(); });
+document.getElementById('drawer-save').addEventListener('click', function(){
+  this.textContent = 'Saved!';
+  var btn = this;
+  setTimeout(function(){ btn.textContent = 'Save changes'; }, 1400);
+});
+
+/* --- Add Account --- */
+function openAddAccountDrawer() {
+  document.getElementById('drawer-title').textContent = 'Add Account';
+  document.getElementById('drawer-subtitle').textContent = '';
+  document.getElementById('drawer-body').innerHTML =
+    '<div class="drawer-section-label">Account Details</div>'
+    + '<div class="drawer-field-row">'
+    +   '<div class="drawer-field"><label>ID</label><input type="text" placeholder="e.g. 101"></div>'
+    +   '<div class="drawer-field"><label>Name</label><input type="text" placeholder="e.g. CapitalOne Shopping"></div>'
+    + '</div>'
+    + '<div class="drawer-field"><label>Status</label>'
+    +   '<select><option value="active">Active</option><option value="inactive">Inactive</option></select>'
+    + '</div>';
+  openDrawer();
+}
+document.getElementById('btn-add-account').addEventListener('click', openAddAccountDrawer);
+
+/* --- Edit group --- */
+function openEditGroupDrawer(id) {
+  var a = getAccount(id);
+  if (!a) return;
+  document.getElementById('drawer-title').textContent = 'Edit Group';
+  document.getElementById('drawer-subtitle').textContent = '#' + a.id + ' — ' + a.name;
+  document.getElementById('drawer-body').innerHTML =
+    '<div class="drawer-section-label">Group Details</div>'
+    + '<div class="drawer-field-row">'
+    +   '<div class="drawer-field"><label>ID</label><input type="text" value="' + a.id + '" readonly style="background:var(--color-background-secondary);color:var(--color-text-secondary);"></div>'
+    +   '<div class="drawer-field"><label>Name</label><input type="text" value="' + escHtml(a.name) + '"></div>'
+    + '</div>'
+    + '<div class="drawer-field"><label>Status</label>'
+    +   '<select><option value="active"' + (a.status==='active'?' selected':'') + '>Active</option>'
+    +   '<option value="inactive"' + (a.status==='inactive'?' selected':'') + '>Inactive</option></select>'
+    + '</div>';
+  openDrawer();
+}
+
+/* --- Add Group --- */
+function openAddGroupDrawer() {
+  document.getElementById('drawer-title').textContent = 'Add Group';
+  document.getElementById('drawer-subtitle').textContent = currentAccount.id + ' — ' + currentAccount.name;
+
+  /* Build options from existing groups in this account */
+  var existingGroups = [];
+  currentAccount.sources.forEach(function(s) {
+    if (s.group && existingGroups.indexOf(s.group) === -1) existingGroups.push(s.group);
+  });
+  var groupListHtml = existingGroups.length === 0
+    ? '<div style="font-size:12px;color:var(--color-text-tertiary);padding:4px 0;">No groups yet.</div>'
+    : existingGroups.map(function(g) {
+        return '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:0.5px solid var(--color-border-tertiary);">'
+          + '<span style="flex:1;font-size:13px;">' + escHtml(g) + '</span>'
+          + '<span style="font-size:11px;color:var(--color-text-tertiary);">'
+          + currentAccount.sources.filter(function(s){return s.group===g;}).length + ' sources</span>'
+          + '</div>';
+      }).join('');
+
+  document.getElementById('drawer-body').innerHTML =
+    '<div class="drawer-section-label">New Group</div>'
+    + '<div class="drawer-field"><label>Group Name</label>'
+    +   '<input type="text" id="d-group-name" placeholder="e.g. Paid Search">'
+    + '</div>'
+    + '<div class="drawer-section-label" style="margin-top:24px;">Existing Groups</div>'
+    + groupListHtml;
+  openDrawer();
+}
+
+/* --- Add Traffic Source to account --- */
+function openAddSourceDrawer() {
+  editingSource = null;
+  document.getElementById('drawer-title').textContent = 'Add Traffic Source';
+  document.getElementById('drawer-subtitle').textContent = currentAccount.id + ' — ' + currentAccount.name;
+
+  var opts = ALL_INTEGRATIONS.map(function(name) {
+    return '<option value="' + escHtml(name) + '">' + escHtml(name) + '</option>';
+  }).join('');
+
+  document.getElementById('drawer-body').innerHTML =
+    '<div class="drawer-section-label">Select Integration</div>'
+    + '<div class="drawer-field">'
+    +   '<label>Traffic Source</label>'
+    +   '<select id="d-ts-name"><option value="" disabled selected>Select from Integrations…</option>' + opts + '</select>'
+    + '</div>'
+    + '<div class="drawer-field">'
+    +   '<label>Status</label>'
+    +   '<select id="d-ts-status"><option value="active">Active</option><option value="inactive">Inactive</option></select>'
+    + '</div>'
+    + '<div style="margin-top:8px;">'
+    +   '<a class="drawer-integration-link" href="integrations-a.html">View all integrations &#8599;</a>'
+    + '</div>';
+  openDrawer();
+}
+
+/* --- Edit existing source --- */
+function openEditSourceDrawer(id) {
+  var s = currentAccount.sources.find(function(x){ return x.id === id; });
+  if (!s) return;
+  editingSource = s;
+  document.getElementById('drawer-title').textContent = 'Edit Traffic Source';
+  document.getElementById('drawer-subtitle').textContent = currentAccount.id + ' — ' + currentAccount.name;
+
+  document.getElementById('drawer-body').innerHTML =
+    '<div class="drawer-section-label">Integration</div>'
+    + '<div class="drawer-field"><label>Traffic Source</label>'
+    +   '<input type="text" value="' + escHtml(s.name) + '" readonly style="background:var(--color-background-secondary);color:var(--color-text-secondary);">'
+    + '</div>'
+    + '<div class="drawer-field"><label>Status</label>'
+    +   '<select id="d-ts-status">'
+    +   '<option value="active"' + (s.status==='active'?' selected':'') + '>Active</option>'
+    +   '<option value="inactive"' + (s.status==='inactive'?' selected':'') + '>Inactive</option>'
+    +   '</select>'
+    + '</div>'
+    + '<div class="drawer-section-label">Implementation Summary</div>'
+    + '<div class="drawer-summary-row">'
+    +   '<div class="drawer-summary-card"><div class="drawer-summary-label">Postbacks</div><div class="drawer-summary-value">' + s.pb + '</div></div>'
+    +   '<div class="drawer-summary-card"><div class="drawer-summary-label">APIs</div><div class="drawer-summary-value">' + s.api + '</div></div>'
+    + '</div>'
+    + '<a class="drawer-integration-link" href="integrations-a.html">View integration setup &#8599;</a>';
+  openDrawer();
+}
+
+function openDrawer() {
+  drawer.classList.add('open');
+  backdrop.classList.add('visible');
+}
+
+/* ===================================================
+   INIT
+   =================================================== */
+renderGlobalStats();
+renderGroupsTable();
+</script>
+</body>
+</html>

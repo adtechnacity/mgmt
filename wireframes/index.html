@@ -1,0 +1,1047 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Maven Manage — Landing Pages</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"></noscript>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="app-shell">
+
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark">M</div>
+      <span class="logo-name">Maven Manage</span>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-group-title">Manage</div>
+      <a class="nav-item active"><span class="nav-icon">⊞</span> Campaigns</a>
+      <a class="nav-item"><span class="nav-icon">◈</span> Accounts</a>
+      <a class="nav-item" href="initiatives.html"><span class="nav-icon">◆</span> Initiatives</a>
+      <a class="nav-item"><span class="nav-icon">↺</span> Global Continuations</a>
+
+      <div class="nav-group-title">Tasks</div>
+
+      <div class="nav-group-title">Configure</div>
+      <a class="nav-item" href="emailimports.html"><span class="nav-icon">✉</span> Email Imports</a>
+
+      <div class="nav-group-title">Tools</div>
+
+      <div class="nav-group-title">Conversion Engine</div>
+      <a class="nav-item" href="integrations-a.html"><span class="nav-icon">⇄</span> Integrations</a>
+      <a class="nav-item" href="accounts.html"><span class="nav-icon">◈</span> Accounts</a>
+      <a class="nav-item" href="configure.html"><span class="nav-icon">⚙</span> Configurations</a>
+    </nav>
+  </aside>
+
+  <!-- ===== MAIN ===== -->
+  <div class="main-wrapper">
+
+    <header class="page-header">
+      <span class="page-header-title">Campaigns</span>
+      <div class="page-header-actions">
+        <button class="btn btn-primary btn-md" id="btn-new">+ New campaign</button>
+      </div>
+    </header>
+
+    <div class="filter-bar">
+      <div class="search-field">
+        <span class="search-icon">&#9906;</span>
+        <input type="text" id="search-input" placeholder="Search by name or LP ID...">
+      </div>
+      <select class="filter-select" id="filter-platform">
+        <option value="">All platforms</option>
+        <option>Facebook</option>
+        <option>Taboola</option>
+        <option>Bing</option>
+        <option>Outbrain</option>
+        <option>MSN</option>
+      </select>
+      <select class="filter-select" id="filter-account">
+        <option value="">All accounts</option>
+        <option>CapitalOne Shopping</option>
+        <option>Fisher Investments</option>
+      </select>
+      <select class="filter-select" id="filter-status">
+        <option value="">All statuses</option>
+        <option>Active</option>
+        <option>Archived</option>
+      </select>
+    </div>
+
+    <main class="content">
+
+      <!-- ===== YOUR QUEUE ===== -->
+      <div class="queue-section">
+        <div class="queue-section-hdr">
+          <span class="queue-section-label">Your queue</span>
+          <span class="queue-count-badge">3</span>
+        </div>
+        <div class="queue-list">
+
+          <div class="queue-row">
+            <span class="queue-type-pill lp">LP</span>
+            <div class="queue-row-info">
+              <div class="queue-row-name">CCF Facebook Senior Travel</div>
+              <div class="queue-row-meta">New LP<span class="meta-dot">·</span>Facebook<span class="meta-dot">·</span>Desktop<span class="meta-dot">·</span>Ryan<span class="meta-dot">·</span>2h ago</div>
+            </div>
+            <button class="btn btn-secondary btn-sm queue-create-btn"
+              data-name="CCF Facebook Senior Travel"
+              data-type-label="New LP"
+              data-platform="Facebook"
+              data-device="Desktop"
+              data-account="CapitalOne Shopping"
+              data-by="Ryan"
+              data-time="2h ago">Create</button>
+          </div>
+
+          <div class="queue-row">
+            <span class="queue-type-pill exp">EXP</span>
+            <div class="queue-row-info">
+              <div class="queue-row-name">Backend Exp LPG 14714 Coupons</div>
+              <div class="queue-row-meta">Experiment<span class="meta-dot">·</span>Taboola<span class="meta-dot">·</span>Lisa<span class="meta-dot">·</span>1d ago</div>
+            </div>
+            <button class="btn btn-secondary btn-sm queue-create-btn"
+              data-name="Backend Exp LPG 14714 Coupons"
+              data-type-label="Experiment"
+              data-platform="Taboola"
+              data-device=""
+              data-account="CapitalOne Shopping"
+              data-by="Lisa"
+              data-time="1d ago">Create</button>
+          </div>
+
+          <div class="queue-row">
+            <span class="queue-type-pill lp">LP</span>
+            <div class="queue-row-info">
+              <div class="queue-row-name">GFC Bing Mobile Pricing</div>
+              <div class="queue-row-meta">New LP<span class="meta-dot">·</span>Bing<span class="meta-dot">·</span>Mobile<span class="meta-dot">·</span>Jimmy<span class="meta-dot">·</span>3d ago</div>
+            </div>
+            <button class="btn btn-secondary btn-sm queue-create-btn"
+              data-name="GFC Bing Mobile Pricing"
+              data-type-label="New LP"
+              data-platform="Bing"
+              data-device="Mobile"
+              data-account="CapitalOne Shopping"
+              data-by="Jimmy"
+              data-time="3d ago">Create</button>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="lp-table-wrap">
+        <table class="lp-table" id="lp-table">
+          <thead>
+            <tr>
+              <th>LP Name</th>
+              <th>Platform</th>
+              <th>LP ID</th>
+              <th>LPG ID</th>
+              <th>Status</th>
+              <th>Created</th>
+            </tr>
+          </thead>
+          <tbody>
+
+            <tr data-platform="Facebook" data-account="CapitalOne Shopping" data-status="Active"
+                data-lp-id="16215" data-lpg-id="16216" data-ds="DS12"
+                data-lp-name="FB - Senior Travel Angle - Coupons CTA - EC=0"
+                data-instapage="blog.couponcodefinder.com/ca/travel-budget-fb"
+                data-platform-key="Facebook">
+              <td>
+                <div class="lp-name">FB - Senior Travel Angle - Coupons CTA - EC=0</div>
+                <div class="lp-account">CapitalOne Shopping · CCF — Coupon Code Finder</div>
+              </td>
+              <td><span class="platform-badge pb-facebook">Facebook</span></td>
+              <td><span class="lp-id">16215</span></td>
+              <td><span class="lp-id">16216</span></td>
+              <td><span class="status-badge sb-active"><span class="dot" style="background:#085041"></span>Active</span></td>
+              <td class="lp-date">Apr 18, 2026</td>
+            </tr>
+
+            <tr data-platform="Taboola" data-account="CapitalOne Shopping" data-status="Active"
+                data-lp-id="16188" data-lpg-id="16189" data-ds="DS18"
+                data-lp-name="TB - Pricing Angle - Coupons CTA - EC=1"
+                data-instapage="blog.couponcodefinder.com/ca/pricing-tab">
+              <td>
+                <div class="lp-name">TB - Pricing Angle - Coupons CTA - EC=1</div>
+                <div class="lp-account">CapitalOne Shopping · CCF — Coupon Code Finder</div>
+              </td>
+              <td><span class="platform-badge pb-taboola">Taboola</span></td>
+              <td><span class="lp-id">16188</span></td>
+              <td><span class="lp-id">16189</span></td>
+              <td><span class="status-badge sb-active"><span class="dot" style="background:#085041"></span>Active</span></td>
+              <td class="lp-date">Apr 15, 2026</td>
+            </tr>
+
+            <tr data-platform="Bing" data-account="CapitalOne Shopping" data-status="Active"
+                data-lp-id="16102" data-lpg-id="16103" data-ds="DS14"
+                data-lp-name="BING - Senior Travel Angle - Coupons CTA - EC=0"
+                data-instapage="blog.couponcodefinder.com/ca/senior-travel-bing">
+              <td>
+                <div class="lp-name">BING - Senior Travel Angle - Coupons CTA - EC=0</div>
+                <div class="lp-account">CapitalOne Shopping · CCF — Coupon Code Finder</div>
+              </td>
+              <td><span class="platform-badge pb-bing">Bing</span></td>
+              <td><span class="lp-id">16102</span></td>
+              <td><span class="lp-id">16103</span></td>
+              <td><span class="status-badge sb-active"><span class="dot" style="background:#085041"></span>Active</span></td>
+              <td class="lp-date">Apr 10, 2026</td>
+            </tr>
+
+            <tr class="archived" data-platform="Facebook" data-account="CapitalOne Shopping" data-status="Archived"
+                data-lp-id="15980" data-lpg-id="15981" data-ds="DS12"
+                data-lp-name="FB - 2 Retailers Angle - Coupons CTA - EC=0"
+                data-instapage="blog.couponcodefinder.com/ca/2-retailers-fb">
+              <td>
+                <div class="lp-name">FB - 2 Retailers Angle - Coupons CTA - EC=0</div>
+                <div class="lp-account">CapitalOne Shopping · CCF — Coupon Code Finder</div>
+              </td>
+              <td><span class="platform-badge pb-facebook">Facebook</span></td>
+              <td><span class="lp-id">15980</span></td>
+              <td><span class="lp-id">15981</span></td>
+              <td><span class="status-badge sb-archived"><span class="dot" style="background:#8A8894"></span>Archived</span></td>
+              <td class="lp-date">Mar 28, 2026</td>
+            </tr>
+
+            <tr data-platform="Outbrain" data-account="CapitalOne Shopping" data-status="Active"
+                data-lp-id="15944" data-lpg-id="15945" data-ds="DS21"
+                data-lp-name="OB - Amazon Hates Angle - Coupons CTA - EC=1"
+                data-instapage="blog.couponcodefinder.com/ca/amazon-hates-ob">
+              <td>
+                <div class="lp-name">OB - Amazon Hates Angle - Coupons CTA - EC=1</div>
+                <div class="lp-account">CapitalOne Shopping · CCF — Coupon Code Finder</div>
+              </td>
+              <td><span class="platform-badge pb-outbrain">Outbrain</span></td>
+              <td><span class="lp-id">15944</span></td>
+              <td><span class="lp-id">15945</span></td>
+              <td><span class="status-badge sb-active"><span class="dot" style="background:#085041"></span>Active</span></td>
+              <td class="lp-date">Mar 22, 2026</td>
+            </tr>
+
+            <tr data-platform="Taboola" data-account="Fisher Investments" data-status="Active"
+                data-lp-id="15870" data-lpg-id="15871" data-ds="DS18"
+                data-lp-name="TAB - Fisher LP Unique 0047"
+                data-instapage="blog.fisherinvestments.com/fi/unique-0047-tab">
+              <td>
+                <div class="lp-name">TAB - Fisher LP Unique 0047</div>
+                <div class="lp-account">Fisher Investments</div>
+              </td>
+              <td><span class="platform-badge pb-taboola">Taboola</span></td>
+              <td><span class="lp-id">15870</span></td>
+              <td><span class="lp-id">15871</span></td>
+              <td><span class="status-badge sb-active"><span class="dot" style="background:#085041"></span>Active</span></td>
+              <td class="lp-date">Mar 15, 2026</td>
+            </tr>
+
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <!-- ===== BACKDROP ===== -->
+  <div class="drawer-backdrop" id="drawer-backdrop"></div>
+
+  <!-- ===== BUILD DRAWER ===== -->
+  <div class="drawer" id="drawer">
+    <div class="drawer-header">
+      <span class="drawer-title" id="drawer-title">New campaign</span>
+      <button class="drawer-close" id="drawer-close">✕</button>
+    </div>
+
+    <div class="drawer-body" id="drawer-body">
+
+      <!-- Ticket banner -->
+      <div class="ticket-banner" id="ticket-banner">
+        <div class="ticket-banner-eyebrow" id="ticket-eyebrow">From Asana · Task 1211441122399736</div>
+        <div class="ticket-banner-name" id="ticket-name">CCF Duplicate of the OST CA Sr Travel Page</div>
+        <div class="ticket-banner-meta" id="ticket-meta">CapitalOne Shopping · Facebook / Meta · Desktop · Senior Travel</div>
+      </div>
+
+      <!-- Partner bar (shown only for batch-partner accounts) -->
+      <div class="partner-bar hidden" id="partner-bar">
+        <span class="partner-bar-text" id="partner-bar-text">Fisher Investments — partner-specific template</span>
+        <span class="partner-bar-pill">Coming soon</span>
+      </div>
+
+      <!-- Section 1: Initiative -->
+      <div class="build-section" id="s1">
+        <div class="section-hdr">
+          <div class="section-num sn-active" id="s1-num">1</div>
+          <div class="section-hdr-body">
+            <div class="section-title">Initiative <span class="auto-badge hidden" id="s1-auto-badge">filled from ticket</span></div>
+            <div class="section-desc" id="s1-desc">Account · O&amp;O page</div>
+            <div class="section-summary hidden" id="s1-summary">CapitalOne Shopping · CCF — Coupon Code Finder</div>
+          </div>
+          <span class="section-chevron">▾</span>
+        </div>
+        <div class="section-body">
+          <!-- Auto body: shown when coming from a ticket -->
+          <div id="s1-auto-body" class="hidden">
+            <div class="form-row">
+              <div class="auto-field-label">Account <span class="auto-chip">auto</span></div>
+              <div class="auto-value" id="s1-account">CapitalOne Shopping</div>
+            </div>
+            <div class="form-row">
+              <div class="auto-field-label">O&amp;O page <span class="auto-chip">auto</span></div>
+              <div class="auto-value" id="s1-oao">CCF — Coupon Code Finder</div>
+            </div>
+            <div class="initiative-banner">
+              <span class="initiative-banner-label">Initiative resolved</span>
+              <span class="initiative-banner-value" id="s1-initiative">COS Social Desktop · COS US Desktop Group</span>
+            </div>
+          </div>
+          <!-- Manual body: shown for new campaign -->
+          <div id="s1-manual-body">
+            <div class="form-row">
+              <label class="form-label" for="s1-account-sel">Account</label>
+              <select class="form-select" id="s1-account-sel">
+                <option value="">Select account...</option>
+                <option value="cos">CapitalOne Shopping</option>
+                <option value="fisher">Fisher Investments</option>
+                <option value="smarter">Smarter Advisors</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <label class="form-label" for="s1-oao-sel">O&amp;O page</label>
+              <select class="form-select" id="s1-oao-sel">
+                <option value="">Select O&amp;O page...</option>
+                <option value="ccf">CCF — Coupon Code Finder</option>
+                <option value="ost">OST — Online Shopping Tools</option>
+                <option value="gfc">GFC — Get Free Coupons</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 2: Traffic source -->
+      <div class="build-section" id="s2">
+        <div class="section-hdr">
+          <div class="section-num sn-active" id="s2-num">2</div>
+          <div class="section-hdr-body">
+            <div class="section-title">Traffic source <span class="auto-badge hidden" id="s2-auto-badge">filled from ticket</span></div>
+            <div class="section-desc" id="s2-desc">Platform · Device</div>
+            <div class="section-summary hidden" id="s2-summary">Facebook / Meta · Desktop</div>
+          </div>
+          <span class="section-chevron">▾</span>
+        </div>
+        <div class="section-body">
+          <!-- Auto body: shown when coming from a ticket -->
+          <div id="s2-auto-body" class="hidden">
+            <div class="form-row">
+              <div class="auto-field-label">Platform <span class="auto-chip">auto</span></div>
+              <div class="auto-value" id="s2-platform">Facebook / Meta</div>
+            </div>
+            <div class="form-row">
+              <div class="auto-field-label">Device <span class="auto-chip">auto</span></div>
+              <div class="auto-value" id="s2-device">Desktop</div>
+            </div>
+            <div class="ts-resolved-banner">
+              <div class="ts-resolved-row">
+                <span class="ts-resolved-key">Data Source</span>
+                <span class="ts-resolved-val" id="s2-ds">DS12</span>
+              </div>
+              <div class="ts-resolved-row">
+                <span class="ts-resolved-key">Pre-lander</span>
+                <span class="ts-resolved-val" id="s2-prelander">Off — Instapage URL is the Media URL</span>
+              </div>
+              <div class="ts-resolved-row">
+                <span class="ts-resolved-key">Alias domain</span>
+                <span class="ts-resolved-val" id="s2-alias">None</span>
+              </div>
+              <div class="ts-resolved-row">
+                <span class="ts-resolved-key">Macros</span>
+                <span class="ts-resolved-val" id="s2-macros">{{double-curly}}</span>
+              </div>
+            </div>
+          </div>
+          <!-- Manual body: shown for new campaign -->
+          <div id="s2-manual-body">
+            <div class="form-row">
+              <label class="form-label" for="s2-platform-sel">Platform</label>
+              <select class="form-select" id="s2-platform-sel">
+                <option value="">Select platform...</option>
+                <option value="Facebook">Facebook / Meta</option>
+                <option value="Taboola">Taboola</option>
+                <option value="Bing">Bing</option>
+                <option value="Outbrain">Outbrain</option>
+                <option value="MSN">MSN</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <label class="form-label" for="s2-device-sel">Device</label>
+              <select class="form-select" id="s2-device-sel">
+                <option value="">Select...</option>
+                <option>Desktop</option>
+                <option>Mobile</option>
+              </select>
+            </div>
+            <div class="ts-resolved-banner hidden" id="s2-manual-resolved">
+              <div class="ts-resolved-row">
+                <span class="ts-resolved-key">Data Source</span>
+                <span class="ts-resolved-val" id="s2-manual-ds">—</span>
+              </div>
+              <div class="ts-resolved-row">
+                <span class="ts-resolved-key">Pre-lander</span>
+                <span class="ts-resolved-val" id="s2-manual-prelander">—</span>
+              </div>
+              <div class="ts-resolved-row">
+                <span class="ts-resolved-key">Alias domain</span>
+                <span class="ts-resolved-val" id="s2-manual-alias">—</span>
+              </div>
+              <div class="ts-resolved-row">
+                <span class="ts-resolved-key">Macros</span>
+                <span class="ts-resolved-val" id="s2-manual-macros">—</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 3: Landing page -->
+      <div class="build-section" id="s3">
+        <div class="section-hdr">
+          <div class="section-num sn-active" id="s3-num">3</div>
+          <div class="section-hdr-body">
+            <div class="section-title" id="s3-title">Landing page</div>
+            <div class="section-desc" id="s3-desc">Instapage URL · angle · landing URL</div>
+          </div>
+          <span class="section-chevron">▾</span>
+        </div>
+        <div class="section-body">
+
+          <!-- Standard body (single LP) -->
+          <div id="s3-standard-body">
+            <div class="form-row">
+              <label class="form-label" for="s3-instapage">Instapage URL</label>
+              <input type="text" class="form-input" id="s3-instapage"
+                placeholder="e.g. blog.couponcodefinder.com/ca/travel-budget-fb">
+              <div class="helper-text">Base page URL without parameters. Becomes the pre-lander URL for front-door platforms.</div>
+            </div>
+            <div class="form-row">
+              <label class="form-label" for="s3-angle">Angle</label>
+              <select class="form-select" id="s3-angle">
+                <option value="">Select...</option>
+                <option value="senior-travel">Senior Travel</option>
+                <option value="pricing">Pricing</option>
+                <option value="2-retailers">2 Retailers</option>
+                <option value="amazon-hates">Amazon Hates</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Partner body: faded batch URL preview (shown for Fisher / Spigot) -->
+          <div id="s3-partner-body" class="hidden" style="opacity:0.45;pointer-events:none;user-select:none;">
+            <div class="form-row">
+              <label class="form-label">Unique Instapage URLs — one per row</label>
+              <div class="url-batch-list">
+                <div class="url-batch-row">
+                  <input class="url-batch-input" type="text" placeholder="e.g. blog.fisherinvestments.com/fi/..." tabindex="-1">
+                  <button class="url-batch-remove" tabindex="-1">✕</button>
+                </div>
+                <div class="url-batch-row">
+                  <input class="url-batch-input" type="text" placeholder="e.g. blog.fisherinvestments.com/fi/..." tabindex="-1">
+                  <button class="url-batch-remove" tabindex="-1">✕</button>
+                </div>
+                <div class="url-batch-row">
+                  <input class="url-batch-input" type="text" placeholder="e.g. blog.fisherinvestments.com/fi/..." tabindex="-1">
+                  <button class="url-batch-remove" tabindex="-1">✕</button>
+                </div>
+                <div class="url-batch-add" tabindex="-1">+ Add URL</div>
+              </div>
+            </div>
+            <div class="form-row">
+              <label class="form-label">Angle (applies to all)</label>
+              <select class="form-select" tabindex="-1">
+                <option>Select...</option>
+              </select>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Coming soon panel (shown for Fisher / Spigot) -->
+      <div class="coming-soon-panel hidden" id="coming-soon-panel">
+        <div class="cs-header">
+          <div class="cs-icon">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 6.667H11.333V5.333a3.333 3.333 0 1 0-6.666 0v1.334H4A1.333 1.333 0 0 0 2.667 8v5.333A1.333 1.333 0 0 0 4 14.667h8a1.333 1.333 0 0 0 1.333-1.334V8A1.333 1.333 0 0 0 12 6.667ZM8 11.333a1.333 1.333 0 1 1 0-2.666 1.333 1.333 0 0 1 0 2.666ZM10 6.667H6V5.333a2 2 0 1 1 4 0v1.334Z" fill="#BA7517"/>
+            </svg>
+          </div>
+          <span class="cs-title">Partner-specific template</span>
+          <span class="cs-badge">Coming soon</span>
+        </div>
+        <div class="cs-body">
+          <p class="cs-desc">Fisher Investments and partners like Spigot require a unique LP for every campaign — no macros, no URL reuse. This template replaces the standard single-URL form with a batch creation mode designed for that workflow.</p>
+          <ul class="cs-features">
+            <li class="cs-feature"><span class="cs-dot"></span><span>Enter multiple unique Instapage URLs at once — one LP created per row</span></li>
+            <li class="cs-feature"><span class="cs-dot"></span><span>Angle and experience settings apply uniformly across the entire batch</span></li>
+            <li class="cs-feature"><span class="cs-dot"></span><span>All LP IDs and Media URLs generated in a single save action</span></li>
+            <li class="cs-feature"><span class="cs-dot"></span><span>Outputs written back to Asana and the Fisher QA tracking sheet automatically</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Section 4: Experience -->
+      <div class="build-section" id="s4">
+        <div class="section-hdr">
+          <div class="section-num sn-active">4</div>
+          <div class="section-hdr-body">
+            <div class="section-title">Experience</div>
+            <div class="section-desc">EC · popup · continuation · UTM source</div>
+          </div>
+          <span class="section-chevron">▾</span>
+        </div>
+        <div class="section-body">
+          <div class="form-row">
+            <label class="form-label" for="s4-ec">EC (Exit Capture)</label>
+            <select class="form-select" id="s4-ec">
+              <option value="">Select...</option>
+              <option value="0">ec=0 — off</option>
+              <option value="1">ec=1 — on</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <label class="form-label" for="s4-popup">Popup</label>
+            <select class="form-select" id="s4-popup">
+              <option value="">Select...</option>
+              <option value="1">popup=1 — on</option>
+              <option value="none">none — off</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <label class="form-label" for="s4-continuation">Continuation</label>
+            <select class="form-select" id="s4-continuation">
+              <option value="none">None</option>
+              <option value="extra-steps">Extra steps</option>
+              <option value="multi-offer">Multi offer</option>
+            </select>
+          </div>
+          <hr class="section-rule">
+          <div class="form-row">
+            <label class="form-label" for="s4-utm">UTM source <span style="font-size:10px;font-weight:400;text-transform:none;letter-spacing:0">(expertm_source)</span></label>
+            <select class="form-select" id="s4-utm">
+              <option value="">Select...</option>
+              <option value="ccf_facebook_desktop">ccf_facebook_desktop</option>
+              <option value="ccf_tbfa">ccf_tbfa</option>
+              <option value="ost_taboola_desktop">ost_taboola_desktop</option>
+              <option value="__new__">+ New source required</option>
+            </select>
+          </div>
+          <div class="hidden" id="utm-new-wrap">
+            <div class="form-row">
+              <label class="form-label" for="s4-utm-new">New UTM source value</label>
+              <input type="text" class="form-input" id="s4-utm-new" placeholder="e.g. ccf_tbfa">
+              <div class="helper-text">Lowercase, no spaces. Format: [brand][platform]. Example: ccf_tbfa</div>
+            </div>
+            <div class="amber-banner" id="utm-amber-banner">
+              <strong>GTM setup needed before URL can be generated.</strong><br>
+              LP + LPG will save first. Return here once Angel Rojas publishes the container.
+            </div>
+            <label class="gtm-confirm hidden" id="gtm-confirm-row">
+              <input type="checkbox" id="gtm-checkbox">
+              <div class="gtm-confirm-text">
+                GTM container has been updated and published
+                <small>Check this after Angel Rojas publishes. Enables URL generation.</small>
+              </div>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- URL Preview -->
+      <div class="url-preview-section">
+        <div class="url-preview-hdr">
+          <span class="url-preview-hdr-label">URL preview</span>
+          <span class="url-preview-mode" id="url-preview-mode">Pre-lander off · Media URL</span>
+        </div>
+        <div class="url-preview-block" id="url-preview">
+          <span class="u-empty">Fill in sections 3 and 4 to preview the assembled URL...</span>
+        </div>
+        <div class="url-preview-legend">
+          <span class="legend-item"><span class="legend-dot" style="background:#1D9E75"></span>Auto-resolved</span>
+          <span class="legend-item"><span class="legend-dot" style="background:#212121"></span>User input</span>
+          <span class="legend-item"><span class="legend-dot" style="background:#BA7517"></span>Pending</span>
+        </div>
+      </div>
+
+    </div><!-- /drawer-body -->
+
+    <div class="drawer-footer">
+      <button class="btn btn-ghost btn-md" onclick="closeDrawer()">Cancel</button>
+      <div class="drawer-footer-right">
+        <button class="btn btn-secondary btn-md" id="btn-save-lp">Save LP + LPG</button>
+        <button class="btn btn-primary btn-md" id="btn-generate">Generate URL →</button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /app-shell -->
+
+<script>
+  /* ===== PLATFORM CONFIG ===== */
+  const PLATFORM_CFG = {
+    Facebook: {
+      ds: 'DS12', prelander: 'off', alias: 'None',
+      macros: '{{double-curly}}',
+      prelanderLabel: 'Off — Instapage URL is the Media URL',
+      macro: k => `{{${k}}}`,
+      buildUrl(inst, ec, popup, utm) {
+        const m = this.macro;
+        const parts = [];
+        parts.push(inst
+          ? `<span class="u-user">${inst}</span>`
+          : `<span class="u-pending">[instapage-url]</span>`);
+        parts.push(`<span class="u-auto">?atnds=12&publisher=${m('placement')}&creative=${m('ad.id')}&adgroup=${m('adset.id')}&campaign=${m('campaign.id')}</span>`);
+        parts.push(utm
+          ? `<span class="u-auto">&utm_source=</span><span class="u-user">${utm}</span>`
+          : `<span class="u-pending">&utm_source=?</span>`);
+        parts.push(popup === '1'
+          ? `<span class="u-user">&popup=1</span>`
+          : popup === 'none' ? '' : `<span class="u-pending">&popup=?</span>`);
+        parts.push(`<span class="u-auto">&uxid=fb</span>`);
+        parts.push(ec !== ''
+          ? `<span class="u-user">&ec=${ec}</span>`
+          : `<span class="u-pending">&ec=?</span>`);
+        return parts.join('');
+      }
+    },
+    Taboola: {
+      ds: 'DS18', prelander: 'on', alias: 'cos-rd.com',
+      macros: '{single-curly}',
+      prelanderLabel: 'On — alias domain is the Media URL',
+      macro: k => `{${k}}`,
+      buildUrl(inst, ec, popup, utm) {
+        const m = this.macro;
+        const parts = [];
+        parts.push(`<span class="u-auto">https://cos-rd.com/DS18/</span>`);
+        parts.push(`<span class="u-pending">[lpg-id]</span>`);
+        parts.push(ec !== ''
+          ? `<span class="u-user">?ec=${ec}</span>`
+          : `<span class="u-pending">?ec=?</span>`);
+        parts.push(popup === '1'
+          ? `<span class="u-user">&popup=1</span>`
+          : popup === 'none' ? '' : `<span class="u-pending">&popup=?</span>`);
+        parts.push(`<span class="u-auto">&atnid=${m('atnid')}&uxid=${m('uxid')}</span>`);
+        return parts.join('');
+      }
+    },
+    Bing: {
+      ds: 'DS14', prelander: 'on', alias: 'adtechnacity.com (no alias)',
+      macros: 'BTN format',
+      prelanderLabel: 'On — adtechnacity.com URL (no alias)',
+      macro: k => `{${k}}`,
+      buildUrl(inst, ec, popup, utm) {
+        const m = this.macro;
+        const parts = [];
+        parts.push(`<span class="u-auto">https://adtechnacity.com/DS14/</span>`);
+        parts.push(`<span class="u-pending">[lpg-id]</span>`);
+        parts.push(ec !== ''
+          ? `<span class="u-user">?ec=${ec}</span>`
+          : `<span class="u-pending">?ec=?</span>`);
+        parts.push(`<span class="u-auto">&msclkid=${m('msclkid')}</span>`);
+        return parts.join('');
+      }
+    },
+    Outbrain: {
+      ds: 'DS21', prelander: 'on', alias: 'cos-rd.com',
+      macros: '{{double-curly}}',
+      prelanderLabel: 'On — alias domain is the Media URL',
+      macro: k => `{{${k}}}`,
+      buildUrl(inst, ec, popup, utm) {
+        const m = this.macro;
+        const parts = [];
+        parts.push(`<span class="u-auto">https://cos-rd.com/DS21/</span>`);
+        parts.push(`<span class="u-pending">[lpg-id]</span>`);
+        parts.push(ec !== ''
+          ? `<span class="u-user">?ec=${ec}</span>`
+          : `<span class="u-pending">?ec=?</span>`);
+        parts.push(popup === '1'
+          ? `<span class="u-user">&popup=1</span>`
+          : popup === 'none' ? '' : `<span class="u-pending">&popup=?</span>`);
+        parts.push(`<span class="u-auto">&ob_click_id=${m('ob_click_id')}</span>`);
+        return parts.join('');
+      }
+    }
+  };
+
+  /* ===== STATE ===== */
+  let currentPlatform = 'Facebook';
+  let drawerMode = 'new'; // 'new' | 'edit'
+
+  /* ===== DRAWER ===== */
+  const drawer   = document.getElementById('drawer');
+  const backdrop = document.getElementById('drawer-backdrop');
+
+  function openDrawer(mode, rowData) {
+    drawerMode = mode || 'new';
+    drawer.classList.add('open');
+    backdrop.classList.add('visible');
+    if (mode === 'edit' && rowData) {
+      populateDrawerFromRow(rowData);
+    } else {
+      resetDrawer();
+    }
+  }
+
+  function closeDrawer() {
+    drawer.classList.remove('open');
+    backdrop.classList.remove('visible');
+  }
+
+  function setSectionManual(sectionId, numId, badgeId, summaryId, descId, autoBodyId, manualBodyId, numText) {
+    document.getElementById(sectionId).classList.remove('collapsed');
+    var num = document.getElementById(numId);
+    num.className = 'section-num sn-active';
+    num.textContent = numText;
+    document.getElementById(badgeId).classList.add('hidden');
+    document.getElementById(summaryId).classList.add('hidden');
+    document.getElementById(descId).classList.remove('hidden');
+    document.getElementById(autoBodyId).classList.add('hidden');
+    document.getElementById(manualBodyId).classList.remove('hidden');
+  }
+
+  function setSectionAuto(sectionId, numId, badgeId, summaryId, summaryText, descId, autoBodyId, manualBodyId) {
+    document.getElementById(sectionId).classList.add('collapsed');
+    var num = document.getElementById(numId);
+    num.className = 'section-num sn-done';
+    num.textContent = '✓';
+    document.getElementById(badgeId).classList.remove('hidden');
+    document.getElementById(summaryId).textContent = summaryText;
+    document.getElementById(summaryId).classList.remove('hidden');
+    document.getElementById(descId).classList.add('hidden');
+    document.getElementById(autoBodyId).classList.remove('hidden');
+    document.getElementById(manualBodyId).classList.add('hidden');
+  }
+
+  function resetDrawer() {
+    document.getElementById('drawer-title').textContent = 'New campaign';
+    document.getElementById('ticket-banner').classList.add('hidden');
+
+    // Section 1: open, manual mode, cleared
+    setSectionManual('s1', 's1-num', 's1-auto-badge', 's1-summary', 's1-desc', 's1-auto-body', 's1-manual-body', '1');
+    document.getElementById('s1-account-sel').value = '';
+    document.getElementById('s1-oao-sel').value = '';
+
+    // Section 2: open, manual mode, cleared
+    setSectionManual('s2', 's2-num', 's2-auto-badge', 's2-summary', 's2-desc', 's2-auto-body', 's2-manual-body', '2');
+    document.getElementById('s2-platform-sel').value = '';
+    document.getElementById('s2-device-sel').value = '';
+    document.getElementById('s2-manual-resolved').classList.add('hidden');
+    currentPlatform = null;
+
+    document.getElementById('s3-instapage').value = '';
+    document.getElementById('s3-angle').value = '';
+    document.getElementById('s4-ec').value = '';
+    document.getElementById('s4-popup').value = '';
+    document.getElementById('s4-continuation').value = 'none';
+    document.getElementById('s4-utm').value = '';
+    document.getElementById('utm-new-wrap').classList.add('hidden');
+    document.getElementById('gtm-confirm-row').classList.add('hidden');
+    checkPartnerMode('');
+    resetUtmState(false);
+    renderUrlPreview();
+  }
+
+  function populateDrawerFromRow(d) {
+    document.getElementById('drawer-title').textContent = 'Edit LP ' + d.lpId;
+    document.getElementById('ticket-banner').classList.add('hidden');
+
+    // Partner mode check (must run before section 3 is touched)
+    checkPartnerMode(d.account || '');
+
+    // Section 1: collapsed, auto mode
+    var s1Summary = d.account || 'CapitalOne Shopping';
+    setSectionAuto('s1', 's1-num', 's1-auto-badge', 's1-summary', s1Summary, 's1-desc', 's1-auto-body', 's1-manual-body');
+    document.getElementById('s1-account').textContent = d.account || '—';
+
+    // Section 2: collapsed, auto mode
+    currentPlatform = d.platform;
+    var cfg = PLATFORM_CFG[d.platform] || PLATFORM_CFG['Facebook'];
+    var platLabel = d.platform === 'Facebook' ? 'Facebook / Meta' : d.platform;
+    var s2Summary = platLabel + ' · Desktop';
+    setSectionAuto('s2', 's2-num', 's2-auto-badge', 's2-summary', s2Summary, 's2-desc', 's2-auto-body', 's2-manual-body');
+    document.getElementById('s2-platform').textContent = platLabel;
+    document.getElementById('s2-device').textContent = 'Desktop';
+    document.getElementById('s2-ds').textContent = cfg.ds;
+    document.getElementById('s2-prelander').textContent = cfg.prelanderLabel;
+    document.getElementById('s2-alias').textContent = cfg.alias;
+    document.getElementById('s2-macros').textContent = cfg.macros;
+
+    document.getElementById('s3-instapage').value = d.instapage || '';
+    document.getElementById('s3-angle').value = '';
+    document.getElementById('s4-ec').value = '';
+    document.getElementById('s4-popup').value = '';
+    document.getElementById('s4-continuation').value = 'none';
+    document.getElementById('s4-utm').value = '';
+    document.getElementById('utm-new-wrap').classList.add('hidden');
+    document.getElementById('gtm-confirm-row').classList.add('hidden');
+    resetUtmState(false);
+    renderUrlPreview();
+  }
+
+  /* ===== SECTION COLLAPSE ===== */
+  document.addEventListener('click', function(e) {
+    var hdr = e.target.closest('.section-hdr');
+    if (!hdr) return;
+    hdr.closest('.build-section').classList.toggle('collapsed');
+  });
+
+  /* ===== UTM LOGIC ===== */
+  function resetUtmState(isNew) {
+    const btnGen  = document.getElementById('btn-generate');
+    const btnSave = document.getElementById('btn-save-lp');
+    if (isNew) {
+      btnGen.disabled = true;
+      btnSave.classList.add('btn-primary');
+      btnSave.classList.remove('btn-secondary');
+    } else {
+      btnGen.disabled = false;
+      btnSave.classList.remove('btn-primary');
+      btnSave.classList.add('btn-secondary');
+    }
+  }
+
+  document.getElementById('s4-utm').addEventListener('change', function() {
+    var isNew = this.value === '__new__';
+    document.getElementById('utm-new-wrap').classList.toggle('hidden', !isNew);
+    document.getElementById('gtm-confirm-row').classList.toggle('hidden', !isNew);
+    resetUtmState(isNew);
+    renderUrlPreview();
+  });
+
+  document.getElementById('gtm-checkbox').addEventListener('change', function() {
+    var btnGen = document.getElementById('btn-generate');
+    btnGen.disabled = !this.checked;
+    if (this.checked) {
+      document.getElementById('btn-save-lp').classList.remove('btn-primary');
+      document.getElementById('btn-save-lp').classList.add('btn-secondary');
+    }
+  });
+
+  /* ===== PARTNER MODE ===== */
+  const PARTNER_BATCH_ACCOUNTS = ['Fisher Investments', 'Smarter Advisors (Spigot)'];
+
+  function checkPartnerMode(accountName) {
+    var isPartner = PARTNER_BATCH_ACCOUNTS.includes(accountName);
+
+    // Partner bar
+    var bar = document.getElementById('partner-bar');
+    if (isPartner) {
+      document.getElementById('partner-bar-text').textContent = accountName + ' — partner-specific template';
+      bar.classList.remove('hidden');
+    } else {
+      bar.classList.add('hidden');
+    }
+
+    // Section 3: toggle standard vs partner body + update header text
+    document.getElementById('s3-standard-body').classList.toggle('hidden', isPartner);
+    document.getElementById('s3-partner-body').classList.toggle('hidden', !isPartner);
+    document.getElementById('s3-title').textContent = isPartner ? 'Landing pages' : 'Landing page';
+    document.getElementById('s3-desc').textContent = isPartner
+      ? 'Batch URL import — one LP per unique URL'
+      : 'Instapage URL · angle · landing URL';
+
+    // Coming soon panel
+    document.getElementById('coming-soon-panel').classList.toggle('hidden', !isPartner);
+
+    // URL preview section
+    document.querySelector('.url-preview-section').classList.toggle('hidden', isPartner);
+
+    // Footer buttons
+    var btnSave = document.getElementById('btn-save-lp');
+    var btnGen  = document.getElementById('btn-generate');
+    btnSave.disabled = isPartner;
+    btnGen.disabled  = isPartner;
+    btnSave.style.opacity = isPartner ? '0.4' : '';
+    btnSave.style.cursor  = isPartner ? 'not-allowed' : '';
+    btnGen.style.opacity  = isPartner ? '0.4' : '';
+    btnGen.style.cursor   = isPartner ? 'not-allowed' : '';
+    if (!isPartner) {
+      // Restore normal UTM-driven button state
+      resetUtmState(document.getElementById('s4-utm').value === '__new__');
+    }
+  }
+
+  /* ===== ACCOUNT SELECT (manual mode) ===== */
+  const ACCOUNT_NAMES = { cos: 'CapitalOne Shopping', fisher: 'Fisher Investments', smarter: 'Smarter Advisors (Spigot)' };
+  document.getElementById('s1-account-sel').addEventListener('change', function() {
+    checkPartnerMode(ACCOUNT_NAMES[this.value] || '');
+  });
+
+  /* ===== PLATFORM SELECT (manual mode) ===== */
+  document.getElementById('s2-platform-sel').addEventListener('change', function() {
+    var platform = this.value;
+    if (!platform) {
+      document.getElementById('s2-manual-resolved').classList.add('hidden');
+      currentPlatform = null;
+      renderUrlPreview();
+      return;
+    }
+    currentPlatform = platform;
+    var cfg = PLATFORM_CFG[platform] || PLATFORM_CFG['Facebook'];
+    document.getElementById('s2-manual-ds').textContent = cfg.ds;
+    document.getElementById('s2-manual-prelander').textContent = cfg.prelanderLabel;
+    document.getElementById('s2-manual-alias').textContent = cfg.alias;
+    document.getElementById('s2-manual-macros').textContent = cfg.macros;
+    document.getElementById('s2-manual-resolved').classList.remove('hidden');
+    renderUrlPreview();
+  });
+
+  /* ===== URL PREVIEW ===== */
+  function renderUrlPreview() {
+    var el = document.getElementById('url-preview');
+    if (!el) return;
+    if (!currentPlatform) {
+      el.innerHTML = '<span class="u-empty">Select a platform to preview the assembled URL...</span>';
+      document.getElementById('url-preview-mode').textContent = '—';
+      return;
+    }
+    var cfg     = PLATFORM_CFG[currentPlatform] || PLATFORM_CFG['Facebook'];
+    var inst    = (document.getElementById('s3-instapage').value || '').trim();
+    var ec      = document.getElementById('s4-ec').value;
+    var popup   = document.getElementById('s4-popup').value;
+    var utmSel  = document.getElementById('s4-utm').value;
+    var utmNew  = (document.getElementById('s4-utm-new') && document.getElementById('s4-utm-new').value.trim()) || '';
+    var utm     = utmSel === '__new__' ? utmNew : utmSel;
+
+    document.getElementById('url-preview-mode').textContent =
+      cfg.prelander === 'off' ? 'Pre-lander off · Media URL' : 'Pre-lander on · Alias URL';
+
+    if (!inst && cfg.prelander === 'off') {
+      el.innerHTML = '<span class="u-empty">Enter Instapage URL to preview the assembled Media URL...</span>';
+      return;
+    }
+
+    el.innerHTML = cfg.buildUrl(inst, ec, popup, utm);
+  }
+
+  ['s3-instapage', 's3-angle', 's4-ec', 's4-popup'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.addEventListener('change', renderUrlPreview);
+  });
+  var instEl = document.getElementById('s3-instapage');
+  if (instEl) instEl.addEventListener('input', renderUrlPreview);
+  var utmNewEl = document.getElementById('s4-utm-new');
+  if (utmNewEl) utmNewEl.addEventListener('input', renderUrlPreview);
+
+  /* ===== ROW CLICKS ===== */
+  document.querySelectorAll('.lp-table tbody tr').forEach(function(tr) {
+    tr.addEventListener('click', function() {
+      openDrawer('edit', {
+        lpId:      tr.dataset.lpId,
+        lpgId:     tr.dataset.lpgId,
+        platform:  tr.dataset.platformKey || tr.dataset.platform,
+        ds:        tr.dataset.ds,
+        lpName:    tr.dataset.lpName,
+        instapage: tr.dataset.instapage,
+        account:   tr.dataset.account
+      });
+    });
+  });
+
+  document.getElementById('btn-new').addEventListener('click', function() { openDrawer('new'); });
+  document.getElementById('drawer-close').addEventListener('click', closeDrawer);
+  backdrop.addEventListener('click', closeDrawer);
+
+  /* ===== QUEUE CREATE BUTTONS ===== */
+  function populateDrawerFromTicket(d) {
+    document.getElementById('drawer-title').textContent = 'New LP from queue';
+
+    // Ticket banner
+    var banner = document.getElementById('ticket-banner');
+    banner.classList.remove('hidden');
+    document.getElementById('ticket-eyebrow').textContent = 'From queue · ' + d.typeLabel;
+    document.getElementById('ticket-name').textContent = d.name;
+    var metaParts = [d.account, d.platform + (d.device ? ' · ' + d.device : ''), 'Assigned by ' + d.by];
+    document.getElementById('ticket-meta').textContent = metaParts.filter(Boolean).join(' · ');
+
+    // Partner mode check
+    checkPartnerMode(d.account || '');
+
+    // Section 1: collapsed, auto mode — account from ticket
+    setSectionAuto('s1', 's1-num', 's1-auto-badge', 's1-summary', d.account || '—', 's1-desc', 's1-auto-body', 's1-manual-body');
+    document.getElementById('s1-account').textContent = d.account || '—';
+
+    // Section 2: collapsed, auto mode — platform + device from ticket
+    currentPlatform = d.platform;
+    var cfg = PLATFORM_CFG[d.platform] || PLATFORM_CFG['Facebook'];
+    var platLabel = d.platform === 'Facebook' ? 'Facebook / Meta' : d.platform;
+    var s2Summary = platLabel + (d.device ? ' · ' + d.device : '');
+    setSectionAuto('s2', 's2-num', 's2-auto-badge', 's2-summary', s2Summary, 's2-desc', 's2-auto-body', 's2-manual-body');
+    document.getElementById('s2-platform').textContent = platLabel;
+    document.getElementById('s2-device').textContent = d.device || '—';
+    document.getElementById('s2-ds').textContent = cfg.ds;
+    document.getElementById('s2-prelander').textContent = cfg.prelanderLabel;
+    document.getElementById('s2-alias').textContent = cfg.alias;
+    document.getElementById('s2-macros').textContent = cfg.macros;
+
+    // Clear sections 3 & 4
+    document.getElementById('s3-instapage').value = '';
+    document.getElementById('s3-angle').value = '';
+    document.getElementById('s4-ec').value = '';
+    document.getElementById('s4-popup').value = '';
+    document.getElementById('s4-continuation').value = 'none';
+    document.getElementById('s4-utm').value = '';
+    document.getElementById('utm-new-wrap').classList.add('hidden');
+    document.getElementById('gtm-confirm-row').classList.add('hidden');
+    resetUtmState(false);
+    renderUrlPreview();
+  }
+
+  document.querySelectorAll('.queue-create-btn').forEach(function(btn) {
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      populateDrawerFromTicket({
+        name:      btn.dataset.name,
+        typeLabel: btn.dataset.typeLabel,
+        platform:  btn.dataset.platform,
+        device:    btn.dataset.device,
+        account:   btn.dataset.account,
+        by:        btn.dataset.by,
+        time:      btn.dataset.time
+      });
+      drawer.classList.add('open');
+      backdrop.classList.add('visible');
+    });
+  });
+
+  /* ===== SEARCH + FILTER ===== */
+  function applyFilters() {
+    var q        = document.getElementById('search-input').value.toLowerCase();
+    var platform = document.getElementById('filter-platform').value;
+    var account  = document.getElementById('filter-account').value;
+    var status   = document.getElementById('filter-status').value;
+
+    document.querySelectorAll('.lp-table tbody tr').forEach(function(tr) {
+      var name    = (tr.dataset.lpName    || '').toLowerCase();
+      var lpId    = (tr.dataset.lpId      || '').toLowerCase();
+      var trPlatf = tr.dataset.platform   || '';
+      var trAcct  = tr.dataset.account    || '';
+      var trStat  = tr.dataset.status     || '';
+
+      var matchQ = !q || name.includes(q) || lpId.includes(q);
+      var matchP = !platform || trPlatf === platform;
+      var matchA = !account  || trAcct === account;
+      var matchS = !status   || trStat === status;
+
+      tr.style.display = (matchQ && matchP && matchA && matchS) ? '' : 'none';
+    });
+  }
+
+  ['search-input', 'filter-platform', 'filter-account', 'filter-status'].forEach(function(id) {
+    document.getElementById(id).addEventListener('input', applyFilters);
+    document.getElementById(id).addEventListener('change', applyFilters);
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Partner template — Coming soon · Build drawer component</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles.css">
+  <style>
+    body {
+      background: #E5E8F0;
+      display: flex; align-items: flex-start; justify-content: center;
+      padding: 40px 24px; min-height: 100vh; box-sizing: border-box;
+    }
+    .drawer-preview {
+      width: 560px;
+      background: var(--color-background-primary);
+      border: 0.5px solid var(--color-border-secondary);
+      border-radius: var(--border-radius-lg);
+      overflow: hidden;
+      display: flex; flex-direction: column;
+    }
+    .preview-label {
+      font-family: var(--font-body); font-size: 11px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.08em;
+      color: var(--color-text-secondary);
+      margin-bottom: 14px; text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+<div>
+  <div class="preview-label">Component preview — Build drawer · Partner account state</div>
+
+  <div class="drawer-preview">
+
+    <!-- Drawer header -->
+    <div class="drawer-header">
+      <span class="drawer-title">New LP from queue</span>
+      <button class="drawer-close">✕</button>
+    </div>
+
+    <!-- Ticket banner -->
+    <div class="ticket-banner">
+      <div class="ticket-banner-eyebrow">From queue · New LP</div>
+      <div class="ticket-banner-name">Fisher Investments LP Unique — New Campaign</div>
+      <div class="ticket-banner-meta">Fisher Investments · Taboola · Desktop · Assigned by Ryan</div>
+    </div>
+
+    <!-- Partner bar -->
+    <div class="partner-bar">
+      <span class="partner-bar-text">Fisher Investments — partner-specific template</span>
+      <span class="partner-bar-pill">Coming soon</span>
+    </div>
+
+    <div style="overflow-y:auto; flex:1;">
+
+      <!-- Section 1: Initiative (collapsed ✓) -->
+      <div class="build-section collapsed">
+        <div class="section-hdr">
+          <div class="section-num sn-done">✓</div>
+          <div class="section-hdr-body">
+            <div class="section-title">Initiative <span class="auto-badge">filled from ticket</span></div>
+            <div class="section-summary">Fisher Investments</div>
+          </div>
+          <span class="section-chevron">▾</span>
+        </div>
+      </div>
+
+      <!-- Section 2: Traffic source (collapsed ✓) -->
+      <div class="build-section collapsed">
+        <div class="section-hdr">
+          <div class="section-num sn-done">✓</div>
+          <div class="section-hdr-body">
+            <div class="section-title">Traffic source <span class="auto-badge">filled from ticket</span></div>
+            <div class="section-summary">Taboola · Desktop</div>
+          </div>
+          <span class="section-chevron">▾</span>
+        </div>
+      </div>
+
+      <!-- Section 3: Landing pages (open, faded preview) -->
+      <div class="build-section">
+        <div class="section-hdr">
+          <div class="section-num sn-active">3</div>
+          <div class="section-hdr-body">
+            <div class="section-title">Landing pages</div>
+            <div class="section-desc">Batch URL import — one LP per unique URL</div>
+          </div>
+          <span class="section-chevron">▾</span>
+        </div>
+        <div class="section-body">
+          <!-- Faded batch URL preview -->
+          <div style="opacity:0.45; pointer-events:none; user-select:none;">
+            <div class="form-row">
+              <label class="form-label">Unique Instapage URLs — one per row</label>
+              <div class="url-batch-list">
+                <div class="url-batch-row">
+                  <input class="url-batch-input" type="text" placeholder="e.g. blog.fisherinvestments.com/fi/..." tabindex="-1">
+                  <button class="url-batch-remove" tabindex="-1">✕</button>
+                </div>
+                <div class="url-batch-row">
+                  <input class="url-batch-input" type="text" placeholder="e.g. blog.fisherinvestments.com/fi/..." tabindex="-1">
+                  <button class="url-batch-remove" tabindex="-1">✕</button>
+                </div>
+                <div class="url-batch-row">
+                  <input class="url-batch-input" type="text" placeholder="e.g. blog.fisherinvestments.com/fi/..." tabindex="-1">
+                  <button class="url-batch-remove" tabindex="-1">✕</button>
+                </div>
+                <div class="url-batch-add" tabindex="-1">+ Add URL</div>
+              </div>
+            </div>
+            <div class="form-row">
+              <label class="form-label">Angle (applies to all)</label>
+              <select class="form-select" tabindex="-1">
+                <option>Select...</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Coming soon panel -->
+      <div class="coming-soon-panel">
+        <div class="cs-header">
+          <div class="cs-icon">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 6.667H11.333V5.333a3.333 3.333 0 1 0-6.666 0v1.334H4A1.333 1.333 0 0 0 2.667 8v5.333A1.333 1.333 0 0 0 4 14.667h8a1.333 1.333 0 0 0 1.333-1.334V8A1.333 1.333 0 0 0 12 6.667ZM8 11.333a1.333 1.333 0 1 1 0-2.666 1.333 1.333 0 0 1 0 2.666ZM10 6.667H6V5.333a2 2 0 1 1 4 0v1.334Z" fill="#BA7517"/>
+            </svg>
+          </div>
+          <span class="cs-title">Partner-specific template</span>
+          <span class="cs-badge">Coming soon</span>
+        </div>
+        <div class="cs-body">
+          <p class="cs-desc">Fisher Investments and partners like Spigot require a unique LP for every campaign — no macros, no URL reuse. This template replaces the standard single-URL form with a batch creation mode designed for that workflow.</p>
+          <ul class="cs-features">
+            <li class="cs-feature"><span class="cs-dot"></span><span>Enter multiple unique Instapage URLs at once — one LP created per row</span></li>
+            <li class="cs-feature"><span class="cs-dot"></span><span>Angle and experience settings apply uniformly across the entire batch</span></li>
+            <li class="cs-feature"><span class="cs-dot"></span><span>All LP IDs and Media URLs generated in a single save action</span></li>
+            <li class="cs-feature"><span class="cs-dot"></span><span>Outputs written back to Asana and the Fisher QA tracking sheet automatically</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Section 4: Experience (standard, collapsed for this preview) -->
+      <div class="build-section collapsed">
+        <div class="section-hdr">
+          <div class="section-num sn-active">4</div>
+          <div class="section-hdr-body">
+            <div class="section-title">Experience</div>
+            <div class="section-desc">EC · popup · continuation · UTM source</div>
+          </div>
+          <span class="section-chevron">▾</span>
+        </div>
+      </div>
+
+    </div><!-- /scroll area -->
+
+    <!-- Footer: both buttons disabled -->
+    <div class="drawer-footer">
+      <button class="btn btn-ghost btn-md">Cancel</button>
+      <div class="drawer-footer-right">
+        <button class="btn btn-secondary btn-md" disabled style="opacity:0.4;cursor:not-allowed;">Save LP + LPG</button>
+        <button class="btn btn-primary btn-md" disabled style="opacity:0.4;cursor:not-allowed;">Generate URL →</button>
+      </div>
+    </div>
+
+  </div><!-- /drawer-preview -->
+</div>
+
+</body>
+</html>
