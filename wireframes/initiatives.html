@@ -17,7 +17,7 @@
   </script>
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.17.12/babel.min.js"></script>
   <style>
     /* Initiative-specific cell styles, scoped to this page */
 
@@ -48,6 +48,19 @@
     .form-readonly textarea:focus {
       border-color: var(--color-border-tertiary) !important;
       box-shadow: none !important;
+    }
+    /* Exception — controls flagged .reselectable stay interactive even when
+       inside a form-readonly wrapper. Used by the Use-existing parent picker so
+       the operator can change their pick without re-opening the drawer. */
+    .form-readonly .reselectable {
+      pointer-events: auto !important;
+      background: white !important;
+      color: var(--color-text-primary) !important;
+      cursor: pointer !important;
+      border-color: var(--color-border-secondary, #C7CFDD) !important;
+    }
+    .form-readonly .reselectable:focus {
+      border-color: #383F60 !important;
     }
 
     .init-id { font-family: var(--font-mono); font-size: 13px; color: var(--color-navy); }
@@ -122,6 +135,64 @@
     }
     .account-tag.ext { background: #E8F1EC; color: #085041; }
     .account-tag.int { background: #F2EBE0; color: #8B5E14; }
+
+    /* Group-by-external toggle in the filter bar */
+    .group-toggle {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 12px; color: var(--color-text-secondary);
+      cursor: pointer; margin-left: 8px;
+    }
+    /* Grouped externals + internals — continuous 3px purple line on the left
+       starting from the parent external row and running through each linked
+       internal. Bigger chevron (▾) on the external indicates expansion. */
+
+    /* Parent external row when grouped: chevron treatment + spine. Collapsed
+       (inactive) rows render with no grey fill — the spine/chevron color alone
+       conveys state. Grey fill only appears when expanded or hovered. */
+    .lp-table tbody tr.has-children:not(.collapsed) td {
+      background: #F1F2F6;
+    }
+    .lp-table tbody tr.has-children:hover td {
+      background: #E5E7EB;
+    }
+    .lp-table tbody tr.has-children td:first-child {
+      box-shadow: inset 3px 0 0 #CBD5E1; /* grey by default (collapsed) */
+      padding-left: 32px;
+      position: relative;
+      cursor: pointer;
+    }
+    .lp-table tbody tr.has-children td:first-child::before {
+      content: '▾';
+      position: absolute;
+      left: 10px; top: 50%;
+      transform: translateY(-50%);
+      color: #94A3B8; /* grey by default */
+      font-size: 14px;
+      line-height: 1;
+    }
+    .lp-table tbody tr.has-children.collapsed td:first-child::before {
+      content: '▸';
+    }
+    /* Active state — expanded OR hovered → navy/purple spine + chevron. */
+    .lp-table tbody tr.has-children:not(.collapsed) td:first-child,
+    .lp-table tbody tr.has-children:hover td:first-child {
+      box-shadow: inset 3px 0 0 #5B3FB8;
+    }
+    .lp-table tbody tr.has-children:not(.collapsed) td:first-child::before,
+    .lp-table tbody tr.has-children:hover td:first-child::before {
+      color: #5B3FB8;
+    }
+
+    /* Child internal rows: navy spine continues from expanded parent.
+       (Children are hidden when parent is collapsed, so they only render
+       in the expanded/navy state.) */
+    .lp-table tbody tr.grouped-internal td:first-child {
+      box-shadow: inset 3px 0 0 #5B3FB8;
+      padding-left: 32px;
+    }
+    .lp-table tbody tr.grouped-internal.hidden-by-collapse {
+      display: none;
+    }
 
     /* Muted state suffix on external rows. Always visible but de-emphasized.
        The "N linked" variant is clickable and filters the table to that
@@ -283,6 +354,20 @@
     .mode-chip-dot.int { background: #8B5E14; }
     .mode-chip-dot.paired { background: #5B3FB8; }
     .mode-chip-menu { right: auto; left: 0; }
+
+    /* Type chip in the drawer header — shows External or Internal at a glance.
+       Static label (not a dropdown). Drops the now-redundant colored dot inside
+       the mode chip — type lives here, mode lives there. */
+    .type-chip {
+      display: inline-flex; align-items: center;
+      padding: 3px 9px;
+      font-family: var(--font-display);
+      font-size: 10px; font-weight: 700;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      border-radius: 10px;
+    }
+    .type-chip.ext { background: #E8F1EC; color: #085041; }
+    .type-chip.int { background: #F2EBE0; color: #8B5E14; }
 
     /* ===== Create-initiative drawer ===== */
     /* Payout-model radio cards (lead question) */
@@ -687,6 +772,9 @@
         <option>Active</option>
         <option>Inactive</option>
       </select>
+      <label class="group-toggle">
+        <input type="checkbox" id="group-by-external"> Group by external
+      </label>
     </div>
 
     <main class="content">
@@ -739,6 +827,41 @@
               <td class="src-cell">Google Analytics</td>
               <td class="src-cell">Maven Track</td>
               <td><span class="auto-approve yes" title="Full auto-approval">✓</span></td>
+              <td><span class="status-badge sb-active"><span class="dot" style="background:#085041"></span>Active</span></td>
+              <td class="actions-cell">
+                <div class="row-actions">
+                  <button class="row-icon-btn" title="View"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+                  <button class="row-icon-btn" title="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+                </div>
+              </td>
+            </tr>
+
+            <tr data-account="CapitalOne Shopping" data-source="Google Analytics" data-type="External" data-status="Active" data-is-3p="true">
+              <td><span class="init-id">COS35</span></td>
+              <td><span class="init-name">COS - 3P - New Mobile</span></td>
+              <td>CapitalOne Shopping</td>
+              <td class="goal-cell">$4,200</td>
+              <td class="src-cell">Google Analytics</td>
+              <td class="src-cell">Maven Track</td>
+              <td><span class="auto-approve yes" title="Full auto-approval">✓</span></td>
+              <td><span class="status-badge sb-active"><span class="dot" style="background:#085041"></span>Active</span></td>
+              <td class="actions-cell">
+                <div class="row-actions">
+                  <button class="row-icon-btn" title="View"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+                  <button class="row-icon-btn" title="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+                  <button class="row-icon-btn row-icon-btn-internal row-action-internal" title="Create internal from this" data-parent-id="COS35">+</button>
+                </div>
+              </td>
+            </tr>
+
+            <tr data-account="CapitalOne Shopping" data-source="Google Analytics" data-type="Internal" data-status="Active">
+              <td><span class="init-id">MTDCOS35</span></td>
+              <td><span class="init-name">MTD - COS New Mobile</span></td>
+              <td>CapitalOne Shopping</td>
+              <td class="goal-cell empty">$0</td>
+              <td class="src-cell">Google Analytics</td>
+              <td class="src-cell">Maven Track</td>
+              <td><span class="auto-approve no" title="Manual review">✗</span></td>
               <td><span class="status-badge sb-active"><span class="dot" style="background:#085041"></span>Active</span></td>
               <td class="actions-cell">
                 <div class="row-actions">
@@ -938,6 +1061,41 @@
               </td>
             </tr>
 
+            <tr data-account="Fisher Investments" data-source="Google Analytics" data-type="External" data-status="Active" data-is-3p="true">
+              <td><span class="init-id">FI12</span></td>
+              <td><span class="init-name">FI - Native Desktop</span></td>
+              <td>Fisher Investments</td>
+              <td class="goal-cell">$18,000</td>
+              <td class="src-cell">Google Analytics</td>
+              <td class="src-cell">Maven Track</td>
+              <td><span class="auto-approve yes" title="Full auto-approval">✓</span></td>
+              <td><span class="status-badge sb-active"><span class="dot" style="background:#085041"></span>Active</span></td>
+              <td class="actions-cell">
+                <div class="row-actions">
+                  <button class="row-icon-btn" title="View"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+                  <button class="row-icon-btn" title="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+                  <button class="row-icon-btn row-icon-btn-internal row-action-internal" title="Create internal from this" data-parent-id="FI12">+</button>
+                </div>
+              </td>
+            </tr>
+
+            <tr data-account="Fisher Investments" data-source="Google Analytics" data-type="Internal" data-status="Active">
+              <td><span class="init-id">MTDFI12</span></td>
+              <td><span class="init-name">MTD - FI Native Desktop</span></td>
+              <td>Fisher Investments</td>
+              <td class="goal-cell empty">$0</td>
+              <td class="src-cell">Google Analytics</td>
+              <td class="src-cell">Maven Track</td>
+              <td><span class="auto-approve no" title="Manual review">✗</span></td>
+              <td><span class="status-badge sb-active"><span class="dot" style="background:#085041"></span>Active</span></td>
+              <td class="actions-cell">
+                <div class="row-actions">
+                  <button class="row-icon-btn" title="View"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+                  <button class="row-icon-btn" title="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+                </div>
+              </td>
+            </tr>
+
             <tr class="inactive" data-account="Honey - Affiliate" data-source="__none__" data-type="External" data-status="Inactive">
               <td><span class="init-id">uk-hon</span></td>
               <td><span class="init-name">Honey UK</span></td>
@@ -1019,24 +1177,8 @@
   <div class="drawer" id="drawer">
     <div class="drawer-header">
       <div class="drawer-header-left">
-        <span class="drawer-title" id="drawer-title">Create external initiative</span>
-        <div class="dropdown-wrap">
-          <button class="mode-chip" id="mode-chip" type="button">
-            <span class="mode-chip-dot ext" id="mode-chip-dot"></span>
-            <span id="mode-chip-label">External mode</span>
-            <span class="dropdown-caret">▾</span>
-          </button>
-          <div class="dropdown-menu mode-chip-menu hidden" id="mode-chip-menu" role="menu">
-            <button class="dropdown-item" data-mode="create-new" role="menuitem">
-              <div class="dropdown-item-label">Create new</div>
-              <div class="dropdown-item-helper">Build a new initiative from scratch. Becomes the base / endpoint.</div>
-            </button>
-            <button class="dropdown-item" data-mode="use-existing" role="menuitem">
-              <div class="dropdown-item-label">Use existing</div>
-              <div class="dropdown-item-helper">Pick an existing initiative to derive from. The new one inherits its config.</div>
-            </button>
-          </div>
-        </div>
+        <span class="drawer-title" id="drawer-title">Create new initiative</span>
+        <span class="type-chip ext" id="drawer-type-chip">External</span>
       </div>
       <button class="drawer-close" id="drawer-close">✕</button>
     </div>
@@ -1092,15 +1234,20 @@
      The +New button toggles the dropdown menu. The drawer-header mode chip
      does the same. Selecting an option opens the drawer in the chosen mode. */
   const addMenu       = document.getElementById('add-init-menu');
+  // Mode chip / dropdown has been removed from the drawer header. The +New
+  // button in the filter bar is now the sole entry point for create-new /
+  // use-existing. The references below are guarded so existing handlers
+  // that still touch them don't crash when the elements are absent.
   const modeMenu      = document.getElementById('mode-chip-menu');
   const modeChipLabel = document.getElementById('mode-chip-label');
   const modeChipDot   = document.getElementById('mode-chip-dot');
 
   function closeAllMenus() {
-    addMenu.classList.add('hidden');
-    modeMenu.classList.add('hidden');
+    if (addMenu)  addMenu.classList.add('hidden');
+    if (modeMenu) modeMenu.classList.add('hidden');
   }
   function toggleMenu(menu) {
+    if (!menu) return;
     var willOpen = menu.classList.contains('hidden');
     closeAllMenus();
     if (willOpen) menu.classList.remove('hidden');
@@ -1109,24 +1256,32 @@
     e.stopPropagation();
     toggleMenu(addMenu);
   });
-  document.getElementById('mode-chip').addEventListener('click', function(e) {
-    e.stopPropagation();
-    toggleMenu(modeMenu);
-  });
+  // Mode chip element no longer in the DOM — skip its click wiring.
   document.addEventListener('click', function(e) {
     if (!e.target.closest('.dropdown-wrap')) closeAllMenus();
   });
 
+  // Helper: set the type chip (External / Internal). Defaults to External.
+  function setDrawerType(type) {
+    var chip = document.getElementById('drawer-type-chip');
+    if (!chip) return;
+    var isInternal = type === 'internal';
+    chip.className = 'type-chip ' + (isInternal ? 'int' : 'ext');
+    chip.textContent = isInternal ? 'Internal' : 'External';
+  }
+
   // Mode chip rendering keeps the drawer header in sync with the active tab.
   function setMode(mode) {
     var conf = {
-      'create-new':   { label: 'Create new',   dotClass: 'mode-chip-dot ext', tab: 'v1', title: 'Create new initiative' },
-      'use-existing': { label: 'Use existing', dotClass: 'mode-chip-dot int', tab: 'v1', title: 'Use existing initiative' },
+      'create-new':   { label: 'Create new',   tab: 'v1', title: 'Create new initiative' },
+      'use-existing': { label: 'Use existing', tab: 'v1', title: 'Use existing initiative' },
     }[mode];
     if (!conf) return;
-    modeChipLabel.textContent = conf.label;
-    modeChipDot.className = conf.dotClass;
+    if (modeChipLabel) modeChipLabel.textContent = conf.label;
     document.getElementById('drawer-title').textContent = conf.title;
+    // + New / Use existing always creates/derives an External — internals are
+    // added via the Payout Partners panel inside an External flow.
+    setDrawerType('external');
     activateTab(conf.tab);
     // Tell the React form which mode to render.
     window.dispatchEvent(new CustomEvent('maven:set-form-mode', { detail: { mode: mode } }));
@@ -1257,6 +1412,96 @@
     el.addEventListener('change', applyFilters);
   });
 
+  /* ===== GROUP BY EXTERNAL =====
+     Toggle reorders the table so each external is immediately followed by its
+     linked internals. Externals with children get a grey background + chevron.
+     Default: all expanded. Clicking a parent's first cell toggles collapse. */
+  (function() {
+    var tbody = document.querySelector('#init-table tbody');
+    if (!tbody) return;
+    Array.from(tbody.querySelectorAll('tr')).forEach(function(tr, i) {
+      tr.dataset.originalIndex = i;
+    });
+
+    // Track which externals the user has EXPANDED. Default state for a group
+    // is collapsed — an empty set means everything is collapsed when grouping
+    // is first turned on.
+    var expandedExternals = new Set();
+
+    function applyGrouping() {
+      var on = document.getElementById('group-by-external').checked;
+      var rows = Array.from(tbody.querySelectorAll('tr'));
+
+      if (!on) {
+        rows.sort(function(a, b) {
+          return (+a.dataset.originalIndex) - (+b.dataset.originalIndex);
+        });
+        rows.forEach(function(r) {
+          r.classList.remove('grouped-internal', 'not-last', 'has-children', 'collapsed', 'hidden-by-collapse');
+          tbody.appendChild(r);
+        });
+        return;
+      }
+
+      var externals = rows.filter(function(r) { return r.dataset.type === 'External'; });
+      var internalsByDest = {};
+      rows.filter(function(r) { return r.dataset.type === 'Internal'; })
+          .forEach(function(r) {
+            var dest = r.dataset.destination || '_orphan_';
+            (internalsByDest[dest] = internalsByDest[dest] || []).push(r);
+          });
+
+      externals.sort(function(a, b) { return (+a.dataset.originalIndex) - (+b.dataset.originalIndex); });
+      rows.forEach(function(r) { r.classList.remove('grouped-internal', 'not-last', 'has-children', 'collapsed', 'hidden-by-collapse'); });
+
+      var ordered = [];
+      externals.forEach(function(ext) {
+        ordered.push(ext);
+        var id = ext.querySelector('.init-id')?.textContent.trim();
+        var kids = (id && internalsByDest[id]) || [];
+        kids.sort(function(a, b) {
+          var aActive = a.dataset.status === 'Active' ? 0 : 1;
+          var bActive = b.dataset.status === 'Active' ? 0 : 1;
+          if (aActive !== bActive) return aActive - bActive;
+          return (+a.dataset.originalIndex) - (+b.dataset.originalIndex);
+        });
+        if (kids.length > 0) {
+          ext.classList.add('has-children');
+          if (!expandedExternals.has(id)) ext.classList.add('collapsed');
+        }
+        kids.forEach(function(k, idx) {
+          k.classList.add('grouped-internal');
+          if (idx < kids.length - 1) k.classList.add('not-last');
+          if (!expandedExternals.has(id)) k.classList.add('hidden-by-collapse');
+          ordered.push(k);
+        });
+        if (id) delete internalsByDest[id];
+      });
+      Object.keys(internalsByDest).forEach(function(k) {
+        internalsByDest[k].forEach(function(r) { ordered.push(r); });
+      });
+
+      ordered.forEach(function(r) { tbody.appendChild(r); });
+    }
+
+    // Clicking a parent's first cell toggles collapse for that group.
+    tbody.addEventListener('click', function(e) {
+      var firstCell = e.target.closest('td:first-child');
+      if (!firstCell) return;
+      var tr = firstCell.closest('tr');
+      if (!tr || !tr.classList.contains('has-children')) return;
+      // Ignore clicks on inner buttons / links (they handle their own actions)
+      if (e.target.closest('button, a')) return;
+      var id = tr.querySelector('.init-id')?.textContent.trim();
+      if (!id) return;
+      if (expandedExternals.has(id)) expandedExternals.delete(id);
+      else expandedExternals.add(id);
+      applyGrouping();
+    });
+
+    document.getElementById('group-by-external').addEventListener('change', applyGrouping);
+  })();
+
   /* ===== DESTINATION COLUMN =====
      Injected after Account so the table HTML stays small. Internal rows
      render "Internal → <destId>"; externals (including standalone) render "External".
@@ -1267,6 +1512,8 @@
     var INT_DEST = {
       MTDCOS90:  'COS80',
       MTDCOS120: 'COS56',
+      MTDCOS35:  'COS35',
+      MTDFI12:   'FI12',
       advcos:    'COS80',
       advcc:     'COS95',
       advmtdcc:  'COS56',
@@ -1311,6 +1558,8 @@
     var PAYOUT_BY_ID = {
       MTDCOS90:  'cpa',
       MTDCOS120: 'cpa',
+      MTDCOS35:  'cpa',
+      MTDFI12:   'cpa',
       advcos:    'revshare',
       advcc:     'revshare',
       advmtdcc:  'revshare',
@@ -1318,6 +1567,8 @@
     var STATE_BY_ID = {
       COS09:        { linked: 0, state: 'standalone' },
       COS87:        { linked: 0, state: 'standalone' },
+      COS35:        { linked: 1, state: 'paired' },
+      FI12:         { linked: 1, state: 'paired' },
       COS95:        { linked: 1, state: 'paired' },
       COS56:        { linked: 1, state: 'paired' },
       COS80:        { linked: 4, state: 'multi-internal' },
@@ -1364,31 +1615,8 @@
       if (tds[4]) tr.insertBefore(payoutTd, tds[4]); else tr.appendChild(payoutTd);
 
       // Muted state suffix on external rows. The "N linked" variant is
-      // clickable and filters the table to that external's pair.
-      if (type === 'External' && stateInfo) {
-        var nameEl = tr.querySelector('.init-name');
-        if (nameEl && !nameEl.querySelector('.ext-suffix')) {
-          var suffixText = '';
-          var isLinkedCount = false;
-          // Only the "N linked" count suffix renders inline — operators reach
-          // standalone / standard via the combined filter dropdown.
-          if (stateInfo.state === 'multi-internal') { suffixText = '· ' + stateInfo.linked + ' linked'; isLinkedCount = true; }
-          else if (stateInfo.state === 'paired')    { suffixText = '· ' + stateInfo.linked + ' linked'; isLinkedCount = true; }
-          if (suffixText) {
-            var suffix = document.createElement(isLinkedCount ? 'button' : 'span');
-            suffix.className = 'ext-suffix' + (isLinkedCount ? ' clickable' : '');
-            suffix.textContent = suffixText;
-            if (isLinkedCount) {
-              suffix.title = 'Filter to pair: ' + id + ' + its internals';
-              suffix.addEventListener('click', function(extId) { return function(e) {
-                e.stopPropagation();
-                applyPairFilter(extId);
-              }; }(id));
-            }
-            nameEl.appendChild(suffix);
-          }
-        }
-      }
+      // (N linked, standalone, standard suffixes all removed — the Group-by-external
+      // toggle + the side panel's Linked Internal Initiatives list cover the pair view.)
     });
 
   })();
@@ -1401,11 +1629,19 @@
     // Map account display names back to ids so the form's Parent Account select
     // can resolve. Add more as needed; falls back to '' if unknown.
     var ACCOUNT_ID_BY_NAME = {
+      // External accounts
       'CapitalOne Shopping': 'cos',
       'Fisher Investments': 'fisher',
       'Investments': 'investments',
       'Opera': 'opera',
       'Atlas Coffee': 'atlas',
+      // Internal accounts — needed so editing an internal row resolves the
+      // internal partner as the form's "Parent account".
+      'Advida - RevShare': 'advida-revshare',
+      'Advida - CapitalOne Shopping': 'advida-cos',
+      'Advida - CompareCredit': 'advida-cc',
+      'Spigot - RevShare': 'spigot',
+      'System1 MTD': 'system1-mtd',
     };
     document.querySelectorAll('#init-table tbody tr').forEach(function(tr) {
       var editBtn = tr.querySelector('.actions-cell button[title="Edit"]');
@@ -1420,12 +1656,14 @@
         var payout  = tr.dataset.payout || '';
         // Maps used to resolve internal-row wiring. Destinations must match
         // EXTERNALS_ELIGIBLE entries so the Destination Initiative dropdown preselects.
-        var INT_DEST = { MTDCOS90:'COS80', MTDCOS120:'COS56', advcos:'COS80', advcc:'COS95', advmtdcc:'COS56' };
-        var EXT_ACCOUNT = { COS80:'cos', COS95:'cos', COS56:'cos' };
+        var INT_DEST = { MTDCOS90:'COS80', MTDCOS120:'COS56', MTDCOS35:'COS35', MTDFI12:'FI12', advcos:'COS80', advcc:'COS95', advmtdcc:'COS56' };
+        var EXT_ACCOUNT = { COS80:'cos', COS95:'cos', COS56:'cos', COS35:'cos', FI12:'fisher' };
         // Partner (internal) account id — must match an internal-type entry in ACCOUNTS.
         var PARTNER_BY_ROW_ID = {
           MTDCOS90:  'spigot',
           MTDCOS120: 'system1-mtd',
+          MTDCOS35:  'spigot',
+          MTDFI12:   'advida-revshare',
           advcos:    'advida-cos',
           advcc:     'advida-cc',
           advmtdcc:  'advida-revshare',
@@ -1456,6 +1694,8 @@
         setTimeout(function() {
           window.dispatchEvent(new CustomEvent('maven:edit-initiative', { detail: detail }));
           document.getElementById('drawer-title').textContent = 'Edit ' + id + ' — ' + name;
+          // Type chip reflects what the row actually is, not the create-new default.
+          setDrawerType(rowType === 'internal' ? 'internal' : 'external');
         }, 0);
       });
     });
@@ -1660,6 +1900,36 @@ const COS80_POINTING_INTERNALS = [
   { id: 'MTDCOS80c', name: 'MTD - System1 COS Mobile',         accountName: 'System1 MTD',       goalType: 'Effective RV30d Revshare %',    goalValue: 100.00, status: 'ACTIVE' },
   { id: 'MTDCOS80d', name: 'MTD - Advida COS Mobile (legacy)', accountName: 'Advida - RevShare', goalType: 'CostPerAction3',                goalValue: 50.00, status: 'INACTIVE' },
 ];
+
+/* Lookup table: which internals point to which external. Reuses
+   COS80_POINTING_INTERNALS for the multi-internal demo case.
+   Falls back to [] for any external not listed here. */
+const LINKED_BY_EXTERNAL = {
+  COS80: COS80_POINTING_INTERNALS,
+  COS95: [
+    { id: 'mtdcos95', name: 'MTD - 3P COS Amazon DSP', accountName: 'Advida - RevShare', goalType: 'CostPerAction3', goalValue: 40.00, status: 'ACTIVE' },
+  ],
+  COS56: [
+    { id: 'mtdcos56', name: 'MTD - 3P COS Third Desktop', accountName: 'Spigot - RevShare', goalType: 'CostPerAction3', goalValue: 35.00, status: 'ACTIVE' },
+  ],
+  COS35: [
+    { id: 'MTDCOS35', name: 'MTD - COS New Mobile', accountName: 'Spigot - RevShare', goalType: 'CostPerAction3', goalValue: 28.00, status: 'ACTIVE' },
+  ],
+  FI12: [
+    { id: 'MTDFI12', name: 'MTD - FI Native Desktop', accountName: 'Advida - RevShare', goalType: 'CostPerAction3', goalValue: 120.00, status: 'ACTIVE' },
+  ],
+};
+const linkedInternalsFor = (extId) => (extId && LINKED_BY_EXTERNAL[extId]) || [];
+
+/* Map internal-account display names to ids for editing dispatched internals.
+   Reused by the linked-internals row Edit links. */
+const INTERNAL_ACCOUNT_ID_BY_NAME = {
+  'Advida - RevShare': 'advida-revshare',
+  'Spigot - RevShare': 'spigot',
+  'System1 MTD': 'system1-mtd',
+  'Advida - CapitalOne Shopping': 'advida-cos',
+  'Advida - CompareCredit': 'advida-cc',
+};
 
 const fmtMoney = (n) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n);
 const fmtPct = (n) => `${Math.round(n)}%`;
@@ -2292,10 +2562,10 @@ const FieldRow = ({ label, required, hint, children }) => (
   </div>
 );
 
-const Section = ({ label, sublabel, children }) => (
-  <div className="py-7 border-b border-slate-100 first:pt-4 last:border-b-0 last:pb-2">
+const Section = ({ label, sublabel, children, id }) => (
+  <div id={id} className="py-4 border-b border-slate-100 first:pt-2 last:border-b-0 last:pb-2">
     <div className="mb-4">
-      <div className="text-[15px] font-bold text-slate-900 leading-tight">{label}</div>
+      <div className="text-[15px] font-bold text-[#383F60] leading-tight">{label}</div>
       {sublabel && <div className="text-[13px] text-slate-600 leading-relaxed mt-1">{sublabel}</div>}
     </div>
     <div>{children}</div>
@@ -2314,7 +2584,7 @@ const Section = ({ label, sublabel, children }) => (
    TODO: confirm with ops (Rob) whether these two live on the goal record or on the
    initiative record. Spec wording places them on the goal record — surfacing them
    here aligns with that. */
-function GoalBudgetForm({ value, onChange, readOnly = false, initiativeType = 'external' }) {
+function GoalBudgetForm({ value, onChange, readOnly = false, initiativeType = 'external', compact = false }) {
   const def = GOAL_TYPES[value.goalType];
   const isPct = def?.unit === '%';
   const isRevshare = isPct;
@@ -2356,7 +2626,7 @@ function GoalBudgetForm({ value, onChange, readOnly = false, initiativeType = 'e
           <span className="text-[13px] text-slate-600">action 1s</span>
         </div>
       </FieldRow>
-      <div className="grid grid-cols-2 gap-3">
+      <div className={compact ? '' : 'grid grid-cols-2 gap-3'}>
         <FieldRow label={`Goal value (${def?.unit || '$'})`} required hint={isInternal ? 'What ATN pays the partner per outcome.' : 'The billing CPA / value ATN charges the client.'}>
           <div className="relative">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">{isPct ? '%' : '$'}</span>
@@ -2364,18 +2634,20 @@ function GoalBudgetForm({ value, onChange, readOnly = false, initiativeType = 'e
               onChange={(e) => onChange('goalValue', e.target.value)} className={`${ei_input} pl-8`} />
           </div>
         </FieldRow>
-        <FieldRow label="Active budget" required={!isInternal}
-          hint={isInternal ? 'Internal is a payout mechanism, not a media buy.' : 'Period budget allocated to this initiative.'}>
-          {isInternal ? (
-            <div className="h-9 flex items-center text-[13px] text-slate-500">$0.00 · auto</div>
-          ) : (
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">$</span>
-              <input type="number" min="0" step="100" value={value.budget}
-                onChange={(e) => onChange('budget', e.target.value)} className={`${ei_input} pl-8`} />
-            </div>
-          )}
-        </FieldRow>
+        {!compact && (
+          <FieldRow label="Active budget" required={!isInternal}
+            hint={isInternal ? 'Internal is a payout mechanism, not a media buy.' : 'Period budget allocated to this initiative.'}>
+            {isInternal ? (
+              <div className="h-9 flex items-center text-[13px] text-slate-500">$0.00 · auto</div>
+            ) : (
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">$</span>
+                <input type="number" min="0" step="100" value={value.budget}
+                  onChange={(e) => onChange('budget', e.target.value)} className={`${ei_input} pl-8`} />
+              </div>
+            )}
+          </FieldRow>
+        )}
       </div>
       {isRevshare && (
         <div className="grid grid-cols-2 gap-3">
@@ -2395,14 +2667,16 @@ function GoalBudgetForm({ value, onChange, readOnly = false, initiativeType = 'e
           </FieldRow>
         </div>
       )}
-      <div className="grid grid-cols-2 gap-3">
-        <FieldRow label="Goal start" required>
-          <input type="date" value={value.startDate} onChange={(e) => onChange('startDate', e.target.value)} className={ei_input} />
-        </FieldRow>
-        <FieldRow label="Goal end" required>
-          <input type="date" value={value.endDate} onChange={(e) => onChange('endDate', e.target.value)} className={ei_input} />
-        </FieldRow>
-      </div>
+      {!compact && (
+        <div className="grid grid-cols-2 gap-3">
+          <FieldRow label="Goal start" required>
+            <input type="date" value={value.startDate} onChange={(e) => onChange('startDate', e.target.value)} className={ei_input} />
+          </FieldRow>
+          <FieldRow label="Goal end" required>
+            <input type="date" value={value.endDate} onChange={(e) => onChange('endDate', e.target.value)} className={ei_input} />
+          </FieldRow>
+        </div>
+      )}
     </>
   );
 }
@@ -2425,16 +2699,46 @@ function GoalBudgetForm({ value, onChange, readOnly = false, initiativeType = 'e
 
    role: 'operator' (default) → "View in Goals"
          'permitted'          → "Edit/Set in Goals" */
+/* Small chip showing whether an inheritable field is currently matching the
+   parent ("Inherited" blue) or has been edited away from it ("Overridden" amber
+   with ↺ revert). Returns null when there's no parent value or no form value. */
+function InheritChip({ formValue, parentValue, onRevert }) {
+  if (parentValue == null || parentValue === '') return null;
+  if (formValue == null || formValue === '') return null;
+  const overridden = formValue !== parentValue;
+  if (overridden) {
+    return (
+      <span className="inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 ml-2">
+        Overridden
+        <button type="button" onClick={onRevert}
+          className="text-amber-600 hover:text-amber-900 bg-transparent border-0 p-0 cursor-pointer">↺</button>
+      </span>
+    );
+  }
+  return (
+    <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 ml-2">
+      Inherited
+    </span>
+  );
+}
+
 function ActiveGoalStrip({ goal, role = 'operator', today = '2026-06-15', initiativeId, initiativeName }) {
-  const baseClasses = "sticky top-0 z-20 -mx-7 px-7 py-3 text-[12px] border-b flex flex-wrap items-center gap-x-2 gap-y-1";
+  // The drawer-body has 16px padding all around. We want the strip flush
+  // against the drawer header (no gap). The combo:
+  //   -mt-4 — pulls the strip up by 16px from its natural flow position
+  //   -top-4 — moves the sticky reference up 16px (so it pins at body's
+  //            border edge, not its content edge, when scrolled)
+  //   -mx-7 — spans edge-to-edge horizontally
+  const baseClasses = "sticky -top-4 z-20 -mt-4 -mx-7 px-7 py-3 text-[12px] border-b flex flex-wrap items-center gap-x-2 gap-y-1";
   const linkLabel = role === 'permitted' ? 'Edit/Set in Goals' : 'View in Goals';
-  // Clicking the link opens the Goals side panel (GoalPanel) pre-filled with
-  // this initiative's goal data, with a Back button to return to the form.
+  // Clicking the link scrolls to the Goal section inside the same side panel
+  // (no separate panel swap). For permitted users this acts as a jump-to-edit;
+  // for operators it's a jump-to-view since the section is read-only when
+  // viewing an existing initiative.
   const linkClick = (e) => {
     e.preventDefault();
-    window.dispatchEvent(new CustomEvent('maven:view-in-goals', {
-      detail: { goal: goal, initiativeId: initiativeId, initiativeName: initiativeName, role: role },
-    }));
+    const target = document.getElementById('initiative-goal-section');
+    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
   const hasGoal = !!(goal && goal.goalType && goal.goalValue !== '' && goal.goalValue !== undefined && goal.goalValue !== null);
@@ -2475,20 +2779,25 @@ function ActiveGoalStrip({ goal, role = 'operator', today = '2026-06-15', initia
     );
   }
 
-  // States 1 & 2 — Active (ambient / low-contrast). Green dot dropped per the
-  // spec ("if the dot fights the header, drop it") — text carries "Active goal".
+  // States 1 & 2 — Active. Colored strip (not plain text) so the goal context
+  // is scannable from the top of the panel. CPA gets emerald, RevShare gets
+  // indigo (matches the toggle accent). Amber stays for warning states above.
+  const activePalette = isPct
+    ? { bg: 'bg-indigo-50',  border: 'border-indigo-200',  text: 'text-indigo-900',  dot: 'bg-indigo-500',  label: 'text-indigo-700',  sep: 'text-indigo-300',  link: 'text-indigo-700 hover:text-indigo-900' }
+    : { bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-900', dot: 'bg-emerald-500', label: 'text-emerald-700', sep: 'text-emerald-300', link: 'text-emerald-700 hover:text-emerald-900' };
   return (
-    <div className={`${baseClasses} bg-white border-slate-100 text-slate-500`}>
-      <span className="font-semibold uppercase tracking-wider text-[10px] text-slate-400">Active goal</span>
-      <span className="text-slate-300">·</span>
+    <div className={`${baseClasses} ${activePalette.bg} ${activePalette.border} ${activePalette.text}`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${activePalette.dot}`}></span>
+      <span className={`font-semibold uppercase tracking-wider text-[10px] ${activePalette.label}`}>Active goal</span>
+      <span className={activePalette.sep}>·</span>
       <span>{def?.label}</span>
-      <span className="text-slate-300">·</span>
-      <span className="font-semibold text-slate-700">{fmtVal}</span>
-      <span className="text-slate-300">·</span>
+      <span className={activePalette.sep}>·</span>
+      <span className="font-semibold">{fmtVal}</span>
+      <span className={activePalette.sep}>·</span>
       <span>Budget {fmtMoney(parseFloat(goal.budget) || 0)}</span>
-      <span className="text-slate-300">·</span>
+      <span className={activePalette.sep}>·</span>
       <span>{goal.startDate} → {goal.endDate}</span>
-      <a href="#" onClick={linkClick} className="ml-auto text-blue-600 hover:text-blue-800 hover:underline text-[11px]">{linkLabel}</a>
+      <a href="#" onClick={linkClick} className={`ml-auto underline text-[11px] font-semibold ${activePalette.link}`}>{linkLabel}</a>
     </div>
   );
 }
@@ -2546,7 +2855,7 @@ function GoalPanel({ initiativeId, initiativeName, initiativeType = 'external', 
         </div>
       )}
       <Section
-        label={<>Goal &amp; budget{typeBadge}</>}
+        label={<>Set Initiative Goal{typeBadge}</>}
         sublabel={
           fromView
             ? `Viewing goal for ${initiativeName ? `${initiativeId} — ${initiativeName}` : initiativeId}.${readOnly ? ' Read-only — strategy/Rob authors goals.' : ''}`
@@ -2565,13 +2874,25 @@ function GoalPanel({ initiativeId, initiativeName, initiativeType = 'external', 
    the goal + budget + tracking config that downstream internals inherit.
    The input set here is intentionally different from the paired/internal case. */
 function ExternalForm({ initial, onSave, onCancel }) {
-  // _internalPayout / _editKey are control fields, not real form data — strip
-  // them out of the form state but read them for Zone 2 expansion.
+  // _internalPayout / _editKey / _backToParentId are control fields — strip
+  // them out of the form state but read them for setup logic.
   const [form, setForm] = useState(() => {
-    const { _internalPayout, _editKey, _drawerTitle, ...rest } = initial;
+    const { _internalPayout, _editKey, _drawerTitle, _backToParentId, _backToParentName, ...rest } = initial;
     return rest;
   });
+  // Back-to-parent: set when this Edit was opened from a parent external's
+  // Payout Partners list. Click the back link → re-render in use-existing
+  // mode focused on the parent.
+  const [backToParentId, setBackToParentId] = useState(initial._backToParentId || null);
+  const [backToParentName] = useState(initial._backToParentName || '');
+  // activeTab: 'general' | 'advanced' | 'custom-metrics'
+  const [activeTab, setActiveTab] = useState('general');
+  // Data Sources has 12 fields — collapsed by default to keep the form scannable.
+  const [dataSourcesExpanded, setDataSourcesExpanded] = useState(false);
+  // Advanced + Custom Metrics moved from tabs into the General body as
+  // chevron-expanders, matching the Data Sources pattern.
   const [advancedExpanded, setAdvancedExpanded] = useState(false);
+  const [customMetricsExpanded, setCustomMetricsExpanded] = useState(false);
   const set = (k, v) => setForm(prev => ({ ...prev, [k]: v }));
 
   // ZONE 1: external mode toggle — create new vs use existing
@@ -2584,6 +2905,7 @@ function ExternalForm({ initial, onSave, onCancel }) {
   // Identity defaults are static text by default. One low-key affordance flips them
   // into inputs for the rare override case (per the design principle).
   const [overrideDefaults, setOverrideDefaults] = useState(false);
+
   // Goals are a SEPARATE entity — not created or edited here. This form only
   // captures wiring + identity for the internal record; goal values originate
   // with strategy/leadership and are set in the goal screen by the goal owner.
@@ -2602,7 +2924,47 @@ function ExternalForm({ initial, onSave, onCancel }) {
     // Otherwise the Name field shows the auto-derived "MTD - <external.name>".
     name:              initial._internalPayout?.name              || '',
     revenueSource:     initial._internalPayout?.revenueSource     || 'rv30d-synthetic',
+    // === Internal-side goal config (operator-authored) ===
+    // Goal type for the INTERNAL is independent of the external's goal type —
+    // an external CPA pair can have a RevShare internal and vice versa.
+    // Other goal fields (budget, dates) inherit silently from the external.
+    goalType:          initial._internalPayout?.goalType          || 'CostPerAction3',
+    goalValue:         initial._internalPayout?.goalValue         || '',
+    goalAmount:        initial._internalPayout?.goalAmount        || 1,
+    revSharePct:       initial._internalPayout?.revSharePct       ?? 100,
+    delay30dRV:        initial._internalPayout?.delay30dRV        ?? 4,
   }));
+  const setIntField = (k, v) => setIntDraft(prev => ({ ...prev, [k]: v }));
+
+  /* === INHERITANCE for internal initiatives ===
+     When operator picks/changes the Destination initiative, inheritable fields
+     auto-fill from that external. Skips initial mount (preserves Edit pre-fills).
+     TODO: confirm "re-inherit on dest change" overwriting operator overrides. */
+  const prevDestRef = React.useRef(null);
+  useEffect(() => {
+    if (form.initiativeType !== 'internal') return;
+    const dest = EXTERNALS_ELIGIBLE.find(e => e.id === intDraft.destInitiativeId);
+    if (!dest) return;
+    if (prevDestRef.current === null) {
+      prevDestRef.current = intDraft.destInitiativeId;
+      return;
+    }
+    if (prevDestRef.current === intDraft.destInitiativeId) return;
+    prevDestRef.current = intDraft.destInitiativeId;
+    setForm(prev => ({
+      ...prev,
+      initiativeGroup:    dest.initiativeGroup    || prev.initiativeGroup,
+      performanceSource:  dest.performanceSource  || prev.performanceSource,
+      trackingSource:     dest.trackingSource     || prev.trackingSource,
+      goalType:           dest.goal?.goalType     || prev.goalType,
+      startDate:          dest.goal?.startDate    || prev.startDate,
+      endDate:            dest.goal?.endDate      || prev.endDate,
+      budget:             0,
+    }));
+  }, [intDraft.destInitiativeId, form.initiativeType]);
+
+  // Source-of-truth for inheritance comparisons (used by InheritChip + drift warning).
+  const destExternal = EXTERNALS_ELIGIBLE.find(e => e.id === intDraft.destInitiativeId) || null;
 
   // Dashboard "+ Internal" launches set Zone 1 to "use existing" + pre-select parent + expand Zone 2.
   useEffect(() => {
@@ -2649,6 +3011,9 @@ function ExternalForm({ initial, onSave, onCancel }) {
         endDate: existingExternal.goal?.endDate || '',
         performanceSource: existingExternal.performanceSource || '',
         trackingSource: existingExternal.trackingSource || '',
+        // Force external context so the Payout Partner zone renders (Zone 2 hides for internals).
+        // Without this, a stale 'internal' from a prior Edit would hide the "+ Add Internal Initiatives" expander.
+        initiativeType: 'external',
       }));
     }
   }, [extMode, selectedExternalId]);
@@ -2714,14 +3079,53 @@ function ExternalForm({ initial, onSave, onCancel }) {
       {/* Mode is controlled by the "+ New initiative" dropdown (Create new / Use existing).
           The in-form toggle was removed — the drawer header chip is the affordance to switch. */}
 
-      {/* ===== ZONE 1 BODY — use existing: picker. The full form below renders
-            with read-only inputs once a parent is picked. ===== */}
+      {/* ===== Wrapper for both modes — tabs + strip always at top. Picker moves
+            inside the General tab when use-existing. ===== */}
+      {(extMode === 'create-new' || extMode === 'use-existing') && (<div className={(extMode === 'use-existing' && existingExternal) ? 'form-readonly' : ''}>
+      {/* Back link — only shown when this edit was opened from a parent
+          external's Payout Partners list. Click → flip to use-existing mode
+          with the parent pre-selected so the operator lands on the same
+          screen they came from. */}
+      {backToParentId && (
+        <div className="-mx-7 px-7 py-2 border-b border-slate-100 bg-slate-50">
+          <button type="button" onClick={() => {
+            setExtMode('use-existing');
+            setSelectedExternalId(backToParentId);
+            setInternalExpanded(false);
+            setBackToParentId(null);
+            // Restore the drawer header title so it no longer says "Edit <internal>".
+            const titleEl = document.getElementById('drawer-title');
+            if (titleEl) titleEl.textContent = 'Use existing initiative';
+            const typeChip = document.getElementById('drawer-type-chip');
+            if (typeChip) { typeChip.className = 'type-chip ext'; typeChip.textContent = 'External'; }
+          }}
+            className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-slate-600 hover:text-slate-900 bg-transparent border-0 p-0 cursor-pointer">
+            <span className="text-[14px] leading-none">←</span>
+            Back to {backToParentName || 'external'}
+          </button>
+        </div>
+      )}
+      {/* Tab bar removed — Advanced + Custom Metrics moved into the General
+          body as chevron-expanders (matching Data Sources). Form is now a
+          single flat surface; secondary groupings collapse rather than tab. */}
+
+      {/* Active goal — sticky below the tab bar; links out to GoalPanel via "View in Goals".
+          Hidden in Create new (no goal record yet — the inline Goal section is the
+          authoring surface). Shown in Edit (formInitial._editKey set) and Use existing
+          (parent picked) since both reference an existing goal record. */}
+      {(!!initial._editKey || (extMode === 'use-existing' && existingExternal)) && (
+        <ActiveGoalStrip goal={form} initiativeId={form.id} initiativeName={form.name} />
+      )}
+
+      {/* (tab-gating removed — everything renders in a single flat form) */}
+
+      {/* Use-existing picker — first thing when picking a parent */}
       {extMode === 'use-existing' && (
-        <Section label="Select existing initiative" sublabel="Pick an existing initiative to view its fields read-only.">
+        <Section label="Select Existing Initiative" sublabel="Pick an existing initiative to view its fields read-only. Switch to a different initiative at any time.">
           <FieldRow label="Initiative" required>
             <select value={selectedExternalId || ''}
               onChange={(e) => setSelectedExternalId(e.target.value || null)}
-              className={`${ei_input} pr-8`}>
+              className={`${ei_input} pr-8 reselectable`}>
               <option value="">Select initiative…</option>
               {EXTERNALS_ELIGIBLE.map(e => (
                 <option key={e.id} value={e.id}>{e.id} — {e.name} · {e.linkedInternals} linked</option>
@@ -2731,24 +3135,60 @@ function ExternalForm({ initial, onSave, onCancel }) {
           {existingExternal && existingExternal.linkedInternals > 0 && (
             <div className="mt-3 bg-amber-50 border border-amber-200 rounded px-3 py-2 text-[11px] text-amber-900 flex items-start gap-2">
               <span className="font-bold flex-shrink-0">ⓘ</span>
-              <span><span className="font-mono font-semibold">{existingExternal.id}</span> already has <span className="font-semibold">{existingExternal.linkedInternals} internal{existingExternal.linkedInternals > 1 ? 's' : ''}</span> linked.</span>
+              <span className="flex-1">
+                <span className="font-mono font-semibold">{existingExternal.id}</span> already has <span className="font-semibold">{existingExternal.linkedInternals} internal{existingExternal.linkedInternals > 1 ? 's' : ''}</span> linked.
+              </span>
+              <a href="#payout-partners-section" onClick={(e) => {
+                e.preventDefault();
+                const t = document.getElementById('payout-partners-section');
+                if (t) t.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }}
+              className="text-amber-700 hover:text-amber-900 font-semibold flex-shrink-0">
+                View
+              </a>
+              <a href="#payout-partners-section" onClick={(e) => {
+                e.preventDefault();
+                // Open the inline Add form, then scroll the panel into view.
+                setInternalExpanded(true);
+                requestAnimationFrame(() => {
+                  const t = document.getElementById('payout-partners-section');
+                  if (t) t.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                });
+              }}
+              className="text-amber-700 hover:text-amber-900 font-semibold flex-shrink-0">
+                Add new payout partner
+              </a>
             </div>
           )}
         </Section>
       )}
 
-      {/* ===== Form sections — same layout, editable for create-new, read-only for use-existing ===== */}
-      {(extMode === 'create-new' || (extMode === 'use-existing' && existingExternal)) && (<div className={(extMode === 'use-existing') ? 'form-readonly' : ''}>
-      {/* Sticky active goal — links out to GoalPanel via "View in Goals" */}
-      <ActiveGoalStrip goal={form} initiativeId={form.id} initiativeName={form.name} />
-      <Section label="General" sublabel="Name and identify this initiative.">
+      {/* Form body — renders in:
+            • create-new (always)
+            • use-existing with parent picked (populated read-only)
+            • use-existing WITHOUT parent picked (dimmed default view + overlay
+              CTA pointing at the picker above) */}
+      {(extMode === 'create-new' || extMode === 'use-existing') && (
+      <div className="relative">
+        {/* Overlay CTA — only when use-existing has no parent picked yet */}
+        {extMode === 'use-existing' && !existingExternal && (
+          <div className="absolute inset-0 z-10 flex items-start justify-center pt-16 pointer-events-none">
+            <div className="bg-white border border-slate-200 shadow-lg rounded-lg px-6 py-5 text-center max-w-xs pointer-events-auto">
+              <div className="text-[24px] text-slate-400 mb-1">↑</div>
+              <div className="text-[14px] font-semibold text-[#383F60] mb-1">Pick an initiative above</div>
+              <div className="text-[12px] text-slate-500 leading-relaxed">The form below will populate with its configuration.</div>
+            </div>
+          </div>
+        )}
+        <div className={extMode === 'use-existing' && !existingExternal ? 'opacity-40 pointer-events-none select-none' : ''}>
+      <Section label="Set Initiative Identity" sublabel="Name and identify this initiative.">
         <FieldRow label="Initiative ID" hint="Auto-generated. Editable if needed.">
           <input value={form.id} onChange={(e) => set('id', e.target.value)} className={`${ei_input} font-mono`} />
         </FieldRow>
         <FieldRow label="Name" required>
           <input value={form.name} onChange={(e) => set('name', e.target.value)} placeholder="e.g. Advida COS Mobile" className={ei_input} />
         </FieldRow>
-        <FieldRow label="Parent account" required hint="External accounts only — internals start from a parent (use Internal mode).">
+        <FieldRow label="Parent account" required>
           <select value={form.accountId}
             onChange={(e) => {
               const newAcct = e.target.value;
@@ -2761,13 +3201,45 @@ function ExternalForm({ initial, onSave, onCancel }) {
             }}
             className={`${ei_input} pr-8`}>
             <option value="">Select account…</option>
-            {ACCOUNTS.filter(a => a.type === 'external').map(a => (
+            {ACCOUNTS.filter(a => a.type === (form.initiativeType === 'internal' ? 'internal' : 'external')).map(a => (
               <option key={a.id} value={a.id}>{a.name}</option>
             ))}
           </select>
         </FieldRow>
-        <FieldRow label="Initiative group" required
-          hint={form.accountId ? null : 'Select an account first — groups belong to a parent account.'}>
+        {/* For internal initiatives: Destination account + Destination initiative
+            live in Identity (right after Parent account), not in a separate Payout Partner zone. */}
+        {form.initiativeType === 'internal' && (
+          <>
+            <FieldRow label="Destination account" required hint="The external account this internal points to.">
+              <select value={intDraft.destAccountId}
+                onChange={(e) => setIntDraft({ ...intDraft, destAccountId: e.target.value })}
+                className={`${ei_input} pr-8`}>
+                <option value="">Select account…</option>
+                {ACCOUNTS.filter(a => a.type === 'external').map(a => (
+                  <option key={a.id} value={a.id}>{a.name}</option>
+                ))}
+              </select>
+            </FieldRow>
+            <FieldRow label="Destination initiative" required hint="An internal with no destination is invalid.">
+              <select value={intDraft.destInitiativeId}
+                onChange={(e) => setIntDraft({ ...intDraft, destInitiativeId: e.target.value })}
+                className={`${ei_input} pr-8`}>
+                <option value="">Select initiative…</option>
+                {EXTERNALS_ELIGIBLE.map(e => (
+                  <option key={e.id} value={e.id}>{e.id} — {e.name}</option>
+                ))}
+              </select>
+            </FieldRow>
+          </>
+        )}
+        <div className="mb-4">
+          <div className="text-[12px] font-semibold text-slate-900 mb-1.5 flex items-center gap-1">
+            Initiative group<span className="text-rose-500 text-[10px]">*</span>
+            {form.initiativeType === 'internal' && destExternal && (
+              <InheritChip formValue={form.initiativeGroup} parentValue={destExternal.initiativeGroup}
+                onRevert={() => set('initiativeGroup', destExternal.initiativeGroup)} />
+            )}
+          </div>
           <select value={form.initiativeGroup}
             onChange={(e) => set('initiativeGroup', e.target.value)}
             disabled={!form.accountId}
@@ -2775,23 +3247,24 @@ function ExternalForm({ initial, onSave, onCancel }) {
             <option value="">{form.accountId ? 'Select group…' : '—'}</option>
             {groupsFor(form.accountId).map(g => <option key={g} value={g}>{g}</option>)}
           </select>
-        </FieldRow>
-        <FieldRow label="DCO" hint="Dynamic Creative Optimization. Legacy flag — used for feed-driven creatives (e.g. Yahoo + AutoTrader).">
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input type="checkbox" checked={form.dco}
-              onChange={(e) => set('dco', e.target.checked)}
-              className="rounded border-slate-300" />
-            <span className="text-[13px] text-slate-700">Enable DCO</span>
-          </label>
-        </FieldRow>
-        <FieldRow label="Search Initiative" hint="Mark this initiative as search traffic (Google / Bing search inventory).">
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input type="checkbox" checked={form.searchInitiative}
-              onChange={(e) => set('searchInitiative', e.target.checked)}
-              className="rounded border-slate-300" />
-            <span className="text-[13px] text-slate-700">Enable Search Initiative</span>
-          </label>
-        </FieldRow>
+          {!form.accountId && <div className="text-[11px] text-slate-500 mt-1.5 leading-relaxed">Select an account first — groups belong to a parent account.</div>}
+        </div>
+        <div className="flex items-center justify-between py-2">
+          <span className="text-[12px] font-semibold text-slate-900">DCO</span>
+          <button type="button" role="switch" aria-checked={!!form.dco}
+            onClick={() => set('dco', !form.dco)}
+            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors border-0 cursor-pointer ${form.dco ? 'bg-indigo-600' : 'bg-slate-300'}`}>
+            <span className={`inline-block h-4 w-4 rounded-full bg-white shadow transition-transform ${form.dco ? 'translate-x-[18px]' : 'translate-x-0.5'}`} />
+          </button>
+        </div>
+        <div className="flex items-center justify-between py-2 mb-4">
+          <span className="text-[12px] font-semibold text-slate-900">Search Initiative</span>
+          <button type="button" role="switch" aria-checked={!!form.searchInitiative}
+            onClick={() => set('searchInitiative', !form.searchInitiative)}
+            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors border-0 cursor-pointer ${form.searchInitiative ? 'bg-indigo-600' : 'bg-slate-300'}`}>
+            <span className={`inline-block h-4 w-4 rounded-full bg-white shadow transition-transform ${form.searchInitiative ? 'translate-x-[18px]' : 'translate-x-0.5'}`} />
+          </button>
+        </div>
         <FieldRow label="Delay 30D RV" hint="Days to wait before counting RV30d revenue. Common for revshare partners.">
           <div className="flex items-center gap-2">
             <input type="number" min="0" step="1" value={form.delay30dRV}
@@ -2804,57 +3277,135 @@ function ExternalForm({ initial, onSave, onCancel }) {
         </FieldRow>
       </Section>
 
-
-      <Section label="Data Sources" sublabel="Where performance, conversion, and revenue data come from. Inherited by paired internals.">
-        <div className="grid grid-cols-2 gap-3">
-          <FieldRow label="Performance Source">
-            <select value={form.performanceSource} onChange={(e) => set('performanceSource', e.target.value)} className={`${ei_input} pr-8`}>
-              <option value="">Select Performance Source</option>
-              <option>Google Analytics</option><option>KBB Adobe</option><option>ATC LNX</option>
-            </select>
-          </FieldRow>
-          <FieldRow label="Tracking Source">
-            <select value={form.trackingSource} onChange={(e) => set('trackingSource', e.target.value)} className={`${ei_input} pr-8`}>
-              <option value="">Select Tracking Source</option>
-              <option>Maven Track</option><option>DCM</option>
-            </select>
-          </FieldRow>
-          {[1,2,3,4,5,6,7,8].map(n => (
-            <FieldRow key={n} label={`Conversion ${n} Source`}>
-              <select value={form[`conversion${n}Source`]} onChange={(e) => set(`conversion${n}Source`, e.target.value)} className={`${ei_input} pr-8`}>
-                <option value="">Select Conversion {n} Source</option>
-                <option>Maven Track</option><option>Google Analytics</option>
-              </select>
-            </FieldRow>
-          ))}
-          <FieldRow label="Revenue Source">
-            <select value={form.revenueSource} onChange={(e) => set('revenueSource', e.target.value)} className={`${ei_input} pr-8`}>
-              <option value="">Select Revenue Source</option>
-              <option value="direct">Direct CPA</option><option value="synthetic">RV30d Synthetic</option>
-            </select>
-          </FieldRow>
-          <FieldRow label="Auto Approval">
-            <select value={form.autoApproval} onChange={(e) => set('autoApproval', e.target.value)} className={`${ei_input} pr-8`}>
-              <option value="">Select Auto Approval</option>
-              <option value="full">Full</option><option value="restricted">Restricted</option><option value="manual">Manual</option>
-            </select>
-          </FieldRow>
-        </div>
+      {/* Goal section — anchored so the Active Goal Strip's "View in Goals" link
+          can scroll to it from anywhere else in the form. */}
+      <Section
+        id="initiative-goal-section"
+        label="Set Initiative Goal"
+        sublabel={form.initiativeType === 'internal' && destExternal
+          ? 'Goal type + dates inherited from the destination external. Set the payout Goal value — that\'s the only goal field truly authored on the internal side.'
+          : 'What this initiative is measured against and how much it can spend. Feeds the Active goal strip at the top.'}>
+        <GoalBudgetForm
+          value={{
+            goalType:    form.goalType,
+            goalAmount:  form.goalAmount,
+            goalValue:   form.goalValue,
+            budget:      form.budget,
+            startDate:   form.startDate,
+            endDate:     form.endDate,
+            revSharePct: form.revSharePct,
+            delay30dRV:  form.delay30dRV,
+          }}
+          onChange={set}
+          initiativeType={form.initiativeType === 'internal' ? 'internal' : 'external'}
+        />
+        {/* Drift warnings — for internal initiatives, surface mismatches with the
+            destination external (non-blocking, just informational). */}
+        {form.initiativeType === 'internal' && destExternal && (() => {
+          const typeDrift  = form.goalType  !== destExternal.goal?.goalType;
+          const startDrift = form.startDate !== destExternal.goal?.startDate;
+          const endDrift   = form.endDate   !== destExternal.goal?.endDate;
+          if (!typeDrift && !startDrift && !endDrift) return null;
+          return (
+            <div className="mt-4 bg-amber-50 border border-amber-200 rounded px-3 py-2.5 text-[12px] text-amber-900 flex items-start gap-2">
+              <span className="w-4 h-4 rounded-full bg-amber-500 text-white flex items-center justify-center text-[10px] font-bold flex-shrink-0 mt-0.5">!</span>
+              <div>
+                <div className="font-semibold mb-1">Pair starts drifted</div>
+                {typeDrift && (
+                  <div>· Goal type: <span className="font-mono">{GOAL_TYPES[destExternal.goal?.goalType]?.label}</span> on external, <span className="font-mono">{GOAL_TYPES[form.goalType]?.label}</span> on internal</div>
+                )}
+                {startDrift && (
+                  <div>· Start: <span className="font-mono">{destExternal.goal?.startDate}</span> on external, <span className="font-mono">{form.startDate || '(unset)'}</span> on internal</div>
+                )}
+                {endDrift && (
+                  <div>· End: <span className="font-mono">{destExternal.goal?.endDate}</span> on external, <span className="font-mono">{form.endDate || '(unset)'}</span> on internal</div>
+                )}
+                <div className="mt-1.5 text-amber-700">Margin will be computed dynamically from RV30d revenue. Save proceeds — this is a warning, not a block.</div>
+              </div>
+            </div>
+          );
+        })()}
       </Section>
 
-      {/* Advanced panel — collapsed by default. Hides Frequency Cap, Landing URL Macros, and Cost Markup. */}
-      <div className="py-7 border-b border-slate-100">
-        <button type="button" onClick={() => setAdvancedExpanded(v => !v)}
-          className="w-full flex items-center justify-between text-left group">
+
+      {/* Data Sources — collapsible since it carries 12 fields. */}
+      <div className="py-4 border-b border-slate-100">
+        <button type="button" onClick={() => setDataSourcesExpanded(v => !v)}
+          className="w-full flex items-center justify-between text-left">
           <div>
-            <div className="text-[15px] font-bold text-slate-900 leading-tight">Advanced</div>
-            <div className="text-[13px] text-slate-600 leading-relaxed mt-1">Frequency cap, landing URL macros, and cost markup. Optional.</div>
+            <div className="text-[15px] font-bold text-[#383F60] leading-tight flex items-center gap-2">
+              {dataSourcesExpanded ? 'Data Sources' : '+ Add Data Sources'}
+              <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-slate-100 text-slate-500">Optional</span>
+            </div>
+            <div className="text-[13px] text-slate-600 leading-relaxed mt-1">Where performance, conversion, and revenue data come from. Inherited by paired internals.</div>
           </div>
-          <span className={`text-slate-500 text-sm transition-transform ${advancedExpanded ? 'rotate-180' : ''}`}>▾</span>
         </button>
+        {dataSourcesExpanded && (
+          <div className="mt-4 grid grid-cols-2 gap-3">
+            <div className="mb-4">
+              <div className="text-[12px] font-semibold text-slate-900 mb-1.5 flex items-center gap-1">
+                Performance Source
+                {form.initiativeType === 'internal' && destExternal && (
+                  <InheritChip formValue={form.performanceSource} parentValue={destExternal.performanceSource}
+                    onRevert={() => set('performanceSource', destExternal.performanceSource)} />
+                )}
+              </div>
+              <select value={form.performanceSource} onChange={(e) => set('performanceSource', e.target.value)} className={`${ei_input} pr-8`}>
+                <option value="">Select Performance Source</option>
+                <option>Google Analytics</option><option>KBB Adobe</option><option>ATC LNX</option>
+              </select>
+            </div>
+            <div className="mb-4">
+              <div className="text-[12px] font-semibold text-slate-900 mb-1.5 flex items-center gap-1">
+                Tracking Source
+                {form.initiativeType === 'internal' && destExternal && (
+                  <InheritChip formValue={form.trackingSource} parentValue={destExternal.trackingSource}
+                    onRevert={() => set('trackingSource', destExternal.trackingSource)} />
+                )}
+              </div>
+              <select value={form.trackingSource} onChange={(e) => set('trackingSource', e.target.value)} className={`${ei_input} pr-8`}>
+                <option value="">Select Tracking Source</option>
+                <option>Maven Track</option><option>DCM</option>
+              </select>
+            </div>
+            {[1,2,3,4,5,6,7,8].map(n => (
+              <FieldRow key={n} label={`Conversion ${n} Source`}>
+                <select value={form[`conversion${n}Source`]} onChange={(e) => set(`conversion${n}Source`, e.target.value)} className={`${ei_input} pr-8`}>
+                  <option value="">Select Conversion {n} Source</option>
+                  <option>Maven Track</option><option>Google Analytics</option>
+                </select>
+              </FieldRow>
+            ))}
+            <FieldRow label="Revenue Source">
+              <select value={form.revenueSource} onChange={(e) => set('revenueSource', e.target.value)} className={`${ei_input} pr-8`}>
+                <option value="">Select Revenue Source</option>
+                <option value="direct">Direct CPA</option><option value="synthetic">RV30d Synthetic</option>
+              </select>
+            </FieldRow>
+            <FieldRow label="Auto Approval">
+              <select value={form.autoApproval} onChange={(e) => set('autoApproval', e.target.value)} className={`${ei_input} pr-8`}>
+                <option value="">Select Auto Approval</option>
+                <option value="full">Full</option><option value="restricted">Restricted</option><option value="manual">Manual</option>
+              </select>
+            </FieldRow>
+          </div>
+        )}
       </div>
-      {advancedExpanded && (<>
-      <Section label="Frequency Cap" sublabel="Frequency caps set at the initiative level will override any frequency caps set at the landing page level. Frequency caps are set for the specified amount of Cap Days, in United States Eastern Time.">
+
+      {/* ===== Advanced — chevron expander, matches Data Sources pattern ===== */}
+      <div className="py-4 border-b border-slate-100">
+        <button type="button" onClick={() => setAdvancedExpanded(v => !v)}
+          className="w-full flex items-center justify-between text-left">
+          <div>
+            <div className="text-[15px] font-bold text-[#383F60] leading-tight flex items-center gap-2">
+              {advancedExpanded ? 'Advanced' : '+ Add Advanced'}
+              <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-slate-100 text-slate-500">Optional</span>
+            </div>
+            <div className="text-[13px] text-slate-600 leading-relaxed mt-1">Frequency caps, landing URL macros, and cost markups.</div>
+          </div>
+        </button>
+        {advancedExpanded && (<div className="mt-4">
+      <Section label="Set Frequency Cap" sublabel="Frequency caps set at the initiative level will override any frequency caps set at the landing page level. Frequency caps are set for the specified amount of Cap Days, in United States Eastern Time.">
         <label className="flex items-center gap-3 cursor-pointer mb-4">
           <input type="checkbox" checked={form.freqCapEnabled}
             onChange={(e) => set('freqCapEnabled', e.target.checked)}
@@ -2881,7 +3432,7 @@ function ExternalForm({ initial, onSave, onCancel }) {
         )}
       </Section>
 
-      <Section label="Landing URL Macros" sublabel="Key/value pairs appended to the landing URL when a user is routed through this initiative.">
+      <Section label="Add Landing URL Macros" sublabel="Key/value pairs appended to the landing URL when a user is routed through this initiative.">
         <div className="border border-slate-200 rounded overflow-hidden">
           <div className="grid grid-cols-[1fr_1fr_60px] bg-white border-b border-slate-200 px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
             <div>Key</div>
@@ -2920,7 +3471,7 @@ function ExternalForm({ initial, onSave, onCancel }) {
         </button>
       </Section>
 
-      <Section label="Cost Markup" sublabel="Apply a percentage markup over a date range. Useful for partner-specific fee structures.">
+      <Section label="Add Cost Markup" sublabel="Apply a percentage markup over a date range. Useful for partner-specific fee structures.">
         <div className="border border-slate-200 rounded overflow-hidden">
           <div className="grid grid-cols-[1fr_1fr_1fr_60px] bg-white border-b border-slate-200 px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
             <div>Percentage</div>
@@ -2969,28 +3520,47 @@ function ExternalForm({ initial, onSave, onCancel }) {
           + Add markup
         </button>
       </Section>
-      </>)}
-      </div>)}
+        </div>)}
+      </div>{/* /advanced expander */}
 
-      {/* ===== ZONE 2: Internal payout (optional, collapsed by default) ===== */}
-      <div className="py-6 border-b border-slate-100 last:border-b-0">
-        <button type="button" onClick={() => setInternalExpanded(v => !v)}
+      {/* ===== Custom Metrics — chevron expander, placeholder for now ===== */}
+      <div className="py-4 border-b border-slate-100">
+        <button type="button" onClick={() => setCustomMetricsExpanded(v => !v)}
           className="w-full flex items-center justify-between text-left">
           <div>
-            <div className="text-[15px] font-bold text-slate-900 leading-tight flex items-center gap-2">
-              {internalExpanded ? 'Internal Initiatives (Payout partner)' : '+ Add Internal Initiatives (Payout partner)'}
+            <div className="text-[15px] font-bold text-[#383F60] leading-tight flex items-center gap-2">
+              {customMetricsExpanded ? 'Custom Metrics' : '+ Add Custom Metrics'}
+              <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-slate-100 text-slate-500">Optional</span>
             </div>
-            <div className="text-[13px] text-slate-600 leading-relaxed mt-1">
-              Optional. Add an internal partner that gets paid per outcome (revshare / CPA). Inherits from the external above.
-            </div>
+            <div className="text-[13px] text-slate-600 leading-relaxed mt-1">Per-initiative custom KPIs surfaced in reporting.</div>
           </div>
-          <span className={`text-slate-500 text-sm transition-transform ${internalExpanded ? 'rotate-180' : ''}`}>▾</span>
         </button>
+        {customMetricsExpanded && (
+          <div className="mt-4 py-8 text-center bg-slate-50 rounded">
+            <div className="text-[13px] font-semibold text-slate-700 mb-1">Custom Metrics</div>
+            <div className="text-[12px] text-slate-500">Coming soon. Define and surface per-initiative custom KPIs here.</div>
+          </div>
+        )}
+      </div>{/* /custom-metrics expander */}
+        </div>{/* /form-body inner dim wrapper */}
+      </div>
+      )}{/* /form-body */}
+      </div>)}
 
-        {internalExpanded && (
-          <div className="mt-4">
-            {effectiveExternal && (effectiveExternal.id || effectiveExternal.name) ? (
-              (() => {
+      {/* ===== ZONE 2: Payout Partners related-items panel =====
+          Always visible (only hidden when the row IS an internal, since
+          internals are themselves payout partners). Renders empty state with
+          CTA when no internals are linked, or a linked list with an "Add
+          Another" affordance when 1+ exist. The Configure-payout form is
+          revealed inside a card when the operator clicks Add. Distinct from
+          the chevron-expander pattern used by Data Sources — this panel is a
+          "related entity" surface, not an "advanced settings" reveal. */}
+      {/* Payout Partners — same gate as form body: only render when we have
+          context (create-new always, use-existing requires a picked parent).
+          Otherwise effectiveExternal is undefined and the IIFE crashes. */}
+      {form.initiativeType !== 'internal' && (extMode === 'create-new' || existingExternal) && (
+      <div id="payout-partners-section" className="py-6 border-b border-slate-100 last:border-b-0">
+        {(() => {
                 const childName = mtdName(effectiveExternal.name || '(new external)');
 
                 /* Goal records live separately. We don't create them here — only
@@ -3051,109 +3621,188 @@ function ExternalForm({ initial, onSave, onCancel }) {
                   );
                 };
 
+                /* Linked internals — only when editing an external (not internal),
+                   and we have an external id to look against. */
+                const showLinkedList = (form.initiativeType !== 'internal') && effectiveExternal.id;
+                const linkedList = showLinkedList ? linkedInternalsFor(effectiveExternal.id) : [];
+                const sortedLinked = [...linkedList].sort((a, b) => {
+                  if (a.status === 'ACTIVE' && b.status !== 'ACTIVE') return -1;
+                  if (a.status !== 'ACTIVE' && b.status === 'ACTIVE') return 1;
+                  return a.id.localeCompare(b.id);
+                });
+
+                const editLinkedInternal = (intl) => {
+                  const payoutType = intl.goalType === 'Effective RV30d Revshare %' ? 'revshare' : 'cpa';
+                  const partnerAcctId = INTERNAL_ACCOUNT_ID_BY_NAME[intl.accountName] || '';
+                  window.dispatchEvent(new CustomEvent('maven:edit-initiative', {
+                    detail: {
+                      id: intl.id,
+                      name: intl.name,
+                      accountId: partnerAcctId,
+                      advertiser: intl.accountName,
+                      initiativeType: 'internal',
+                      payout: payoutType,
+                      // Captures the parent context so the form can render a
+                      // "← Back to <external>" link, returning the operator
+                      // to use-existing mode for that external.
+                      _backToParentId: effectiveExternal.id,
+                      _backToParentName: effectiveExternal.name,
+                      _internalPayout: {
+                        destAccountId: 'cos',
+                        destInitiativeId: effectiveExternal.id,
+                        accountId: partnerAcctId,
+                        name: intl.name,
+                        revenueSource: payoutType === 'revshare' ? 'rv30d-synthetic' : 'direct',
+                      },
+                    },
+                  }));
+                };
+
+                const activeCount = linkedList.filter(i => i.status === 'ACTIVE').length;
+                const hasLinked = linkedList.length > 0;
+
                 return (
                   <>
-                    {/* Inheritance summary */}
-                    <div className="bg-blue-50 border border-blue-100 rounded px-3 py-2 mb-5 text-[11px] text-blue-900">
-                      Inheriting from <span className="font-mono font-semibold">{effectiveExternal.id || '(new)'}</span> — child name auto-set to <span className="font-mono">{childName}</span>. Goals are entered separately in the goal screen.
-                    </div>
-
-                    {/* ===== Wiring (Create Internal Initiative) ===== */}
-                    <div className="mb-5">
-                      <div className="text-[12px] font-bold uppercase tracking-wider text-slate-500 mb-3">Wiring</div>
-                      <div className="grid grid-cols-2 gap-3">
-                        {/* Destination account — dropdown, defaults to the external's account */}
-                        <FieldRow label="Destination account" required>
-                          <select value={intDraft.destAccountId || effectiveExternal.accountId || ''}
-                            onChange={(e) => setIntDraft({ ...intDraft, destAccountId: e.target.value })}
-                            className={`${ei_input} pr-8`}>
-                            <option value="">Select account…</option>
-                            {ACCOUNTS.filter(a => a.type === 'external').map(a => (
-                              <option key={a.id} value={a.id}>{a.name}</option>
-                            ))}
-                          </select>
-                        </FieldRow>
-                        {/* Destination initiative — dropdown of eligible externals */}
-                        <FieldRow label="Destination initiative" required hint="An internal with no destination is invalid.">
-                          <select value={intDraft.destInitiativeId || effectiveExternal.id || ''}
-                            onChange={(e) => setIntDraft({ ...intDraft, destInitiativeId: e.target.value })}
-                            className={`${ei_input} pr-8`}>
-                            <option value="">Select initiative…</option>
-                            {EXTERNALS_ELIGIBLE.map(e => (
-                              <option key={e.id} value={e.id}>{e.id} — {e.name}</option>
-                            ))}
-                          </select>
-                        </FieldRow>
-                        {/* Type — muted static text. Implicit when payout zone is expanded; persists on the record */}
-                        <div>
-                          <div className="text-[12px] font-semibold text-slate-900 mb-1.5">Type</div>
-                          <div className="h-9 flex items-center text-[13px] text-slate-500">Internal · trading-desk</div>
-                        </div>
+                    {/* ===== Panel header (always visible) ===== */}
+                    <div className="mb-4">
+                      <div className="text-[15px] font-bold text-[#383F60] leading-tight flex items-center gap-2">
+                        Payout Partners
+                        <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-slate-100 text-slate-500">Optional</span>
+                        {hasLinked && (
+                          <span className="text-[11px] font-semibold text-slate-500 tracking-normal normal-case">
+                            · {linkedList.length} {activeCount !== linkedList.length && `(${activeCount} active)`}
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-[13px] text-slate-600 leading-relaxed mt-1">
+                        Internal initiatives paid per outcome (revshare / CPA). Each inherits identity + data sources from this external.
                       </div>
                     </div>
 
-                    {/* ===== Identity ===== */}
-                    <div className="mb-5">
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="text-[12px] font-bold uppercase tracking-wider text-slate-500">Identity</div>
-                        <button type="button" onClick={() => setOverrideDefaults(v => !v)}
-                          className="text-[10px] text-slate-400 hover:text-slate-700">
-                          {overrideDefaults ? '↺ Use defaults' : '✎ Override defaults'}
+                    {/* ===== Empty state — no linked internals + form closed ===== */}
+                    {!hasLinked && !internalExpanded && (
+                      <div className="border border-dashed border-slate-200 rounded-md px-5 py-6 text-center bg-slate-50/50">
+                        <div className="text-[24px] text-slate-300 mb-2">⇄</div>
+                        <div className="text-[13px] text-slate-700 mb-1">No payout partners yet</div>
+                        <div className="text-[12px] text-slate-500 leading-relaxed mb-4 max-w-md mx-auto">
+                          Add an internal partner to pay them for this initiative's outcomes — common for revshare deals (Advida, Spigot) and CPA pairs.
+                        </div>
+                        <button type="button" onClick={() => setInternalExpanded(true)}
+                          className="text-[13px] font-semibold text-white bg-slate-900 hover:bg-slate-800 px-4 py-2 rounded border-0 cursor-pointer">
+                          + Add Payout Partner
                         </button>
                       </div>
-                      <div className="grid grid-cols-2 gap-3">
-                        {/* Partner account — operator input, always editable (real input) */}
-                        <FieldRow label="Partner (internal) account" required hint="Which internal partner gets paid.">
-                          <select value={intDraft.accountId}
-                            onChange={(e) => setIntDraft({ ...intDraft, accountId: e.target.value })}
-                            className={`${ei_input} pr-8`}>
-                            <option value="">Select partner…</option>
-                            {ACCOUNTS.filter(a => a.type === 'internal').map(a => (
-                              <option key={a.id} value={a.id}>{a.name}</option>
-                            ))}
-                          </select>
-                        </FieldRow>
-                        {/* Name — muted static text by default; input when override is on.
-                            If intDraft.name is set (e.g., editing an existing internal), show it; else auto-derive. */}
-                        <div>
-                          <div className="text-[12px] font-semibold text-slate-900 mb-1.5">Name</div>
-                          {overrideDefaults ? (
-                            <input type="text" value={intDraft.name || childName}
-                              onChange={(e) => setIntDraft({ ...intDraft, name: e.target.value })}
-                              className={ei_input} />
-                          ) : (
-                            <div className="h-9 flex items-center text-[13px] text-slate-500">{intDraft.name || childName}</div>
-                          )}
+                    )}
+
+                    {/* ===== Linked list (always visible when 1+ linked) ===== */}
+                    {hasLinked && (
+                      <div className="divide-y divide-slate-100 border border-slate-100 rounded-md overflow-hidden">
+                        {sortedLinked.map(intl => {
+                          const isPct = intl.goalType === 'Effective RV30d Revshare %';
+                          const inactive = intl.status !== 'ACTIVE';
+                          return (
+                            <div key={intl.id}
+                              className={`flex items-center gap-3 px-3 py-2 ${inactive ? 'opacity-50 bg-slate-50' : 'bg-white hover:bg-slate-50'}`}>
+                              <div className="font-mono text-[12px] text-slate-600 w-28 flex-shrink-0">{intl.id}</div>
+                              <div className="flex-1 min-w-0">
+                                <div className="text-[13px] text-slate-900 truncate">{intl.name}</div>
+                                <div className="text-[11px] text-slate-500 truncate">{intl.accountName}</div>
+                              </div>
+                              <Chip tone={isPct ? 'percent' : 'dollar'}>{isPct ? 'RevShare' : 'CPA'}</Chip>
+                              <StatusBadge status={intl.status} />
+                              <button type="button" onClick={() => editLinkedInternal(intl)}
+                                className="text-[12px] font-semibold text-slate-600 hover:text-slate-900 px-2 py-1 bg-transparent border-0">
+                                Edit →
+                              </button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {/* ===== Add Another button (visible when 1+ linked AND form closed) ===== */}
+                    {hasLinked && !internalExpanded && (
+                      <div className="mt-3">
+                        <button type="button" onClick={() => setInternalExpanded(true)}
+                          className="text-[13px] font-semibold text-slate-700 hover:text-slate-900 border border-slate-200 hover:border-slate-300 bg-white px-3 py-1.5 rounded cursor-pointer">
+                          + Add Another Payout Partner
+                        </button>
+                      </div>
+                    )}
+
+                    {/* ===== Form card — only when adding =====
+                        Light grey bg + 3px purple left stripe to read as a
+                        "creating a related entity" surface, distinct from
+                        the form Section pattern. */}
+                    {internalExpanded && (
+                      <div className="mt-4 rounded-md bg-slate-50 border border-slate-200"
+                        style={{ boxShadow: 'inset 3px 0 0 #5B3FB8' }}>
+                        <div className="px-5 py-4 border-b border-slate-200 flex items-center justify-between">
+                          <div className="text-[13px] font-semibold text-slate-900">New payout partner</div>
+                          <button type="button" onClick={() => setInternalExpanded(false)}
+                            className="text-[12px] text-slate-500 hover:text-slate-900 bg-transparent border-0 cursor-pointer p-0">
+                            Cancel
+                          </button>
                         </div>
-                        {/* Revenue source — muted static text by default; select when override is on */}
-                        <div>
-                          <div className="text-[12px] font-semibold text-slate-900 mb-1.5">Revenue source</div>
-                          {overrideDefaults ? (
-                            <select value={intDraft.revenueSource}
-                              onChange={(e) => setIntDraft({ ...intDraft, revenueSource: e.target.value })}
-                              className={`${ei_input} pr-8`}>
-                              <option value="rv30d-synthetic">RV30d Synthetic (partner-payout)</option>
-                              <option value="direct">Direct CPA</option>
-                              <option value="impact">Impact (external default)</option>
-                            </select>
-                          ) : (
-                            <div className="h-9 flex items-center text-[13px] text-slate-500">RV30d Synthetic (partner-payout)</div>
-                          )}
+                        <div className="px-5 py-4">
+                          {/* ===== Configure payout (operator inputs only) ===== */}
+                          <div className="mb-5">
+                            <div className="text-[12px] font-bold uppercase tracking-wider text-slate-500 mb-1">Configure payout</div>
+                            <div className="text-[11px] text-slate-500 leading-relaxed mb-3">
+                              Initiative group, data sources, and dates inherit from <span className="font-semibold text-slate-700">{effectiveExternal.name || 'the external above'}</span>.
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                              <FieldRow label="Partner (internal) account" required hint="Which internal partner gets paid.">
+                                <select value={intDraft.accountId}
+                                  onChange={(e) => setIntDraft({ ...intDraft, accountId: e.target.value })}
+                                  className={`${ei_input} pr-8`}>
+                                  <option value="">Select partner…</option>
+                                  {ACCOUNTS.filter(a => a.type === 'internal').map(a => (
+                                    <option key={a.id} value={a.id}>{a.name}</option>
+                                  ))}
+                                </select>
+                              </FieldRow>
+                              <div>
+                                <div className="flex items-center justify-between mb-1.5">
+                                  <div className="text-[12px] font-semibold text-slate-900">Name</div>
+                                  <button type="button" onClick={() => setOverrideDefaults(v => !v)}
+                                    className="text-[10px] text-slate-400 hover:text-slate-700 bg-transparent border-0 cursor-pointer p-0">
+                                    {overrideDefaults ? '↺ reset' : '✎ edit'}
+                                  </button>
+                                </div>
+                                {overrideDefaults ? (
+                                  <input type="text" value={intDraft.name || childName}
+                                    onChange={(e) => setIntDraft({ ...intDraft, name: e.target.value })}
+                                    className={ei_input} />
+                                ) : (
+                                  <div className="h-9 flex items-center text-[13px] text-slate-500">{intDraft.name || childName}</div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* ===== Payout goal ===== */}
+                          <div>
+                            <div className="text-[12px] font-bold uppercase tracking-wider text-slate-500 mb-1">Payout goal</div>
+                            <div className="text-[11px] text-slate-500 leading-relaxed mb-3">
+                              Independent of the external's goal — set the payout terms ATN owes the partner. Pair dates and $0 budget inherit silently.
+                            </div>
+                            <GoalBudgetForm
+                              value={intDraft}
+                              onChange={setIntField}
+                              initiativeType="internal"
+                              compact
+                            />
+                          </div>
                         </div>
                       </div>
-                    </div>
+                    )}
 
                   </>
                 );
-              })()
-            ) : (
-              <div className="bg-slate-50 border border-slate-200 rounded px-3 py-3 text-[12px] text-slate-600">
-                {extMode === 'use-existing' ? 'Pick an existing external above first.' : 'Fill in the external above first — at least name, account, goal type, and goal value.'}
-              </div>
-            )}
-          </div>
-        )}
+              })()}
       </div>
+      )}{/* /general-only Zone 2 */}
 
       {/* Save / Cancel live in the drawer's static footer — no duplicate buttons here.
           The drawer's "Save initiative" dispatches 'maven:save-init' which we listen for below. */}
@@ -3179,6 +3828,7 @@ const EXTERNAL_FORM_EMPTY = {
   dco: false,
   searchInitiative: false,
   delay30dRV: '',
+  revSharePct: '',
   freqCapEnabled: false,
   freqCap: 0,
   freqCapDays: 0,
@@ -3214,6 +3864,7 @@ const EXTERNAL_FORM_DEFAULTS = {
   dco: false,
   searchInitiative: false,
   delay30dRV: 0,
+  revSharePct: 100,
   startDate: '2026-01-01',
   endDate: '2026-12-31',
   freqCapEnabled: false,
@@ -3496,6 +4147,20 @@ const EXTERNALS_ELIGIBLE = [
     performanceSource: 'Google Analytics', trackingSource: 'Maven Track',
     linkedInternals: 1,
     goal: { id: 6002, startDate: '2026-01-01', endDate: '2026-12-31', budget: 60.00, goalType: 'CostPerAction3', goalValue: 60.00, goalAmount: '1 action 3', status: 'ACTIVE' },
+  },
+  {
+    id: 'COS35', name: 'COS - 3P - New Mobile', accountId: 'cos',
+    initiativeGroup: 'COS US Mobile', status: 'ACTIVE',
+    performanceSource: 'Google Analytics', trackingSource: 'Maven Track',
+    linkedInternals: 1,
+    goal: { id: 6003, startDate: '2026-01-01', endDate: '2026-12-31', budget: 40.00, goalType: 'CostPerAction3', goalValue: 40.00, goalAmount: '1 action 3', status: 'ACTIVE' },
+  },
+  {
+    id: 'FI12', name: 'FI - Native Desktop', accountId: 'fisher',
+    initiativeGroup: 'FI US Desktop', status: 'ACTIVE',
+    performanceSource: 'Google Analytics', trackingSource: 'Maven Track',
+    linkedInternals: 1,
+    goal: { id: 6004, startDate: '2026-01-01', endDate: '2026-12-31', budget: 150.00, goalType: 'CostPerAction3', goalValue: 150.00, goalAmount: '1 action 3', status: 'ACTIVE' },
   },
 ];
 
